@@ -1,0 +1,33 @@
+2024/11/18 20:25:05 Running in interactive mode.
+2024/11/18 20:25:15 Initializing project github.com/EmilioCliff/kokomed-fin/backend
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/.envs
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/.envs/.local
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/.envs/.local/config.env
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/.envs/configs
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/.envs/configs/sqlc.yaml
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/cmd
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/cmd/server
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/cmd/server/main.go
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/cmd/cli
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/cmd/cli/main.go
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/README.md
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/Dockerfile
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/internal
+2024/11/18 20:25:15 Creating empty directory: /home/emilio/kokomed-fin/backend/internal/handlers
+2024/11/18 20:25:15 Creating empty directory: /home/emilio/kokomed-fin/backend/internal/repository
+2024/11/18 20:25:15 Creating empty directory: /home/emilio/kokomed-fin/backend/internal/mock
+2024/11/18 20:25:15 Creating empty directory: /home/emilio/kokomed-fin/backend/internal/services
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/internal/mysql
+2024/11/18 20:25:15 Creating empty directory: /home/emilio/kokomed-fin/backend/internal/mysql/generated
+2024/11/18 20:25:15 Creating empty directory: /home/emilio/kokomed-fin/backend/internal/mysql/migrations
+2024/11/18 20:25:15 Creating empty directory: /home/emilio/kokomed-fin/backend/internal/mysql/queries
+2024/11/18 20:25:15 Creating empty directory: /home/emilio/kokomed-fin/backend/internal/mysql/mock
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/pkg
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/pkg/errors.go
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/.gitignore
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/Makefile
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/.github
+2024/11/18 20:25:15 Creating directory: /home/emilio/kokomed-fin/backend/.github/workflows
+2024/11/18 20:25:15 Creating file: /home/emilio/kokomed-fin/backend/.github/workflows/ci.yml
+2024/11/18 20:25:15 Initializing go module...
+2024/11/18 20:25:15 Initializing git repository...

@@ -1,0 +1,12 @@
+# Binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Configs
+*.env
+
+# Logs
+*.log
