@@ -145,28 +145,28 @@ type Branch struct {
 }
 
 type Client struct {
-	ID            uint32        `json:"id"`
-	FullName      string        `json:"full_name"`
-	PhoneNumber   string        `json:"phone_number"`
-	IDNumber      string        `json:"id_number"`
-	Dob           sql.NullTime  `json:"dob"`
-	Gender        ClientsGender `json:"gender"`
-	Active        bool          `json:"active"`
-	BranchID      uint32        `json:"branch_id"`
-	AssignedStaff uint32        `json:"assigned_staff"`
-	Overpayment   string        `json:"overpayment"`
-	UpdatedBy     uint32        `json:"updated_by"`
-	UpdatedAt     time.Time     `json:"updated_at"`
-	CreatedBy     uint32        `json:"created_by"`
-	CreatedAt     time.Time     `json:"created_at"`
+	ID            uint32         `json:"id"`
+	FullName      string         `json:"full_name"`
+	PhoneNumber   string         `json:"phone_number"`
+	IDNumber      sql.NullString `json:"id_number"`
+	Dob           sql.NullTime   `json:"dob"`
+	Gender        ClientsGender  `json:"gender"`
+	Active        bool           `json:"active"`
+	BranchID      uint32         `json:"branch_id"`
+	AssignedStaff uint32         `json:"assigned_staff"`
+	Overpayment   float64        `json:"overpayment"`
+	UpdatedBy     uint32         `json:"updated_by"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	CreatedBy     uint32         `json:"created_by"`
+	CreatedAt     time.Time      `json:"created_at"`
 }
 
 type Installment struct {
 	ID                uint32       `json:"id"`
 	LoanID            uint32       `json:"loan_id"`
 	InstallmentNumber uint32       `json:"installment_number"`
-	AmountDue         string       `json:"amount_due"`
-	RemainingAmount   string       `json:"remaining_amount"`
+	AmountDue         float64      `json:"amount_due"`
+	RemainingAmount   float64      `json:"remaining_amount"`
 	Paid              bool         `json:"paid"`
 	PaidAt            sql.NullTime `json:"paid_at"`
 	DueDate           time.Time    `json:"due_date"`
@@ -185,8 +185,8 @@ type Loan struct {
 	TotalInstallments  uint32         `json:"total_installments"`
 	InstallmentsPeriod uint32         `json:"installments_period"`
 	Status             LoansStatus    `json:"status"`
-	ProcessingFee      string         `json:"processing_fee"`
-	PaidAmount         string         `json:"paid_amount"`
+	ProcessingFee      float64        `json:"processing_fee"`
+	PaidAmount         float64        `json:"paid_amount"`
 	UpdatedBy          sql.NullInt32  `json:"updated_by"`
 	CreatedBy          uint32         `json:"created_by"`
 	CreatedAt          time.Time      `json:"created_at"`
@@ -198,7 +198,7 @@ type NonPosted struct {
 	AccountNumber     string        `json:"account_number"`
 	PhoneNumber       string        `json:"phone_number"`
 	PayingName        string        `json:"paying_name"`
-	Amount            string        `json:"amount"`
+	Amount            float64       `json:"amount"`
 	PaidDate          time.Time     `json:"paid_date"`
 	AssignTo          sql.NullInt32 `json:"assign_to"`
 }

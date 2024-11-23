@@ -9,36 +9,14 @@ SELECT * FROM users WHERE id = ? LIMIT 1;
 SELECT password FROM users WHERE email = ? LIMIT 1;
 
 -- name: ListUsers :many
-SELECT * FROM users ORDER BY full_name DESC;
+SELECT * FROM users ORDER BY full_name DESC LIMIT ? OFFSET ?;
 
 -- name: UpdateUser :execresult
 UPDATE users 
-    SET full_name = ?, 
-    phone_number = ?, 
-    updated_at = ?, 
-    updated_by = ? 
-WHERE id = ?;
-
--- name: UpdateUserRole :execresult
-UPDATE users
-    SET role = ?,
-    updated_at = ?, 
-    updated_by = ? 
-WHERE id = ?;
-
--- name: UpdateUserRefreshToken :execresult
-UPDATE users
-    SET refresh_token = ?
-WHERE id = ?;
-
--- name: UpdateUserPassword :execresult
-UPDATE users
-    SET password = ?
-WHERE id = ?;
-
--- name: UpdateUserBranch :execresult
-UPDATE users
-    SET branch_id = ?,
-    updated_at = ?, 
-    updated_by = ? 
-WHERE id = ?;
+    SET role = coalesce(sqlc.narg("role"), role), 
+    branch_id = coalesce(sqlc.narg("branch_id"), branch_id),
+    password = coalesce(sqlc.narg("password"), password),
+    refresh_token = coalesce(sqlc.narg("refresh_token"), refresh_token),
+    updated_at = coalesce(sqlc.narg("updated_at"), updated_at), 
+    updated_by = coalesce(sqlc.narg("updated_by"), updated_by) 
+WHERE id = sqlc.arg("id");

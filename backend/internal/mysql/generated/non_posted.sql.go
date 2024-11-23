@@ -38,7 +38,7 @@ type CreateNonPostedParams struct {
 	AccountNumber     string    `json:"account_number"`
 	PhoneNumber       string    `json:"phone_number"`
 	PayingName        string    `json:"paying_name"`
-	Amount            string    `json:"amount"`
+	Amount            float64   `json:"amount"`
 	PaidDate          time.Time `json:"paid_date"`
 }
 

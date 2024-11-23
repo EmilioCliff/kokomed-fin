@@ -260,30 +260,30 @@ func (q *Queries) ListClientsByBranch(ctx context.Context, arg ListClientsByBran
 
 const updateClient = `-- name: UpdateClient :execresult
 UPDATE clients 
-    SET full_name = coalesce(?, full_name),
-    phone_number = coalesce(?, phone_number),
+    SET full_name = ?,
+    phone_number = ?,
     id_number = coalesce(?, id_number),
     dob = coalesce(?, dob),
-    gender = coalesce(?, gender),
-    active = coalesce(?, active),
-    branch_id = coalesce(?, branch_id),
-    assigned_staff = coalesce(?, assigned_staff),
+    gender = ?,
+    active = ?,
+    branch_id = ?,
+    assigned_staff = ?,
     updated_at = CURRENT_TIMESTAMP,
     updated_by = ?
 WHERE id = ?
 `
 
 type UpdateClientParams struct {
-	FullName      sql.NullString    `json:"full_name"`
-	PhoneNumber   sql.NullString    `json:"phone_number"`
-	IDNumber      sql.NullString    `json:"id_number"`
-	Dob           sql.NullTime      `json:"dob"`
-	Gender        NullClientsGender `json:"gender"`
-	Active        sql.NullBool      `json:"active"`
-	BranchID      sql.NullInt32     `json:"branch_id"`
-	AssignedStaff sql.NullInt32     `json:"assigned_staff"`
-	UpdatedBy     uint32            `json:"updated_by"`
-	ID            uint32            `json:"id"`
+	FullName      string         `json:"full_name"`
+	PhoneNumber   string         `json:"phone_number"`
+	IDNumber      sql.NullString `json:"id_number"`
+	Dob           sql.NullTime   `json:"dob"`
+	Gender        ClientsGender  `json:"gender"`
+	Active        bool           `json:"active"`
+	BranchID      uint32         `json:"branch_id"`
+	AssignedStaff uint32         `json:"assigned_staff"`
+	UpdatedBy     uint32         `json:"updated_by"`
+	ID            uint32         `json:"id"`
 }
 
 func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) (sql.Result, error) {
@@ -299,17 +299,4 @@ func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) (sql
 		arg.UpdatedBy,
 		arg.ID,
 	)
-}
-
-const updateClientOverpayment = `-- name: UpdateClientOverpayment :execresult
-UPDATE clients SET overpayment = ? WHERE id = ?
-`
-
-type UpdateClientOverpaymentParams struct {
-	Overpayment string `json:"overpayment"`
-	ID          uint32 `json:"id"`
-}
-
-func (q *Queries) UpdateClientOverpayment(ctx context.Context, arg UpdateClientOverpaymentParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, updateClientOverpayment, arg.Overpayment, arg.ID)
 }

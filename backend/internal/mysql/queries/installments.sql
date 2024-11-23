@@ -13,9 +13,6 @@ SELECT * FROM installments WHERE loan_id = ? ORDER BY due_date ASC LIMIT ? OFFSE
 -- name: UpdateInstallment :execresult
 UPDATE installments 
     SET remaining_amount =  sqlc.arg("remaining_amount"),
-    paid =  sqlc.arg("paid"),
+    paid =  coalesce(sqlc.narg("paid"), paid),
     paid_at =  coalesce(sqlc.narg("paid_at"), paid_at)
 WHERE id = sqlc.arg("id");
-
--- name: DeleteInstallment :exec
-DELETE FROM installments WHERE id = ?;

@@ -146,30 +146,3 @@ func (q *Queries) ListProductsByBranch(ctx context.Context, arg ListProductsByBr
 	}
 	return items, nil
 }
-
-const updateProduct = `-- name: UpdateProduct :execresult
-UPDATE products 
-    SET loan_amount = coalesce(?, loan_amount),
-    repay_amount = coalesce(?, repay_amount),
-    interest_amount = coalesce(?, interest_amount),
-    updated_by = ?
-WHERE id = ?
-`
-
-type UpdateProductParams struct {
-	LoanAmount     sql.NullFloat64 `json:"loan_amount"`
-	RepayAmount    sql.NullFloat64 `json:"repay_amount"`
-	InterestAmount sql.NullFloat64 `json:"interest_amount"`
-	UpdatedBy      uint32          `json:"updated_by"`
-	ID             uint32          `json:"id"`
-}
-
-func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, updateProduct,
-		arg.LoanAmount,
-		arg.RepayAmount,
-		arg.InterestAmount,
-		arg.UpdatedBy,
-		arg.ID,
-	)
-}

@@ -27,10 +27,9 @@ type UpdateProduct struct {
 }
 
 type ProductRepository interface {
-	GetAllProducts(ctx context.Context, pgData *pkg.PaginationMetadata) ([]*Product, error)
-	GetProductByID(ctx context.Context, id uint32) (*Product, error)
-	ListProductByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]*Product, error)
-	CreateProduct(ctx context.Context, product *Product) (*Product, error)
-	UpdateProduct(ctx context.Context, product *UpdateProduct) (*Product, error)
+	GetAllProducts(ctx context.Context, pgData *pkg.PaginationMetadata) ([]Product, error)
+	GetProductByID(ctx context.Context, id uint32) (Product, error)
+	ListProductByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]Product, error)
+	CreateProduct(ctx context.Context, product *Product) (Product, error)
 	DeleteProduct(ctx context.Context, id uint32) error
 }

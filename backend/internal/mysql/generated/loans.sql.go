@@ -41,7 +41,7 @@ type CreateLoanParams struct {
 	TotalInstallments  uint32         `json:"total_installments"`
 	InstallmentsPeriod uint32         `json:"installments_period"`
 	Status             LoansStatus    `json:"status"`
-	ProcessingFee      string         `json:"processing_fee"`
+	ProcessingFee      float64        `json:"processing_fee"`
 	CreatedBy          uint32         `json:"created_by"`
 }
 
@@ -378,6 +378,19 @@ func (q *Queries) ListNonDisbursedLoans(ctx context.Context, arg ListNonDisburse
 	return items, nil
 }
 
+const transferLoan = `-- name: TransferLoan :execresult
+UPDATE loans SET loan_officer = ? WHERE id = ?
+`
+
+type TransferLoanParams struct {
+	LoanOfficer uint32 `json:"loan_officer"`
+	ID          uint32 `json:"id"`
+}
+
+func (q *Queries) TransferLoan(ctx context.Context, arg TransferLoanParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, transferLoan, arg.LoanOfficer, arg.ID)
+}
+
 const updateLoan = `-- name: UpdateLoan :execresult
 UPDATE loans 
     SET paid_amount = ?,
@@ -386,7 +399,7 @@ WHERE id = ?
 `
 
 type UpdateLoanParams struct {
-	PaidAmount string        `json:"paid_amount"`
+	PaidAmount float64       `json:"paid_amount"`
 	UpdatedBy  sql.NullInt32 `json:"updated_by"`
 	ID         uint32        `json:"id"`
 }

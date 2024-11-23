@@ -21,8 +21,8 @@ VALUES (
 type CreateInstallmentParams struct {
 	LoanID            uint32    `json:"loan_id"`
 	InstallmentNumber uint32    `json:"installment_number"`
-	AmountDue         string    `json:"amount_due"`
-	RemainingAmount   string    `json:"remaining_amount"`
+	AmountDue         float64   `json:"amount_due"`
+	RemainingAmount   float64   `json:"remaining_amount"`
 	DueDate           time.Time `json:"due_date"`
 }
 
@@ -34,15 +34,6 @@ func (q *Queries) CreateInstallment(ctx context.Context, arg CreateInstallmentPa
 		arg.RemainingAmount,
 		arg.DueDate,
 	)
-}
-
-const deleteInstallment = `-- name: DeleteInstallment :exec
-DELETE FROM installments WHERE id = ?
-`
-
-func (q *Queries) DeleteInstallment(ctx context.Context, id uint32) error {
-	_, err := q.db.ExecContext(ctx, deleteInstallment, id)
-	return err
 }
 
 const getInstallment = `-- name: GetInstallment :one
@@ -110,14 +101,14 @@ func (q *Queries) ListInstallmentsByLoan(ctx context.Context, arg ListInstallmen
 const updateInstallment = `-- name: UpdateInstallment :execresult
 UPDATE installments 
     SET remaining_amount =  ?,
-    paid =  ?,
+    paid =  coalesce(?, paid),
     paid_at =  coalesce(?, paid_at)
 WHERE id = ?
 `
 
 type UpdateInstallmentParams struct {
-	RemainingAmount string       `json:"remaining_amount"`
-	Paid            bool         `json:"paid"`
+	RemainingAmount float64      `json:"remaining_amount"`
+	Paid            sql.NullBool `json:"paid"`
 	PaidAt          sql.NullTime `json:"paid_at"`
 	ID              uint32       `json:"id"`
 }

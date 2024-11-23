@@ -14,14 +14,14 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func NewTestProductRepository() *ProductRepository {
+func NewTestNonPostedRepository() *NonPostedRepository {
 	store := NewStore(pkg.Config{})
 
-	return NewProductRepository(store)
+	return NewNonPostedRepository(store)
 }
 
-func TestProductRepository_GetAllProducts(t *testing.T) {
-	r := NewTestProductRepository()
+func TestNonPostedRepository_TestCreateNonPosted(t *testing.T) {
+	r := NewTestNonPostedRepository()
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -34,240 +34,28 @@ func TestProductRepository_GetAllProducts(t *testing.T) {
 		buildStubs func(mockQueries *mockdb.MockQuerier)
 		wantErr    bool
 		err        error
-		wantResult []repository.Product
+		wantResult repository.NonPosted
 	}{
 		{
 			name: "OK",
 			buildStubs: func(mockQueries *mockdb.MockQuerier) {
 				mockQueries.EXPECT().
-					ListProducts(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return([]generated.Product{
-						{ID: 42, BranchID: 1, LoanAmount: 1000},
-					}, nil)
-			},
-			wantErr:    false,
-			err:        nil,
-			wantResult: []repository.Product{{ID: 42, BranchID: 1, LoanAmount: 1000}},
-		},
-		{
-			name: "Not Found",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					ListProducts(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(nil, sql.ErrNoRows)
-			},
-			wantErr: true,
-			err:     errors.New(pkg.NOT_FOUND_ERROR),
-		},
-		{
-			name: "Internal Error",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					ListProducts(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(nil, errors.New("internal error"))
-			},
-			wantErr: true,
-			err:     errors.New(pkg.INTERNAL_ERROR),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			tc.buildStubs(mockQueries)
-
-			result, err := r.GetAllProducts(context.Background(), &pkg.PaginationMetadata{})
-
-			if tc.wantErr {
-				require.Error(t, err)
-				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.wantResult, result)
-			}
-		})
-	}
-}
-
-func TestProductRepository_GetProductByID(t *testing.T) {
-	r := NewTestProductRepository()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockQueries := mockdb.NewMockQuerier(ctrl)
-	r.queries = mockQueries
-
-	tests := []struct {
-		name       string
-		buildStubs func(mockQueries *mockdb.MockQuerier)
-		wantErr    bool
-		err        error
-		wantResult repository.Product
-	}{
-		{
-			name: "OK",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					GetProduct(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(generated.Product{ID: 42, BranchID: 1, LoanAmount: 1000}, nil)
-			},
-			wantErr:    false,
-			err:        nil,
-			wantResult: repository.Product{ID: 42, BranchID: 1, LoanAmount: 1000},
-		},
-		{
-			name: "Not Found",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					GetProduct(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(generated.Product{}, sql.ErrNoRows)
-			},
-			wantErr: true,
-			err:     errors.New(pkg.NOT_FOUND_ERROR),
-		},
-		{
-			name: "Internal Error",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					GetProduct(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(generated.Product{}, errors.New("internal error"))
-			},
-			wantErr: true,
-			err:     errors.New(pkg.INTERNAL_ERROR),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			tc.buildStubs(mockQueries)
-
-			result, err := r.GetProductByID(context.Background(), 42)
-
-			if tc.wantErr {
-				require.Error(t, err)
-				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.wantResult, result)
-			}
-		})
-	}
-}
-
-func TestProductRepository_ListProductByBranch(t *testing.T) {
-	r := NewTestProductRepository()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockQueries := mockdb.NewMockQuerier(ctrl)
-	r.queries = mockQueries
-
-	tests := []struct {
-		name       string
-		buildStubs func(mockQueries *mockdb.MockQuerier)
-		wantErr    bool
-		err        error
-		wantResult []repository.Product
-	}{
-		{
-			name: "OK",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					ListProductsByBranch(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return([]generated.Product{
-						{ID: 42, BranchID: 1, LoanAmount: 1000},
-					}, nil)
-			},
-			wantErr:    false,
-			err:        nil,
-			wantResult: []repository.Product{{ID: 42, BranchID: 1, LoanAmount: 1000}},
-		},
-		{
-			name: "Not Found",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					ListProductsByBranch(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(nil, sql.ErrNoRows)
-			},
-			wantErr: true,
-			err:     errors.New(pkg.NOT_FOUND_ERROR),
-		},
-		{
-			name: "Internal Error",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					ListProductsByBranch(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(nil, errors.New("internal error"))
-			},
-			wantErr: true,
-			err:     errors.New(pkg.INTERNAL_ERROR),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			tc.buildStubs(mockQueries)
-
-			result, err := r.ListProductByBranch(context.Background(), 1, &pkg.PaginationMetadata{})
-
-			if tc.wantErr {
-				require.Error(t, err)
-				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.wantResult, result)
-			}
-		})
-	}
-}
-
-func TestProductRepository_CreateProduct(t *testing.T) {
-	r := NewTestProductRepository()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockQueries := mockdb.NewMockQuerier(ctrl)
-	r.queries = mockQueries
-
-	tests := []struct {
-		name       string
-		buildStubs func(mockQueries *mockdb.MockQuerier)
-		wantErr    bool
-		err        error
-		wantResult repository.Product
-	}{
-		{
-			name: "OK",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					CreateProduct(gomock.Any(), gomock.Any()).
+					CreateNonPosted(gomock.Any(), gomock.Eq(generated.CreateNonPostedParams{TransactionNumber: "test"})).
 					Times(1).
 					Return(&mockSQLResult{lastInsertID: 1, rowsAffected: 1}, nil)
 			},
 			wantErr: false,
 			err:     nil,
-			wantResult: repository.Product{
-				ID:         1,
-				BranchID:   1,
-				LoanAmount: 1000,
+			wantResult: repository.NonPosted{
+				ID:                1,
+				TransactionNumber: "test",
 			},
 		},
 		{
-			name: "Internal Error",
+			name: "Internal Server Error",
 			buildStubs: func(mockQueries *mockdb.MockQuerier) {
 				mockQueries.EXPECT().
-					CreateProduct(gomock.Any(), gomock.Any()).
+					CreateNonPosted(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(&mockSQLResult{}, errors.New("internal error"))
 			},
@@ -280,24 +68,304 @@ func TestProductRepository_CreateProduct(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.buildStubs(mockQueries)
 
-			product, err := r.CreateProduct(context.Background(), &repository.Product{
-				BranchID:   1,
-				LoanAmount: 1000,
-			})
+			result, err := r.CreateNonPosted(context.Background(), &repository.NonPosted{TransactionNumber: "test"})
 
 			if tc.wantErr {
 				require.Error(t, err)
 				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.wantResult, product)
+				require.Equal(t, tc.wantResult, result)
 			}
 		})
 	}
 }
 
-func TestProductRepository_DeleteProduct(t *testing.T) {
-	r := NewTestProductRepository()
+func TestNonPostedRepository_GetNonPosted(t *testing.T) {
+	r := NewTestNonPostedRepository()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockQueries := mockdb.NewMockQuerier(ctrl)
+	r.queries = mockQueries
+
+	tests := []struct {
+		name       string
+		buildStubs func(mockQueries *mockdb.MockQuerier)
+		wantErr    bool
+		err        error
+		wantResult repository.NonPosted
+	}{
+		{
+			name: "OK",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					GetNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(generated.NonPosted{ID: 1, TransactionNumber: "test"}, nil)
+			},
+			wantErr: false,
+			err:     nil,
+			wantResult: repository.NonPosted{
+				ID:                1,
+				TransactionNumber: "test",
+			},
+		},
+		{
+			name: "Not Found",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					GetNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(generated.NonPosted{}, sql.ErrNoRows)
+			},
+			wantErr: true,
+			err:     errors.New(pkg.NOT_FOUND_ERROR),
+		},
+		{
+			name: "Internal Server Error",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					GetNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(generated.NonPosted{}, errors.New("internal error"))
+			},
+			wantErr: true,
+			err:     errors.New(pkg.INTERNAL_ERROR),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockQueries)
+
+			result, err := r.GetNonPosted(context.Background(), 1)
+
+			if tc.wantErr {
+				require.Error(t, err)
+				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.wantResult, result)
+			}
+		})
+	}
+}
+
+func TestNonPostedRepository_AssignNonPosted(t *testing.T) {
+	r := NewTestNonPostedRepository()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockQueries := mockdb.NewMockQuerier(ctrl)
+	r.queries = mockQueries
+
+	tests := []struct {
+		name       string
+		buildStubs func(mockQueries *mockdb.MockQuerier)
+		wantErr    bool
+		err        error
+		wantResult repository.NonPosted
+	}{
+		{
+			name: "OK",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					AssignNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(&mockSQLResult{lastInsertID: 1, rowsAffected: 1}, nil)
+
+				mockQueries.EXPECT().
+					GetNonPosted(gomock.Any(), gomock.Eq(uint32(1))).
+					Times(1).
+					Return(generated.NonPosted{ID: 1, AssignTo: sql.NullInt32{Valid: true, Int32: 10}}, nil)
+			},
+			wantErr:    false,
+			err:        nil,
+			wantResult: repository.NonPosted{ID: 1, AssignedTo: pkg.Uint32Ptr(10)},
+		},
+		{
+			name: "Internal Server Error",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					AssignNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil, errors.New("internal error"))
+			},
+			wantErr: true,
+			err:     errors.New(pkg.INTERNAL_ERROR),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockQueries)
+
+			result, err := r.AssignNonPosted(context.Background(), 1, 10)
+
+			if tc.wantErr {
+				require.Error(t, err)
+				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.wantResult, result)
+			}
+		})
+	}
+}
+
+func TestNonPostedRepository_ListNonPosted(t *testing.T) {
+	r := NewTestNonPostedRepository()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockQueries := mockdb.NewMockQuerier(ctrl)
+	r.queries = mockQueries
+
+	tests := []struct {
+		name       string
+		buildStubs func(mockQueries *mockdb.MockQuerier)
+		wantErr    bool
+		err        error
+		wantResult []repository.NonPosted
+	}{
+		{
+			name: "OK",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					ListAllNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]generated.NonPosted{
+						{ID: 1, TransactionNumber: "test"},
+					}, nil)
+			},
+			wantErr: false,
+			err:     nil,
+			wantResult: []repository.NonPosted{
+				{ID: 1, TransactionNumber: "test"},
+			},
+		},
+		{
+			name: "NonPosted not found",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					ListAllNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]generated.NonPosted{}, nil)
+			},
+			wantErr:    false,
+			err:        nil,
+			wantResult: []repository.NonPosted{},
+		},
+		{
+			name: "Internal Server Error",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					ListAllNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil, errors.New("internal error"))
+			},
+			wantErr: true,
+			err:     errors.New(pkg.INTERNAL_ERROR),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockQueries)
+
+			result, err := r.ListNonPosted(context.Background(), &pkg.PaginationMetadata{})
+
+			if tc.wantErr {
+				require.Error(t, err)
+				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.wantResult, result)
+			}
+		})
+	}
+}
+
+func TestNonPostedRepository_ListUnassignedNonPosted(t *testing.T) {
+	r := NewTestNonPostedRepository()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockQueries := mockdb.NewMockQuerier(ctrl)
+	r.queries = mockQueries
+
+	tests := []struct {
+		name       string
+		buildStubs func(mockQueries *mockdb.MockQuerier)
+		wantErr    bool
+		err        error
+		wantResult []repository.NonPosted
+	}{
+		{
+			name: "OK",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					ListUnassignedNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]generated.NonPosted{
+						{ID: 1, TransactionNumber: "test"},
+					}, nil)
+			},
+			wantErr: false,
+			err:     nil,
+			wantResult: []repository.NonPosted{
+				{ID: 1, TransactionNumber: "test"},
+			},
+		},
+		{
+			name: "NonPosted not found",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					ListUnassignedNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]generated.NonPosted{}, nil)
+			},
+			wantErr:    false,
+			err:        nil,
+			wantResult: []repository.NonPosted{},
+		},
+		{
+			name: "Internal Server Error",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					ListUnassignedNonPosted(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(nil, errors.New("internal error"))
+			},
+			wantErr: true,
+			err:     errors.New(pkg.INTERNAL_ERROR),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockQueries)
+
+			result, err := r.ListUnassignedNonPosted(context.Background(), &pkg.PaginationMetadata{})
+
+			if tc.wantErr {
+				require.Error(t, err)
+				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.wantResult, result)
+			}
+		})
+	}
+}
+
+func TestNonPostedRepository_DeleteNonPosted(t *testing.T) {
+	r := NewTestNonPostedRepository()
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -315,7 +383,7 @@ func TestProductRepository_DeleteProduct(t *testing.T) {
 			name: "OK",
 			buildStubs: func(mockQueries *mockdb.MockQuerier) {
 				mockQueries.EXPECT().
-					DeleteProduct(gomock.Any(), gomock.Any()).
+					DeleteNonPosted(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(nil)
 			},
@@ -323,21 +391,10 @@ func TestProductRepository_DeleteProduct(t *testing.T) {
 			err:     nil,
 		},
 		{
-			name: "Not Found",
+			name: "Internal Server Error",
 			buildStubs: func(mockQueries *mockdb.MockQuerier) {
 				mockQueries.EXPECT().
-					DeleteProduct(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(sql.ErrNoRows)
-			},
-			wantErr: true,
-			err:     errors.New(pkg.NOT_FOUND_ERROR),
-		},
-		{
-			name: "Internal Error",
-			buildStubs: func(mockQueries *mockdb.MockQuerier) {
-				mockQueries.EXPECT().
-					DeleteProduct(gomock.Any(), gomock.Any()).
+					DeleteNonPosted(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(errors.New("internal error"))
 			},
@@ -350,7 +407,7 @@ func TestProductRepository_DeleteProduct(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.buildStubs(mockQueries)
 
-			err := r.DeleteProduct(context.Background(), 1)
+			err := r.DeleteNonPosted(context.Background(), 1)
 
 			if tc.wantErr {
 				require.Error(t, err)
@@ -360,17 +417,4 @@ func TestProductRepository_DeleteProduct(t *testing.T) {
 			}
 		})
 	}
-}
-
-type mockSQLResult struct {
-	lastInsertID int64
-	rowsAffected int64
-}
-
-func (m *mockSQLResult) LastInsertId() (int64, error) {
-	return m.lastInsertID, nil
-}
-
-func (m *mockSQLResult) RowsAffected() (int64, error) {
-	return m.rowsAffected, nil
 }

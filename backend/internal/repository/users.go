@@ -1,1 +1,41 @@
 package repository
+
+import (
+	"context"
+	"time"
+
+	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+)
+
+type User struct {
+	ID           uint32    `json:"id"`
+	FullName     string    `json:"full_name"`
+	PhoneNumber  string    `json:"phone_number"`
+	Email        string    `json:"email"`
+	Password     string    `json:"password"`
+	RefreshToken string    `json:"refresh_token"`
+	Role         string    `json:"role"`
+	BranchID     uint32    `json:"branch_id"`
+	UpdatedBy    uint32    `json:"updated_by"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	CreatedBy    uint32    `json:"created_by"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+type UpdateUser struct {
+	ID           uint32     `json:"id"`
+	Role         *string    `json:"role"`
+	BranchID     *uint32    `json:"branch_id"`
+	Password     *string    `json:"password"`
+	RefreshToken *string    `json:"refresh_token"`
+	UpdatedBy    *uint32    `json:"updated_by"`
+	UpdatedAt    *time.Time `json:"updated_at"`
+}
+
+type UserRepository interface {
+	CreateUser(ctx context.Context, user *User) (User, error)
+	GetUserByID(ctx context.Context, id uint32) (User, error)
+	GetUserPassword(ctx context.Context, email string) (string, error)
+	ListUsers(ctx context.Context, pgData *pkg.PaginationMetadata) ([]User, error)
+	UpdateUser(ctx context.Context, user *UpdateUser) (User, error)
+}

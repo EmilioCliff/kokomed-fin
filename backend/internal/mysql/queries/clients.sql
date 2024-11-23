@@ -22,14 +22,14 @@ SELECT * FROM clients WHERE id = ? LIMIT 1;
 
 -- name: UpdateClient :execresult
 UPDATE clients 
-    SET full_name = coalesce(sqlc.narg("full_name"), full_name),
-    phone_number = coalesce(sqlc.narg("phone_number"), phone_number),
+    SET full_name = sqlc.arg("full_name"),
+    phone_number = sqlc.arg("phone_number"),
     id_number = coalesce(sqlc.narg("id_number"), id_number),
     dob = coalesce(sqlc.narg("dob"), dob),
-    gender = coalesce(sqlc.narg("gender"), gender),
-    active = coalesce(sqlc.narg("active"), active),
-    branch_id = coalesce(sqlc.narg("branch_id"), branch_id),
-    assigned_staff = coalesce(sqlc.narg("assigned_staff"), assigned_staff),
+    gender = sqlc.arg("gender"),
+    active = sqlc.arg("active"),
+    branch_id = sqlc.arg("branch_id"),
+    assigned_staff = sqlc.arg("assigned_staff"),
     updated_at = CURRENT_TIMESTAMP,
     updated_by = sqlc.arg("updated_by")
 WHERE id = sqlc.arg("id");
@@ -45,6 +45,3 @@ SELECT * FROM clients WHERE branch_id = ? LIMIT ? OFFSET ?;
 
 -- name: ListClientsByActiveStatus :many
 SELECT * FROM clients WHERE active = ? LIMIT ? OFFSET ?;
-
--- name: UpdateClientOverpayment :execresult
-UPDATE clients SET overpayment = ? WHERE id = ?;

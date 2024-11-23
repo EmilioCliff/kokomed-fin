@@ -29,6 +29,9 @@ UPDATE loans
     updated_by = coalesce(sqlc.arg("updated_by"), updated_by)
 WHERE id = sqlc.arg("id");
 
+-- name: TransferLoan :execresult
+UPDATE loans SET loan_officer = ? WHERE id = ?;
+
 -- name: GetLoan :one
 SELECT * FROM loans WHERE id = ? LIMIT 1;
 

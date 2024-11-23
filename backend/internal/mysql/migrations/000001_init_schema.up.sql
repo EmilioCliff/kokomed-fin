@@ -26,7 +26,7 @@ CREATE TABLE `clients` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
   `full_name` VARCHAR(255) NOT NULL,
   `phone_number` VARCHAR(255) NOT NULL,
-  `id_number` VARCHAR(255) NOT NULL DEFAULT "Not Provided",
+  `id_number` VARCHAR(255) NULL,
   `dob` DATE NULL,
   `gender` ENUM('MALE', 'FEMALE') NOT NULL,
   `active` BOOLEAN NOT NULL DEFAULT FALSE,
@@ -47,9 +47,9 @@ CREATE TABLE `clients` (
 CREATE TABLE `products` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
   `branch_id` INT NOT NULL,
-  `loan_amount` FLOAT NOT NULL,
-  `repay_amount` FLOAT NOT NULL,
-  `interest_amount` FLOAT NOT NULL,
+  `loan_amount` DECIMAL(10, 2) NOT NULL,
+  `repay_amount` DECIMAL(10, 2) NOT NULL,
+  `interest_amount` DECIMAL(10, 2) NOT NULL,
   `updated_by` INT NOT NULL,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -108,7 +108,7 @@ CREATE TABLE `non_posted` (
   `paying_name` VARCHAR(255) NOT NULL,
   `amount` DECIMAL(10,2) NOT NULL,
   `paid_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `assign_to` INT,
+  `assign_to` INT NULL,
 
   CONSTRAINT fk_non_posted_assign_to FOREIGN KEY (`assign_to`) REFERENCES `clients` (`id`)
 );

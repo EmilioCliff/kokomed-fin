@@ -20,7 +20,6 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
 	DeleteBranch(ctx context.Context, id uint32) error
 	DeleteClient(ctx context.Context, id uint32) (sql.Result, error)
-	DeleteInstallment(ctx context.Context, id uint32) error
 	DeleteLoan(ctx context.Context, id uint32) error
 	DeleteNonPosted(ctx context.Context, id uint32) error
 	DeleteProduct(ctx context.Context, id uint32) error
@@ -48,19 +47,14 @@ type Querier interface {
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error)
 	ListProductsByBranch(ctx context.Context, arg ListProductsByBranchParams) ([]Product, error)
 	ListUnassignedNonPosted(ctx context.Context, arg ListUnassignedNonPostedParams) ([]NonPosted, error)
-	ListUsers(ctx context.Context) ([]User, error)
+	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
+	TransferLoan(ctx context.Context, arg TransferLoanParams) (sql.Result, error)
 	UpdateBranch(ctx context.Context, arg UpdateBranchParams) (sql.Result, error)
 	UpdateClient(ctx context.Context, arg UpdateClientParams) (sql.Result, error)
-	UpdateClientOverpayment(ctx context.Context, arg UpdateClientOverpaymentParams) (sql.Result, error)
 	UpdateInstallment(ctx context.Context, arg UpdateInstallmentParams) (sql.Result, error)
 	UpdateLoan(ctx context.Context, arg UpdateLoanParams) (sql.Result, error)
 	UpdateLoanStatus(ctx context.Context, arg UpdateLoanStatusParams) (sql.Result, error)
-	UpdateProduct(ctx context.Context, arg UpdateProductParams) (sql.Result, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (sql.Result, error)
-	UpdateUserBranch(ctx context.Context, arg UpdateUserBranchParams) (sql.Result, error)
-	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (sql.Result, error)
-	UpdateUserRefreshToken(ctx context.Context, arg UpdateUserRefreshTokenParams) (sql.Result, error)
-	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (sql.Result, error)
 }
 
 var _ Querier = (*Queries)(nil)

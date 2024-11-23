@@ -80,11 +80,16 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (string, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, full_name, phone_number, email, password, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users ORDER BY full_name DESC
+SELECT id, full_name, phone_number, email, password, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users ORDER BY full_name DESC LIMIT ? OFFSET ?
 `
 
-func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, listUsers)
+type ListUsersParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, listUsers, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -121,103 +126,31 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 
 const updateUser = `-- name: UpdateUser :execresult
 UPDATE users 
-    SET full_name = ?, 
-    phone_number = ?, 
-    updated_at = ?, 
-    updated_by = ? 
+    SET role = coalesce(?, role), 
+    branch_id = coalesce(?, branch_id),
+    password = coalesce(?, password),
+    refresh_token = coalesce(?, refresh_token),
+    updated_at = coalesce(?, updated_at), 
+    updated_by = coalesce(?, updated_by) 
 WHERE id = ?
 `
 
 type UpdateUserParams struct {
-	FullName    string    `json:"full_name"`
-	PhoneNumber string    `json:"phone_number"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	UpdatedBy   uint32    `json:"updated_by"`
-	ID          uint32    `json:"id"`
+	Role         NullUsersRole  `json:"role"`
+	BranchID     sql.NullInt32  `json:"branch_id"`
+	Password     sql.NullString `json:"password"`
+	RefreshToken sql.NullString `json:"refresh_token"`
+	UpdatedAt    sql.NullTime   `json:"updated_at"`
+	UpdatedBy    sql.NullInt32  `json:"updated_by"`
+	ID           uint32         `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, updateUser,
-		arg.FullName,
-		arg.PhoneNumber,
-		arg.UpdatedAt,
-		arg.UpdatedBy,
-		arg.ID,
-	)
-}
-
-const updateUserBranch = `-- name: UpdateUserBranch :execresult
-UPDATE users
-    SET branch_id = ?,
-    updated_at = ?, 
-    updated_by = ? 
-WHERE id = ?
-`
-
-type UpdateUserBranchParams struct {
-	BranchID  uint32    `json:"branch_id"`
-	UpdatedAt time.Time `json:"updated_at"`
-	UpdatedBy uint32    `json:"updated_by"`
-	ID        uint32    `json:"id"`
-}
-
-func (q *Queries) UpdateUserBranch(ctx context.Context, arg UpdateUserBranchParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, updateUserBranch,
-		arg.BranchID,
-		arg.UpdatedAt,
-		arg.UpdatedBy,
-		arg.ID,
-	)
-}
-
-const updateUserPassword = `-- name: UpdateUserPassword :execresult
-UPDATE users
-    SET password = ?
-WHERE id = ?
-`
-
-type UpdateUserPasswordParams struct {
-	Password string `json:"password"`
-	ID       uint32 `json:"id"`
-}
-
-func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, updateUserPassword, arg.Password, arg.ID)
-}
-
-const updateUserRefreshToken = `-- name: UpdateUserRefreshToken :execresult
-UPDATE users
-    SET refresh_token = ?
-WHERE id = ?
-`
-
-type UpdateUserRefreshTokenParams struct {
-	RefreshToken string `json:"refresh_token"`
-	ID           uint32 `json:"id"`
-}
-
-func (q *Queries) UpdateUserRefreshToken(ctx context.Context, arg UpdateUserRefreshTokenParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, updateUserRefreshToken, arg.RefreshToken, arg.ID)
-}
-
-const updateUserRole = `-- name: UpdateUserRole :execresult
-UPDATE users
-    SET role = ?,
-    updated_at = ?, 
-    updated_by = ? 
-WHERE id = ?
-`
-
-type UpdateUserRoleParams struct {
-	Role      UsersRole `json:"role"`
-	UpdatedAt time.Time `json:"updated_at"`
-	UpdatedBy uint32    `json:"updated_by"`
-	ID        uint32    `json:"id"`
-}
-
-func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, updateUserRole,
 		arg.Role,
+		arg.BranchID,
+		arg.Password,
+		arg.RefreshToken,
 		arg.UpdatedAt,
 		arg.UpdatedBy,
 		arg.ID,

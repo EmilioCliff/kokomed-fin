@@ -190,20 +190,6 @@ func (mr *MockQuerierMockRecorder) DeleteClient(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteClient", reflect.TypeOf((*MockQuerier)(nil).DeleteClient), arg0, arg1)
 }
 
-// DeleteInstallment mocks base method.
-func (m *MockQuerier) DeleteInstallment(arg0 context.Context, arg1 uint32) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteInstallment", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteInstallment indicates an expected call of DeleteInstallment.
-func (mr *MockQuerierMockRecorder) DeleteInstallment(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteInstallment", reflect.TypeOf((*MockQuerier)(nil).DeleteInstallment), arg0, arg1)
-}
-
 // DeleteLoan mocks base method.
 func (m *MockQuerier) DeleteLoan(arg0 context.Context, arg1 uint32) error {
 	m.ctrl.T.Helper()
@@ -607,18 +593,33 @@ func (mr *MockQuerierMockRecorder) ListUnassignedNonPosted(arg0, arg1 any) *gomo
 }
 
 // ListUsers mocks base method.
-func (m *MockQuerier) ListUsers(arg0 context.Context) ([]generated.User, error) {
+func (m *MockQuerier) ListUsers(arg0 context.Context, arg1 generated.ListUsersParams) ([]generated.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListUsers", arg0)
+	ret := m.ctrl.Call(m, "ListUsers", arg0, arg1)
 	ret0, _ := ret[0].([]generated.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListUsers indicates an expected call of ListUsers.
-func (mr *MockQuerierMockRecorder) ListUsers(arg0 any) *gomock.Call {
+func (mr *MockQuerierMockRecorder) ListUsers(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockQuerier)(nil).ListUsers), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockQuerier)(nil).ListUsers), arg0, arg1)
+}
+
+// TransferLoan mocks base method.
+func (m *MockQuerier) TransferLoan(arg0 context.Context, arg1 generated.TransferLoanParams) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TransferLoan", arg0, arg1)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TransferLoan indicates an expected call of TransferLoan.
+func (mr *MockQuerierMockRecorder) TransferLoan(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransferLoan", reflect.TypeOf((*MockQuerier)(nil).TransferLoan), arg0, arg1)
 }
 
 // UpdateBranch mocks base method.
@@ -649,21 +650,6 @@ func (m *MockQuerier) UpdateClient(arg0 context.Context, arg1 generated.UpdateCl
 func (mr *MockQuerierMockRecorder) UpdateClient(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClient", reflect.TypeOf((*MockQuerier)(nil).UpdateClient), arg0, arg1)
-}
-
-// UpdateClientOverpayment mocks base method.
-func (m *MockQuerier) UpdateClientOverpayment(arg0 context.Context, arg1 generated.UpdateClientOverpaymentParams) (sql.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateClientOverpayment", arg0, arg1)
-	ret0, _ := ret[0].(sql.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateClientOverpayment indicates an expected call of UpdateClientOverpayment.
-func (mr *MockQuerierMockRecorder) UpdateClientOverpayment(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClientOverpayment", reflect.TypeOf((*MockQuerier)(nil).UpdateClientOverpayment), arg0, arg1)
 }
 
 // UpdateInstallment mocks base method.
@@ -711,21 +697,6 @@ func (mr *MockQuerierMockRecorder) UpdateLoanStatus(arg0, arg1 any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLoanStatus", reflect.TypeOf((*MockQuerier)(nil).UpdateLoanStatus), arg0, arg1)
 }
 
-// UpdateProduct mocks base method.
-func (m *MockQuerier) UpdateProduct(arg0 context.Context, arg1 generated.UpdateProductParams) (sql.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateProduct", arg0, arg1)
-	ret0, _ := ret[0].(sql.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateProduct indicates an expected call of UpdateProduct.
-func (mr *MockQuerierMockRecorder) UpdateProduct(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateProduct", reflect.TypeOf((*MockQuerier)(nil).UpdateProduct), arg0, arg1)
-}
-
 // UpdateUser mocks base method.
 func (m *MockQuerier) UpdateUser(arg0 context.Context, arg1 generated.UpdateUserParams) (sql.Result, error) {
 	m.ctrl.T.Helper()
@@ -739,64 +710,4 @@ func (m *MockQuerier) UpdateUser(arg0 context.Context, arg1 generated.UpdateUser
 func (mr *MockQuerierMockRecorder) UpdateUser(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockQuerier)(nil).UpdateUser), arg0, arg1)
-}
-
-// UpdateUserBranch mocks base method.
-func (m *MockQuerier) UpdateUserBranch(arg0 context.Context, arg1 generated.UpdateUserBranchParams) (sql.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserBranch", arg0, arg1)
-	ret0, _ := ret[0].(sql.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUserBranch indicates an expected call of UpdateUserBranch.
-func (mr *MockQuerierMockRecorder) UpdateUserBranch(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserBranch", reflect.TypeOf((*MockQuerier)(nil).UpdateUserBranch), arg0, arg1)
-}
-
-// UpdateUserPassword mocks base method.
-func (m *MockQuerier) UpdateUserPassword(arg0 context.Context, arg1 generated.UpdateUserPasswordParams) (sql.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserPassword", arg0, arg1)
-	ret0, _ := ret[0].(sql.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUserPassword indicates an expected call of UpdateUserPassword.
-func (mr *MockQuerierMockRecorder) UpdateUserPassword(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPassword", reflect.TypeOf((*MockQuerier)(nil).UpdateUserPassword), arg0, arg1)
-}
-
-// UpdateUserRefreshToken mocks base method.
-func (m *MockQuerier) UpdateUserRefreshToken(arg0 context.Context, arg1 generated.UpdateUserRefreshTokenParams) (sql.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserRefreshToken", arg0, arg1)
-	ret0, _ := ret[0].(sql.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUserRefreshToken indicates an expected call of UpdateUserRefreshToken.
-func (mr *MockQuerierMockRecorder) UpdateUserRefreshToken(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserRefreshToken", reflect.TypeOf((*MockQuerier)(nil).UpdateUserRefreshToken), arg0, arg1)
-}
-
-// UpdateUserRole mocks base method.
-func (m *MockQuerier) UpdateUserRole(arg0 context.Context, arg1 generated.UpdateUserRoleParams) (sql.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserRole", arg0, arg1)
-	ret0, _ := ret[0].(sql.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUserRole indicates an expected call of UpdateUserRole.
-func (mr *MockQuerierMockRecorder) UpdateUserRole(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserRole", reflect.TypeOf((*MockQuerier)(nil).UpdateUserRole), arg0, arg1)
 }
