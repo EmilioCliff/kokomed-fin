@@ -25,6 +25,7 @@ func NewLoanRepository(db *Store) *LoanRepository {
 }
 
 func (r *LoanRepository) CreateLoan(ctx context.Context, loan *repository.Loan) (repository.Loan, error) {
+	// create loan and installments at the same time
 	params := generated.CreateLoanParams{
 		ProductID:          loan.ProductID,
 		ClientID:           loan.ClientID,

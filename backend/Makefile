@@ -19,7 +19,13 @@ mock:
 	mockgen -package mockdb -destination ./internal/mysql/mockdb/mock.go github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated Querier
 
 createMigrate:
-	migrate create -ext sql -dir ./internal/mysql/migrations/ -seq `${SCHEMA}`
+	migrate create -ext sql -dir ./internal/mysql/migrations/ -seq "${SCHEMA}"
+
+migrateup:
+	migrate -path ./internal/mysql/migrations -database "mysql://kokomed:secret@tcp(localhost:3306)/kokomed-fin" -verbose up
+
+migratedown:
+	migrate -path ./internal/mysql/migrations -database "mysql://kokomed:secret@tcp(localhost:3306)/kokomed-fin" -verbose down
 
 .PHONY: test race-test sqlc run coverage createMigrate mock
 	

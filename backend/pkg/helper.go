@@ -1,6 +1,22 @@
 package pkg
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
+
+func StringToUint32(s string) (uint32, error) {
+	if s == "" {
+		return 0, Errorf(INVALID_ERROR, "id/page is required")
+	}
+
+	id, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		return 0, Errorf(INVALID_ERROR, "invalid id/page: %s", err.Error())
+	}
+
+	return uint32(id), nil
+}
 
 // StringPtr returns a pointer to the given string.
 func StringPtr(s string) *string { return &s }

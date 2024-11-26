@@ -63,17 +63,33 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uint32) (repository
 	return convertGeneratedUser(user), nil
 }
 
-func (r *UserRepository) GetUserPassword(ctx context.Context, email string) (string, error) {
-	password, err := r.queries.GetUserByEmail(ctx, email)
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (repository.User, error) {
+	user, err := r.queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
+			return repository.User{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
 
-		return "", pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %s", err.Error())
+		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %s", err.Error())
 	}
 
-	return password, nil
+	return convertGeneratedUser(user), nil
+}
+
+func (r *UserRepository) UpdateUserPassword(ctx context.Context, email string, password string) error {
+	_, err := r.queries.UpdateUserPassword(ctx, generated.UpdateUserPasswordParams{
+		Email:    email,
+		Password: password,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
+		}
+
+		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update user password: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (r *UserRepository) ListUsers(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.User, error) {
@@ -145,31 +161,27 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.Update
 		}
 	}
 
-	execResult, err := r.queries.UpdateUser(ctx, params)
+	_, err := r.queries.UpdateUser(ctx, params)
 	if err != nil {
 		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update user: %s", err.Error())
 	}
 
-	id, err := execResult.LastInsertId()
-	if err != nil {
-		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
-	}
-
-	return r.GetUserByID(ctx, uint32(id))
+	return r.GetUserByID(ctx, user.ID)
 }
 
 func convertGeneratedUser(user generated.User) repository.User {
 	return repository.User{
-		ID:           uint32(user.ID),
-		FullName:     user.FullName,
-		PhoneNumber:  user.PhoneNumber,
-		Email:        user.Email,
-		Password:     user.Password,
-		RefreshToken: user.RefreshToken,
-		Role:         string(user.Role),
-		BranchID:     user.BranchID,
-		UpdatedAt:    user.UpdatedAt,
-		UpdatedBy:    uint32(user.UpdatedBy),
-		CreatedBy:    uint32(user.CreatedBy),
+		ID:              uint32(user.ID),
+		FullName:        user.FullName,
+		PhoneNumber:     user.PhoneNumber,
+		Email:           user.Email,
+		Password:        user.Password,
+		PasswordUpdated: user.PasswordUpdated,
+		RefreshToken:    user.RefreshToken,
+		Role:            string(user.Role),
+		BranchID:        user.BranchID,
+		UpdatedAt:       user.UpdatedAt,
+		UpdatedBy:       uint32(user.UpdatedBy),
+		CreatedBy:       uint32(user.CreatedBy),
 	}
 }

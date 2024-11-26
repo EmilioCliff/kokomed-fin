@@ -6,7 +6,10 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 SELECT * FROM users WHERE id = ? LIMIT 1;
 
 -- name: GetUserByEmail :one
-SELECT password FROM users WHERE email = ? LIMIT 1;
+SELECT * FROM users WHERE email = ? LIMIT 1;
+
+-- name: UpdateUserPassword :execresult
+UPDATE users SET password = ?, password_updated = password_updated + 1 WHERE email = ?;
 
 -- name: ListUsers :many
 SELECT * FROM users ORDER BY full_name DESC LIMIT ? OFFSET ?;

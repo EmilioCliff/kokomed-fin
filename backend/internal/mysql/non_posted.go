@@ -60,7 +60,7 @@ func (r *NonPostedRepository) GetNonPosted(ctx context.Context, id uint32) (repo
 }
 
 func (r *NonPostedRepository) AssignNonPosted(ctx context.Context, id uint32, assignedTo uint32) (repository.NonPosted, error) {
-	execResult, err := r.queries.AssignNonPosted(ctx, generated.AssignNonPostedParams{
+	_, err := r.queries.AssignNonPosted(ctx, generated.AssignNonPostedParams{
 		ID: id,
 		AssignTo: sql.NullInt32{
 			Valid: true,
@@ -71,12 +71,7 @@ func (r *NonPostedRepository) AssignNonPosted(ctx context.Context, id uint32, as
 		return repository.NonPosted{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to assign non posted: %s", err.Error())
 	}
 
-	genId, err := execResult.LastInsertId()
-	if err != nil {
-		return repository.NonPosted{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
-	}
-
-	return r.GetNonPosted(ctx, uint32(genId))
+	return r.GetNonPosted(ctx, id)
 }
 
 func (r *NonPostedRepository) ListNonPosted(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.NonPosted, error) {

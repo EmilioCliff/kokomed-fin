@@ -199,8 +199,8 @@ type NonPosted struct {
 	PhoneNumber       string        `json:"phone_number"`
 	PayingName        string        `json:"paying_name"`
 	Amount            float64       `json:"amount"`
-	PaidDate          time.Time     `json:"paid_date"`
 	AssignTo          sql.NullInt32 `json:"assign_to"`
+	PaidDate          time.Time     `json:"paid_date"`
 }
 
 type Product struct {
@@ -215,16 +215,17 @@ type Product struct {
 }
 
 type User struct {
-	ID           uint32    `json:"id"`
-	FullName     string    `json:"full_name"`
-	PhoneNumber  string    `json:"phone_number"`
-	Email        string    `json:"email"`
-	Password     string    `json:"password"`
-	RefreshToken string    `json:"refresh_token"`
-	Role         UsersRole `json:"role"`
-	BranchID     uint32    `json:"branch_id"`
-	UpdatedBy    uint32    `json:"updated_by"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	CreatedBy    uint32    `json:"created_by"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID              uint32    `json:"id"`
+	FullName        string    `json:"full_name"`
+	PhoneNumber     string    `json:"phone_number"`
+	Email           string    `json:"email"`
+	Password        string    `json:"password"`
+	PasswordUpdated uint32    `json:"password_updated"`
+	RefreshToken    string    `json:"refresh_token"`
+	Role            UsersRole `json:"role"`
+	BranchID        uint32    `json:"branch_id"`
+	UpdatedBy       uint32    `json:"updated_by"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	CreatedBy       uint32    `json:"created_by"`
+	CreatedAt       time.Time `json:"created_at"`
 }

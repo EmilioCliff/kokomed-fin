@@ -45,7 +45,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Res
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, full_name, phone_number, email, password, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users WHERE id = ? LIMIT 1
+SELECT id, full_name, phone_number, email, password, password_updated, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id uint32) (User, error) {
@@ -57,6 +57,7 @@ func (q *Queries) GetUser(ctx context.Context, id uint32) (User, error) {
 		&i.PhoneNumber,
 		&i.Email,
 		&i.Password,
+		&i.PasswordUpdated,
 		&i.RefreshToken,
 		&i.Role,
 		&i.BranchID,
@@ -69,18 +70,32 @@ func (q *Queries) GetUser(ctx context.Context, id uint32) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT password FROM users WHERE email = ? LIMIT 1
+SELECT id, full_name, phone_number, email, password, password_updated, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users WHERE email = ? LIMIT 1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (string, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
-	var password string
-	err := row.Scan(&password)
-	return password, err
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.Password,
+		&i.PasswordUpdated,
+		&i.RefreshToken,
+		&i.Role,
+		&i.BranchID,
+		&i.UpdatedBy,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, full_name, phone_number, email, password, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users ORDER BY full_name DESC LIMIT ? OFFSET ?
+SELECT id, full_name, phone_number, email, password, password_updated, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users ORDER BY full_name DESC LIMIT ? OFFSET ?
 `
 
 type ListUsersParams struct {
@@ -103,6 +118,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.PhoneNumber,
 			&i.Email,
 			&i.Password,
+			&i.PasswordUpdated,
 			&i.RefreshToken,
 			&i.Role,
 			&i.BranchID,
@@ -155,4 +171,17 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (sql.Res
 		arg.UpdatedBy,
 		arg.ID,
 	)
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :execresult
+UPDATE users SET password = ?, password_updated = password_updated + 1 WHERE email = ?
+`
+
+type UpdateUserPasswordParams struct {
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, updateUserPassword, arg.Password, arg.Email)
 }

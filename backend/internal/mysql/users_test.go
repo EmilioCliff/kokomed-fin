@@ -157,7 +157,7 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 	}
 }
 
-func TestUserRepository_GetUserPassword(t *testing.T) {
+func TestUserRepository_GetUserByEmail(t *testing.T) {
 	r := NewTestUserRepository()
 
 	ctrl := gomock.NewController(t)
@@ -171,7 +171,7 @@ func TestUserRepository_GetUserPassword(t *testing.T) {
 		buildStubs func(mockQueries *mockdb.MockQuerier)
 		wantErr    bool
 		err        error
-		wantResult string
+		wantResult repository.User
 	}{
 		{
 			name: "OK",
@@ -179,11 +179,15 @@ func TestUserRepository_GetUserPassword(t *testing.T) {
 				mockQueries.EXPECT().
 					GetUserByEmail(gomock.Any(), gomock.Eq("email")).
 					Times(1).
-					Return("test", nil)
+					Return(generated.User{ID: 1, FullName: "test", Password: "test"}, nil)
 			},
-			wantErr:    false,
-			err:        nil,
-			wantResult: "test",
+			wantErr: false,
+			err:     nil,
+			wantResult: repository.User{
+				ID:       1,
+				FullName: "test",
+				Password: "test",
+			},
 		},
 		{
 			name: "Not Found",
@@ -191,7 +195,7 @@ func TestUserRepository_GetUserPassword(t *testing.T) {
 				mockQueries.EXPECT().
 					GetUserByEmail(gomock.Any(), gomock.Eq("email")).
 					Times(1).
-					Return("", sql.ErrNoRows)
+					Return(generated.User{}, sql.ErrNoRows)
 			},
 			wantErr: true,
 			err:     errors.New(pkg.NOT_FOUND_ERROR),
@@ -202,7 +206,7 @@ func TestUserRepository_GetUserPassword(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.buildStubs(mockQueries)
 
-			result, err := r.GetUserPassword(context.Background(), "email")
+			result, err := r.GetUserByEmail(context.Background(), "email")
 
 			if tc.wantErr {
 				require.Error(t, err)
@@ -210,6 +214,72 @@ func TestUserRepository_GetUserPassword(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.wantResult, result)
+			}
+		})
+	}
+}
+
+func TestUserRepository_UpdateUserPassword(t *testing.T) {
+	r := NewTestUserRepository()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockQueries := mockdb.NewMockQuerier(ctrl)
+	r.queries = mockQueries
+
+	tests := []struct {
+		name       string
+		buildStubs func(mockQueries *mockdb.MockQuerier)
+		wantErr    bool
+		err        error
+	}{
+		{
+			name: "OK",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					UpdateUserPassword(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(&mockSQLResult{lastInsertID: 1, rowsAffected: 1}, nil)
+			},
+			wantErr: false,
+			err:     nil,
+		},
+		{
+			name: "Not Found",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					UpdateUserPassword(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(&mockSQLResult{}, sql.ErrNoRows)
+			},
+			wantErr: true,
+			err:     errors.New(pkg.NOT_FOUND_ERROR),
+		},
+		{
+			name: "Internal Server Error",
+			buildStubs: func(mockQueries *mockdb.MockQuerier) {
+				mockQueries.EXPECT().
+					UpdateUserPassword(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(&mockSQLResult{}, errors.New("error"))
+			},
+			wantErr: true,
+			err:     errors.New(pkg.INTERNAL_ERROR),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockQueries)
+
+			err := r.UpdateUserPassword(context.Background(), "test", "password")
+
+			if tc.wantErr {
+				require.Error(t, err)
+				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}

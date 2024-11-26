@@ -63,7 +63,7 @@ func (q *Queries) DeleteNonPosted(ctx context.Context, id uint32) error {
 }
 
 const getNonPosted = `-- name: GetNonPosted :one
-SELECT id, transaction_number, account_number, phone_number, paying_name, amount, paid_date, assign_to FROM non_posted WHERE id = ? LIMIT 1
+SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date FROM non_posted WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetNonPosted(ctx context.Context, id uint32) (NonPosted, error) {
@@ -76,14 +76,14 @@ func (q *Queries) GetNonPosted(ctx context.Context, id uint32) (NonPosted, error
 		&i.PhoneNumber,
 		&i.PayingName,
 		&i.Amount,
-		&i.PaidDate,
 		&i.AssignTo,
+		&i.PaidDate,
 	)
 	return i, err
 }
 
 const listAllNonPosted = `-- name: ListAllNonPosted :many
-SELECT id, transaction_number, account_number, phone_number, paying_name, amount, paid_date, assign_to FROM non_posted LIMIT ? OFFSET ?
+SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date FROM non_posted LIMIT ? OFFSET ?
 `
 
 type ListAllNonPostedParams struct {
@@ -107,8 +107,8 @@ func (q *Queries) ListAllNonPosted(ctx context.Context, arg ListAllNonPostedPara
 			&i.PhoneNumber,
 			&i.PayingName,
 			&i.Amount,
-			&i.PaidDate,
 			&i.AssignTo,
+			&i.PaidDate,
 		); err != nil {
 			return nil, err
 		}
@@ -124,7 +124,7 @@ func (q *Queries) ListAllNonPosted(ctx context.Context, arg ListAllNonPostedPara
 }
 
 const listUnassignedNonPosted = `-- name: ListUnassignedNonPosted :many
-SELECT id, transaction_number, account_number, phone_number, paying_name, amount, paid_date, assign_to FROM non_posted WHERE assign_to IS NULL LIMIT ? OFFSET ?
+SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date FROM non_posted WHERE assign_to IS NULL LIMIT ? OFFSET ?
 `
 
 type ListUnassignedNonPostedParams struct {
@@ -148,8 +148,8 @@ func (q *Queries) ListUnassignedNonPosted(ctx context.Context, arg ListUnassigne
 			&i.PhoneNumber,
 			&i.PayingName,
 			&i.Amount,
-			&i.PaidDate,
 			&i.AssignTo,
+			&i.PaidDate,
 		); err != nil {
 			return nil, err
 		}

@@ -1,9 +1,9 @@
 package pkg
 
 type PaginationMetadata struct {
-	CurrentPage int32 `json:"current_page"`
-	TotalData   int32 `json:"total_data"`
-	TotalPages  int32 `json:"total_pages"`
+	CurrentPage uint32 `json:"current_page"`
+	TotalData   uint32 `json:"total_data"`
+	TotalPages  uint32 `json:"total_pages"`
 }
 
 const pageSize = 10
@@ -12,11 +12,11 @@ func GetPageSize() int32 {
 	return pageSize
 }
 
-func CalculateOffset(currentPage int32) int32 {
-	return (currentPage - 1) * pageSize
+func CalculateOffset(currentPage uint32) int32 {
+	return int32((currentPage - 1) * pageSize)
 }
 
-func CreatePaginationMetadata(totalData int32, pageSize int32, currentPage int32) PaginationMetadata {
+func CreatePaginationMetadata(totalData uint32, pageSize uint32, currentPage uint32) PaginationMetadata {
 	return PaginationMetadata{
 		CurrentPage: currentPage,
 		TotalData:   totalData,

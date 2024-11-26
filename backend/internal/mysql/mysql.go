@@ -28,20 +28,22 @@ func NewStore(config pkg.Config) *Store {
 }
 
 type MySQLRepo struct {
-	branches repository.BranchRepository
-	loans    repository.LoansRepository
-	products repository.ProductRepository
-	users    repository.UserRepository
-	clients  repository.ClientRepository
+	Branches  repository.BranchRepository
+	Loans     repository.LoansRepository
+	Products  repository.ProductRepository
+	Users     repository.UserRepository
+	Clients   repository.ClientRepository
+	NonPosted repository.NonPostedRepository
 }
 
 func NewMySQLRepo(db *Store) *MySQLRepo {
 	return &MySQLRepo{
-		branches: NewBranchRepository(db),
-		loans:    NewLoanRepository(db),
-		products: NewProductRepository(db),
-		users:    NewUserRepository(db),
-		clients:  NewClientRepository(db),
+		Branches:  NewBranchRepository(db),
+		Loans:     NewLoanRepository(db),
+		Products:  NewProductRepository(db),
+		Users:     NewUserRepository(db),
+		Clients:   NewClientRepository(db),
+		NonPosted: NewNonPostedRepository(db),
 	}
 }
 

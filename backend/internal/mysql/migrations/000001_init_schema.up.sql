@@ -9,7 +9,8 @@ CREATE TABLE `users` (
   `phone_number` VARCHAR(255) NOT NULL,
   `email` VARCHAR(255) UNIQUE NOT NULL,
   `password` VARCHAR(255) NOT NULL,
-  `refresh_token` VARCHAR(255) NOT NULL,
+  `password_updated` INT NOT NULL DEFAULT 0,
+  `refresh_token` VARCHAR(2048) NOT NULL,
   `role` ENUM('ADMIN', 'AGENT') NOT NULL,
   `branch_id` INT NOT NULL,
   `updated_by` INT NOT NULL,
@@ -25,8 +26,8 @@ CREATE TABLE `users` (
 CREATE TABLE `clients` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
   `full_name` VARCHAR(255) NOT NULL,
-  `phone_number` VARCHAR(255) NOT NULL,
-  `id_number` VARCHAR(255) NULL,
+  `phone_number` VARCHAR(255) NOT NULL UNIQUE,
+  `id_number` VARCHAR(255) NULL UNIQUE,
   `dob` DATE NULL,
   `gender` ENUM('MALE', 'FEMALE') NOT NULL,
   `active` BOOLEAN NOT NULL DEFAULT FALSE,
@@ -55,8 +56,8 @@ CREATE TABLE `products` (
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT fk_products_branch_id FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`),
-  CONSTRAINT fk_products_updated_by FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`),
-  CONSTRAINT fk_products_created_by FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+  CONSTRAINT fk_products_updated_by FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+  -- CONSTRAINT fk_products_created_by FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
 );
 
 CREATE TABLE `loans` (
@@ -64,17 +65,17 @@ CREATE TABLE `loans` (
   `product_id` INT NOT NULL,
   `client_id` INT NOT NULL,
   `loan_officer` INT NOT NULL,
-  `loan_purpose` TEXT NULL,
-  `due_date` DATE NULL,
+  `loan_purpose` TEXT DEFAULT NULL,
+  `due_date` DATE DEFAULT NULL,
   `approved_by` INT NOT NULL,
-  `disbursed_on` DATE NULL,
-  `disbursed_by` INT NULL,
+  `disbursed_on` DATE DEFAULT NULL,
+  `disbursed_by` INT  DEFAULT NULL,
   `total_installments` INT NOT NULL DEFAULT 4,
   `installments_period` INT NOT NULL DEFAULT 7,
   `status` ENUM('INACTIVE', 'ACTIVE', 'COMPLETED', 'DEFAULTED') NOT NULL,
   `processing_fee` DECIMAL(10,2) NOT NULL DEFAULT 400.00,
   `paid_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  `updated_by` INT NULL,
+  `updated_by` INT DEFAULT NULL,
   `created_by` INT NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -104,11 +105,11 @@ CREATE TABLE `non_posted` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
   `transaction_number` VARCHAR(255) NOT NULL,
   `account_number` VARCHAR(255) NOT NULL,
-  `phone_number` VARCHAR(255) NOT NULL,
+  `phone_number` VARCHAR(2048) NOT NULL,
   `paying_name` VARCHAR(255) NOT NULL,
   `amount` DECIMAL(10,2) NOT NULL,
-  `paid_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `assign_to` INT NULL,
+  `paid_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT fk_non_posted_assign_to FOREIGN KEY (`assign_to`) REFERENCES `clients` (`id`)
 );

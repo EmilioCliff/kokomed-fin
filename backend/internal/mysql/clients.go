@@ -67,6 +67,7 @@ func (r *ClientRepository) CreateClient(ctx context.Context, client *repository.
 
 func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.Client) (repository.Client, error) {
 	params := generated.UpdateClientParams{
+		ID:            client.ID,
 		FullName:      client.FullName,
 		PhoneNumber:   client.PhoneNumber,
 		Gender:        generated.ClientsGender(client.Gender),
@@ -90,17 +91,10 @@ func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.
 		}
 	}
 
-	execResult, err := r.queries.UpdateClient(ctx, params)
+	_, err := r.queries.UpdateClient(ctx, params)
 	if err != nil {
 		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update client: %s", err.Error())
 	}
-
-	id, err := execResult.LastInsertId()
-	if err != nil {
-		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
-	}
-
-	client.ID = uint32(id)
 
 	return *client, nil
 }

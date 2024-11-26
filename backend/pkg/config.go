@@ -18,13 +18,15 @@ type Config struct {
 	REFRESH_TOKEN_DURATION  time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 	TOKEN_SYMMETRY_KEY      string        `mapstructure:"TOKEN_SYMMETRY_KEY"`
 	PASSWORD_COST           int           `mapstructure:"PASSWORD_COST"`
+	RSA_PRIVATE_KEY         string        `mapstructure:"RSA_PRIVATE_KEY"`
+	RSA_PUBLIC_KEY          string        `mapstructure:"RSA_PUBLIC_KEY"`
 }
 
 // Loads app configuration from .env file.
 func LoadConfig(path string) (Config, error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("config")
-	viper.SetConfigType("env")
+	viper.SetConfigType("yaml")
 
 	viper.AutomaticEnv()
 

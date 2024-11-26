@@ -32,7 +32,7 @@ type Querier interface {
 	GetNonPosted(ctx context.Context, id uint32) (NonPosted, error)
 	GetProduct(ctx context.Context, id uint32) (Product, error)
 	GetUser(ctx context.Context, id uint32) (User, error)
-	GetUserByEmail(ctx context.Context, email string) (string, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
 	ListAllNonPosted(ctx context.Context, arg ListAllNonPostedParams) ([]NonPosted, error)
 	ListBranches(ctx context.Context) ([]Branch, error)
 	ListClients(ctx context.Context, arg ListClientsParams) ([]Client, error)
@@ -55,6 +55,7 @@ type Querier interface {
 	UpdateLoan(ctx context.Context, arg UpdateLoanParams) (sql.Result, error)
 	UpdateLoanStatus(ctx context.Context, arg UpdateLoanStatusParams) (sql.Result, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (sql.Result, error)
+	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (sql.Result, error)
 }
 
 var _ Querier = (*Queries)(nil)

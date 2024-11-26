@@ -368,10 +368,10 @@ func (mr *MockQuerierMockRecorder) GetUser(arg0, arg1 any) *gomock.Call {
 }
 
 // GetUserByEmail mocks base method.
-func (m *MockQuerier) GetUserByEmail(arg0 context.Context, arg1 string) (string, error) {
+func (m *MockQuerier) GetUserByEmail(arg0 context.Context, arg1 string) (generated.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserByEmail", arg0, arg1)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(generated.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -710,4 +710,19 @@ func (m *MockQuerier) UpdateUser(arg0 context.Context, arg1 generated.UpdateUser
 func (mr *MockQuerierMockRecorder) UpdateUser(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockQuerier)(nil).UpdateUser), arg0, arg1)
+}
+
+// UpdateUserPassword mocks base method.
+func (m *MockQuerier) UpdateUserPassword(arg0 context.Context, arg1 generated.UpdateUserPasswordParams) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserPassword", arg0, arg1)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserPassword indicates an expected call of UpdateUserPassword.
+func (mr *MockQuerierMockRecorder) UpdateUserPassword(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPassword", reflect.TypeOf((*MockQuerier)(nil).UpdateUserPassword), arg0, arg1)
 }
