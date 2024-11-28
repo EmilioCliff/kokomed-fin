@@ -6,7 +6,6 @@ bin/
 *.dylib
 
 # Configs
-*.env
 config.yaml
 
 # Logs
