@@ -1,0 +1,835 @@
+{
+	"info": {
+		"_postman_id": "c34115e5-d956-45fd-ae04-d89730b74319",
+		"name": "Kokomed-Finance",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30814635"
+	},
+	"item": [
+		{
+			"name": "Branches",
+			"item": [
+				{
+					"name": "Create Branch",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Mombasa\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/branch",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"branch"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Branch",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/branch/11",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"branch",
+								"11"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Branches",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/branch?page=1",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"branch"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Branch",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Nairobi Headquaters\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/branch/2",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"branch",
+								"2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"emiliocliff@gmail.com\",\n    \"password\": \"secret2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/login",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/refresh-token/emiliocliff@gmail.com",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"refresh-token",
+								"emiliocliff@gmail.com"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstname\": \"john\",\n    \"lastname\": \"doe\",\n    \"phone_number\": \"0718750145\",\n    \"email\": \"emiliocliff33@gmail.com\",\n    \"branch_id\": 1,\n    \"role\": \"AGENT\",\n    \"created_by\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/user",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/user",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/user/4",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"user",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Credentials",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"emiliocliff@gmail.com\",\n    \"new_password\": \"secret2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/user/reset-password",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"user",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"ADMIN\",\n    \"branch_id\": 3,\n    \"updated_by\": 4\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/user/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"user",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Clients",
+			"item": [
+				{
+					"name": "Create Client",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"Wesley\",\n    \"last_name\": \"Anipes\",\n    \"phone_number\": \"071342233\",\n    \"gender\": \"FEMALE\",\n    \"branch_id\": 13,\n    \"assigned_staff\": 2,\n    \"updated_by\": 4\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/client",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"client"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Clients",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/client?page=2",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"client"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Clients By Branch",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/client/branch/1?page=1",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"client",
+								"branch",
+								"1"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Clients By Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/client/status?status=active&page=1",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"client",
+								"status"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "active"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetClient",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/client/9",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"client",
+								"9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Client",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"janing\",\n    \"last_name\": \"doing\",\n    \"phone_number\": \"07182501452\",\n    \n    \"dob\": \"2001-10-30\",\n    \"gender\": \"FEMALE\",\n    \"active\": true,\n    \"branch_id\": 2,\n    \"assigned_staff\": 4,\n    \"updated_by\": 4\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/client/12",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"client",
+								"12"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Create Product",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"branch_id\": 13,\n    \"loan_amount\": 120000.00,\n    \"repay_amount\": 132000.00,\n    \"updated_by\": 4\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/product",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"product"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/product",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"product"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Products By Branch",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/product/branch/13",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"product",
+								"branch",
+								"13"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/product/2",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"product",
+								"2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Non-Posted",
+			"item": [
+				{
+					"name": "List All Non-Posted",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/non-posted/all?page=1",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"non-posted",
+								"all"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Unassigned Non-Posted",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/non-posted/unassigned?page=2",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"non-posted",
+								"unassigned"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Non-Posted",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/non-posted/by-id/17",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"non-posted",
+								"by-id",
+								"17"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Non-Posted By Source",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/non-posted/by-type/mpesa?page=1",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"non-posted",
+								"by-type",
+								"mpesa"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Loans",
+			"item": [
+				{
+					"name": "Create Loan",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product_id\": 3,\n    \"client_id\": 14,\n    \"loan_officer_id\": 1,\n    \"loan_purpose\": \"Agriculture\",\n    \"approved_by\": 1,\n    \"installments\": 1,\n    \"installments_period\": 7,\n    \"processing_fee\": 350.0,\n    \"processing_fee_paid\": true,\n    \"created_by\": 2\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/loan",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"loan"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Disburse Loan",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"disbursed_on\": \"2025-10-04\",\n    \"disburse_by\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/loan/26/disburse",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"loan",
+								"26",
+								"disburse"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Transfer Loan Officer",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"loan_officer_id\": 4,\n    \"admin_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/loan/10/assign",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"loan",
+								"10",
+								"assign"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Loan",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/loan/21",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"loan",
+								"21"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Loans",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/loan?page=1&client=10&loan_officer=4",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"loan"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "client",
+									"value": "10"
+								},
+								{
+									"key": "loan_officer",
+									"value": "4"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "Callback",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"TransactionType\": \"Pay Bill\",\n   \"TransID\":\"RKTQDM7W6S\",\n   \"TransTime\":\"20191122063845\",\n   \"TransAmount\":\"1000\",\n   \"BusinessShortCode\": \"600638\",\n   \"BillRefNumber\":\"07134233\",\n   \"InvoiceNumber\":\"\",\n   \"OrgAccountBalance\":\"\",\n   \"ThirdPartyTransID\": \"\",\n   \"MSISDN\":\"25470****149\",\n   \"FirstName\":\"Sophia\",\n   \"MiddleName\":\"\",\n   \"LastName\":\"Doe\"\n\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/payment/callback",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"payment",
+								"callback"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Non-Posted",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"client_id\": 10,\n    \"admin_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/payment/27/assign",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"payment",
+								"27",
+								"assign"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

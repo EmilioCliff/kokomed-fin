@@ -1,2 +1,0 @@
-docker run -d --name fin-mysql -e MYSQL_ROOT_PASSWORD=strong_password -e MYSQL_DATABASE=kokomed-fin -e MYSQL_USER=kokomed -e MYSQL_PASSWORD=secret -p 3306:3306 3c716403fbe7
-migrate -path db/migrations -database "$(DB_URL)" -verbose down
