@@ -8,6 +8,7 @@ import (
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/handlers"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/payments"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -22,7 +23,7 @@ func main() {
 	}
 	log.Println("config loaded successfuly")
 
-	maker, err := pkg.NewJWTMaker(config.RSA_PRIVATE_KEY, config.RSA_PUBLIC_KEY)
+	maker, err := pkg.NewJWTMaker(config.RSA_PRIVATE_KEY, config.RSA_PUBLIC_KEY, config)
 	if err != nil {
 		panic(err)
 	}
@@ -37,8 +38,9 @@ func main() {
 	log.Println("db opened successfuly")
 
 	repo := mysql.NewMySQLRepo(store)
+	paymentService := payments.NewPaymentService(repo, store)
 
-	server := handlers.NewServer(config, *maker, repo)
+	server := handlers.NewServer(config, *maker, repo, paymentService)
 
 	log.Println("starting server at port ", config.HTTP_PORT)
 	if err := server.Start(); err != nil {

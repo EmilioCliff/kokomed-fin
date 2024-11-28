@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
@@ -24,109 +25,14 @@ func NewLoanRepository(db *Store) *LoanRepository {
 	}
 }
 
-func (r *LoanRepository) CreateLoan(ctx context.Context, loan *repository.Loan) (repository.Loan, error) {
-	// create loan and installments at the same time
-	params := generated.CreateLoanParams{
-		ProductID:          loan.ProductID,
-		ClientID:           loan.ClientID,
-		LoanOfficer:        loan.LoanOfficerID,
-		ApprovedBy:         loan.ApprovedBy,
-		TotalInstallments:  loan.TotalInstallments,
-		InstallmentsPeriod: loan.InstallmentsPeriod,
-		ProcessingFee:      loan.ProcessingFee,
-		CreatedBy:          loan.CreatedBy,
-	}
-
-	if loan.LoanPurpose != nil {
-		params.LoanPurpose = sql.NullString{
-			Valid:  true,
-			String: *loan.LoanPurpose,
-		}
-	}
-
-	if loan.DueDate != nil && loan.DisbursedBy != nil && loan.DisbursedOn != nil {
-		params.DueDate = sql.NullTime{
-			Valid: true,
-			Time:  *loan.DueDate,
-		}
-		params.DisbursedOn = sql.NullTime{
-			Valid: true,
-			Time:  *loan.DisbursedOn,
-		}
-		params.DisbursedBy = sql.NullInt32{
-			Valid: true,
-			Int32: int32(*loan.DisbursedBy),
-		}
-	}
-
-	execResult, err := r.queries.CreateLoan(ctx, params)
-	if err != nil {
-		return repository.Loan{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create loan: %s", err.Error())
-	}
-
-	id, err := execResult.LastInsertId()
-	if err != nil {
-		return repository.Loan{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
-	}
-
-	loan.ID = uint32(id)
-
-	return *loan, nil
-}
-
-func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *repository.DisburseLoan) error {
-	_, err := r.queries.DisburseLoan(ctx, generated.DisburseLoanParams{
-		ID: disburseLoan.ID,
-		DisbursedOn: sql.NullTime{
-			Valid: true,
-			Time:  disburseLoan.DisbursedOn,
-		},
-		DisbursedBy: sql.NullInt32{
-			Valid: true,
-			Int32: int32(disburseLoan.DisbursedBy),
-		},
-		DueDate: sql.NullTime{
-			Valid: true,
-			Time:  disburseLoan.DueDate,
-		},
-	})
-	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to disburse loan: %s", err.Error())
-	}
-
-	return nil
-}
-
-func (r *LoanRepository) UpdateLoan(ctx context.Context, loan *repository.UpdateLoan) (repository.Loan, error) {
-	params := generated.UpdateLoanParams{
-		ID:         loan.ID,
-		PaidAmount: loan.PaidAmount,
-	}
-
-	if loan.UpdatedBy != nil {
-		params.UpdatedBy = sql.NullInt32{
-			Valid: true,
-			Int32: int32(*loan.UpdatedBy),
-		}
-	}
-
-	execResult, err := r.queries.UpdateLoan(ctx, params)
-	if err != nil {
-		return repository.Loan{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan: %s", err.Error())
-	}
-
-	id, err := execResult.LastInsertId()
-	if err != nil {
-		return repository.Loan{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
-	}
-
-	return r.GetLoanByID(ctx, uint32(id))
-}
-
-func (r *LoanRepository) TransferLoan(ctx context.Context, officerId uint32, loanId uint32) error {
+func (r *LoanRepository) TransferLoan(ctx context.Context, officerId uint32, loanId uint32, adminId uint32) error {
 	_, err := r.queries.TransferLoan(ctx, generated.TransferLoanParams{
 		ID:          loanId,
 		LoanOfficer: officerId,
+		UpdatedBy: sql.NullInt32{
+			Valid: true,
+			Int32: int32(adminId),
+		},
 	})
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to transfer loan: %s", err.Error())
@@ -148,23 +54,91 @@ func (r *LoanRepository) GetLoanByID(ctx context.Context, id uint32) (repository
 	return convertGeneratedLoan(loan), nil
 }
 
-func (r *LoanRepository) ListLoans(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.Loan, error) {
-	loans, err := r.queries.ListLoans(ctx, generated.ListLoansParams{
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
+func (t *LoanRepository) GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error) {
+	loanID, err := t.queries.GetClientActiveLoan(ctx, generated.GetClientActiveLoanParams{
+		ClientID: clientID,
+		Status:   generated.LoansStatusACTIVE,
 	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, pkg.Errorf(pkg.NOT_FOUND_ERROR, "loan not found")
+		}
+
+		return 0, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan: %s", err.Error())
+	}
+
+	return loanID, nil
+}
+
+func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.Loan, error) {
+	params := generated.ListLoansParams{
+		Column1:     nil, // Placeholder for branch_id
+		BranchID:    0,   // Default value
+		Column3:     nil, // Placeholder for client_id
+		ClientID:    0,   // Default value
+		Column5:     nil, // Placeholder for loan_officer
+		LoanOfficer: 0,   // Default value
+		Column7:     nil, // Placeholder for status
+		Status:      "",  // Default value
+		Limit:       int32(pkg.GetPageSize()),
+		Offset:      int32(pkg.CalculateOffset(pgData.CurrentPage)),
+	}
+
+	// Set dynamic parameters based on the input category
+	if category.BranchID != nil {
+		params.Column1 = true // Any non-nil value to trigger this filter
+		params.BranchID = *category.BranchID
+	}
+
+	if category.ClientID != nil {
+		params.Column3 = true
+		params.ClientID = *category.ClientID
+	}
+
+	if category.LoanOfficer != nil {
+		params.Column5 = true
+		params.LoanOfficer = *category.LoanOfficer
+	}
+
+	if category.Status != nil {
+		params.Column7 = true
+		params.Status = generated.LoansStatus(*category.Status)
+	}
+
+	// Execute the query
+	loans, err := r.queries.ListLoans(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
 		}
-
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans: %s", err.Error())
 	}
+
+	log.Println(len(loans))
 
 	result := make([]repository.Loan, len(loans))
 
 	for i, loan := range loans {
-		result[i] = convertGeneratedLoan(loan)
+		result[i] = convertGeneratedLoan(generated.Loan{
+			ID:                 loan.ID,
+			ProductID:          loan.ProductID,
+			ClientID:           loan.ClientID,
+			LoanOfficer:        loan.LoanOfficer,
+			LoanPurpose:        loan.LoanPurpose,
+			DueDate:            loan.DueDate,
+			ApprovedBy:         loan.ApprovedBy,
+			DisbursedOn:        loan.DisbursedOn,
+			DisbursedBy:        loan.DisbursedBy,
+			TotalInstallments:  loan.TotalInstallments,
+			InstallmentsPeriod: loan.InstallmentsPeriod,
+			Status:             loan.Status,
+			ProcessingFee:      loan.ProcessingFee,
+			PaidAmount:         loan.PaidAmount,
+			UpdatedBy:          loan.UpdatedBy,
+			CreatedBy:          loan.CreatedBy,
+			CreatedAt:          loan.CreatedAt,
+			FeePaid:            loan.FeePaid,
+		})
 	}
 
 	return result, nil
@@ -181,131 +155,6 @@ func (r *LoanRepository) DeleteLoan(ctx context.Context, id uint32) error {
 	}
 
 	return nil
-}
-
-func (r *LoanRepository) GetAllClientsLoans(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]repository.Loan, error) {
-	loans, err := r.queries.ListLoansByClient(ctx, generated.ListLoansByClientParams{
-		ClientID: id,
-		Limit:    pkg.GetPageSize(),
-		Offset:   pkg.CalculateOffset(pgData.CurrentPage),
-	})
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
-		}
-
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans: %s", err.Error())
-	}
-
-	result := make([]repository.Loan, len(loans))
-
-	for i, loan := range loans {
-		result[i] = convertGeneratedLoan(loan)
-	}
-
-	return result, nil
-}
-
-func (r *LoanRepository) GetAllUsersLoans(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]repository.Loan, error) {
-	loans, err := r.queries.ListLoansByLoanOfficer(ctx, generated.ListLoansByLoanOfficerParams{
-		LoanOfficer: id,
-		Limit:       pkg.GetPageSize(),
-		Offset:      pkg.CalculateOffset(pgData.CurrentPage),
-	})
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
-		}
-
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans: %s", err.Error())
-	}
-
-	result := make([]repository.Loan, len(loans))
-
-	for i, loan := range loans {
-		result[i] = convertGeneratedLoan(loan)
-	}
-
-	return result, nil
-}
-
-func (r *LoanRepository) ListLoansByStatus(ctx context.Context, status string, pgData *pkg.PaginationMetadata) ([]repository.Loan, error) {
-	loans, err := r.queries.ListLoansByStatus(ctx, generated.ListLoansByStatusParams{
-		Status: generated.LoansStatus(status),
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
-	})
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found with status: %s", status)
-		}
-
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans: %s", err.Error())
-	}
-
-	result := make([]repository.Loan, len(loans))
-
-	for i, loan := range loans {
-		result[i] = convertGeneratedLoan(loan)
-	}
-
-	return result, nil
-}
-
-func (r *LoanRepository) ListNonDisbursedLoans(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.Loan, error) {
-	loans, err := r.queries.ListNonDisbursedLoans(ctx, generated.ListNonDisbursedLoansParams{
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
-	})
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
-		}
-
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans: %s", err.Error())
-	}
-
-	result := make([]repository.Loan, len(loans))
-
-	for i, loan := range loans {
-		result[i] = convertGeneratedLoan(loan)
-	}
-
-	return result, nil
-}
-
-func (r *LoanRepository) UpdateLoanStatus(ctx context.Context, id uint32, status string) error {
-	_, err := r.queries.UpdateLoanStatus(ctx, generated.UpdateLoanStatusParams{
-		Status: generated.LoansStatus(status),
-		ID:     id,
-	})
-	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to change loans status: %s", err.Error())
-	}
-
-	return nil
-}
-
-func (r *LoanRepository) CreateInstallment(ctx context.Context, installment *repository.Installment) (repository.Installment, error) {
-	execResult, err := r.queries.CreateInstallment(ctx, generated.CreateInstallmentParams{
-		LoanID:            installment.LoanID,
-		InstallmentNumber: installment.InstallmentNo,
-		AmountDue:         installment.Amount,
-		RemainingAmount:   installment.RemainingAmount,
-		DueDate:           installment.DueDate,
-	})
-	if err != nil {
-		return repository.Installment{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create installment: %v", err)
-	}
-
-	id, err := execResult.LastInsertId()
-	if err != nil {
-		return repository.Installment{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
-	}
-
-	installment.ID = uint32(id)
-
-	return *installment, err
 }
 
 func (r *LoanRepository) GetLoanInstallments(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]repository.Installment, error) {
@@ -425,6 +274,7 @@ func convertGeneratedLoan(loan generated.Loan) repository.Loan {
 		UpdatedBy:          updatedBy,
 		CreatedBy:          loan.CreatedBy,
 		CreatedAt:          loan.CreatedAt,
+		FeePaid:            loan.FeePaid,
 	}
 }
 

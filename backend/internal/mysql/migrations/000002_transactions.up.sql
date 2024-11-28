@@ -1,0 +1,3 @@
+ALTER TABLE `loans` ADD COLUMN `fee_paid` BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE `non_posted` ADD COLUMN `transaction_source` ENUM("MPESA", "INTERNAL") NOT NULL;

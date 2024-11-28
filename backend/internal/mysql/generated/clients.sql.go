@@ -89,30 +89,15 @@ func (q *Queries) GetClient(ctx context.Context, id uint32) (Client, error) {
 	return i, err
 }
 
-const getClientByPhoneNumber = `-- name: GetClientByPhoneNumber :one
-SELECT id, full_name, phone_number, id_number, dob, gender, active, branch_id, assigned_staff, overpayment, updated_by, updated_at, created_by, created_at FROM clients WHERE phone_number = ? LIMIT 1
+const getClientIDByPhoneNumber = `-- name: GetClientIDByPhoneNumber :one
+SELECT id FROM clients WHERE phone_number = ? LIMIT 1
 `
 
-func (q *Queries) GetClientByPhoneNumber(ctx context.Context, phoneNumber string) (Client, error) {
-	row := q.db.QueryRowContext(ctx, getClientByPhoneNumber, phoneNumber)
-	var i Client
-	err := row.Scan(
-		&i.ID,
-		&i.FullName,
-		&i.PhoneNumber,
-		&i.IDNumber,
-		&i.Dob,
-		&i.Gender,
-		&i.Active,
-		&i.BranchID,
-		&i.AssignedStaff,
-		&i.Overpayment,
-		&i.UpdatedBy,
-		&i.UpdatedAt,
-		&i.CreatedBy,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error) {
+	row := q.db.QueryRowContext(ctx, getClientIDByPhoneNumber, phoneNumber)
+	var id uint32
+	err := row.Scan(&id)
+	return id, err
 }
 
 const listClients = `-- name: ListClients :many
@@ -298,5 +283,37 @@ func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) (sql
 		arg.AssignedStaff,
 		arg.UpdatedBy,
 		arg.ID,
+	)
+}
+
+const updateClientOverpayment = `-- name: UpdateClientOverpayment :execresult
+
+UPDATE clients
+SET overpayment = overpayment + ?
+WHERE 
+    (phone_number = ? AND ? IS NOT NULL)
+    OR 
+    (id = ? AND ? IS NOT NULL)
+`
+
+type UpdateClientOverpaymentParams struct {
+	Overpayment float64 `json:"overpayment"`
+	PhoneNumber string  `json:"phone_number"`
+	ClientID    uint32  `json:"client_id"`
+}
+
+// -- name: UpdateClientOverpayment :execresult
+// UPDATE clients
+//
+//	SET overpayment = overpayment + sqlc.arg("overpayment")
+//
+// WHERE phone_number = sqlc.arg("phone_number");
+func (q *Queries) UpdateClientOverpayment(ctx context.Context, arg UpdateClientOverpaymentParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, updateClientOverpayment,
+		arg.Overpayment,
+		arg.PhoneNumber,
+		arg.PhoneNumber,
+		arg.ClientID,
+		arg.ClientID,
 	)
 }

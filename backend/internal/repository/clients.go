@@ -27,9 +27,10 @@ type Client struct {
 type ClientRepository interface {
 	CreateClient(ctx context.Context, client *Client) (Client, error)
 	UpdateClient(ctx context.Context, client *Client) (Client, error)
+	UpdateClientOverpayment(ctx context.Context, phoneNumber string, overpayment float64) error
 	ListClients(ctx context.Context, pgData *pkg.PaginationMetadata) ([]Client, error)
 	GetClient(ctx context.Context, clientID uint32) (Client, error)
-	GetClientByPhoneNumber(ctx context.Context, phoneNumber string) (Client, error)
+	GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error)
 	ListClientsByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]Client, error)
 	ListClientsByActiveStatus(ctx context.Context, active bool, pgData *pkg.PaginationMetadata) ([]Client, error)
 }

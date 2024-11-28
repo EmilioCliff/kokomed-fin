@@ -97,6 +97,48 @@ func (ns NullLoansStatus) Value() (driver.Value, error) {
 	return string(ns.LoansStatus), nil
 }
 
+type NonPostedTransactionSource string
+
+const (
+	NonPostedTransactionSourceMPESA    NonPostedTransactionSource = "MPESA"
+	NonPostedTransactionSourceINTERNAL NonPostedTransactionSource = "INTERNAL"
+)
+
+func (e *NonPostedTransactionSource) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = NonPostedTransactionSource(s)
+	case string:
+		*e = NonPostedTransactionSource(s)
+	default:
+		return fmt.Errorf("unsupported scan type for NonPostedTransactionSource: %T", src)
+	}
+	return nil
+}
+
+type NullNonPostedTransactionSource struct {
+	NonPostedTransactionSource NonPostedTransactionSource `json:"non_posted_transaction_source"`
+	Valid                      bool                       `json:"valid"` // Valid is true if NonPostedTransactionSource is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullNonPostedTransactionSource) Scan(value interface{}) error {
+	if value == nil {
+		ns.NonPostedTransactionSource, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.NonPostedTransactionSource.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullNonPostedTransactionSource) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.NonPostedTransactionSource), nil
+}
+
 type UsersRole string
 
 const (
@@ -190,17 +232,19 @@ type Loan struct {
 	UpdatedBy          sql.NullInt32  `json:"updated_by"`
 	CreatedBy          uint32         `json:"created_by"`
 	CreatedAt          time.Time      `json:"created_at"`
+	FeePaid            bool           `json:"fee_paid"`
 }
 
 type NonPosted struct {
-	ID                uint32        `json:"id"`
-	TransactionNumber string        `json:"transaction_number"`
-	AccountNumber     string        `json:"account_number"`
-	PhoneNumber       string        `json:"phone_number"`
-	PayingName        string        `json:"paying_name"`
-	Amount            float64       `json:"amount"`
-	AssignTo          sql.NullInt32 `json:"assign_to"`
-	PaidDate          time.Time     `json:"paid_date"`
+	ID                uint32                     `json:"id"`
+	TransactionNumber string                     `json:"transaction_number"`
+	AccountNumber     string                     `json:"account_number"`
+	PhoneNumber       string                     `json:"phone_number"`
+	PayingName        string                     `json:"paying_name"`
+	Amount            float64                    `json:"amount"`
+	AssignTo          sql.NullInt32              `json:"assign_to"`
+	PaidDate          time.Time                  `json:"paid_date"`
+	TransactionSource NonPostedTransactionSource `json:"transaction_source"`
 }
 
 type Product struct {

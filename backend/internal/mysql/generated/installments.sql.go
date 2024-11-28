@@ -98,6 +98,66 @@ func (q *Queries) ListInstallmentsByLoan(ctx context.Context, arg ListInstallmen
 	return items, nil
 }
 
+const listUnpaidInstallmentsByLoan = `-- name: ListUnpaidInstallmentsByLoan :many
+SELECT id, loan_id, installment_number, amount_due, remaining_amount, paid, paid_at, due_date FROM installments WHERE loan_id = ? AND remaining_amount > 0 ORDER BY due_date ASC
+`
+
+func (q *Queries) ListUnpaidInstallmentsByLoan(ctx context.Context, loanID uint32) ([]Installment, error) {
+	rows, err := q.db.QueryContext(ctx, listUnpaidInstallmentsByLoan, loanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Installment
+	for rows.Next() {
+		var i Installment
+		if err := rows.Scan(
+			&i.ID,
+			&i.LoanID,
+			&i.InstallmentNumber,
+			&i.AmountDue,
+			&i.RemainingAmount,
+			&i.Paid,
+			&i.PaidAt,
+			&i.DueDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const payInstallment = `-- name: PayInstallment :execresult
+UPDATE installments 
+    SET remaining_amount = ?,
+    paid =  coalesce(?, paid),
+    paid_at =  coalesce(?, paid_at)
+WHERE id = ?
+`
+
+type PayInstallmentParams struct {
+	RemainingAmount float64      `json:"remaining_amount"`
+	Paid            sql.NullBool `json:"paid"`
+	PaidAt          sql.NullTime `json:"paid_at"`
+	ID              uint32       `json:"id"`
+}
+
+func (q *Queries) PayInstallment(ctx context.Context, arg PayInstallmentParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, payInstallment,
+		arg.RemainingAmount,
+		arg.Paid,
+		arg.PaidAt,
+		arg.ID,
+	)
+}
+
 const updateInstallment = `-- name: UpdateInstallment :execresult
 UPDATE installments 
     SET remaining_amount =  ?,

@@ -34,11 +34,25 @@ UPDATE clients
     updated_by = sqlc.arg("updated_by")
 WHERE id = sqlc.arg("id");
 
+-- -- name: UpdateClientOverpayment :execresult
+-- UPDATE clients 
+--     SET overpayment = overpayment + sqlc.arg("overpayment")
+-- WHERE phone_number = sqlc.arg("phone_number");
+
+-- name: UpdateClientOverpayment :execresult
+UPDATE clients
+SET overpayment = overpayment + sqlc.arg("overpayment")
+WHERE 
+    (phone_number = sqlc.arg("phone_number") AND sqlc.arg("phone_number") IS NOT NULL)
+    OR 
+    (id = sqlc.arg("client_id") AND sqlc.arg("client_id") IS NOT NULL);
+
+
 -- name: DeleteClient :execresult
 DELETE FROM clients WHERE id = ?;
 
--- name: GetClientByPhoneNumber :one
-SELECT * FROM clients WHERE phone_number = ? LIMIT 1;
+-- name: GetClientIDByPhoneNumber :one
+SELECT id FROM clients WHERE phone_number = ? LIMIT 1;
 
 -- name: ListClientsByBranch :many
 SELECT * FROM clients WHERE branch_id = ? LIMIT ? OFFSET ?;

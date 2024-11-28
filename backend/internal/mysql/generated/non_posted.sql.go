@@ -13,43 +13,56 @@ import (
 
 const assignNonPosted = `-- name: AssignNonPosted :execresult
 UPDATE non_posted 
-    SET assign_to = ?
+    SET assign_to = ?,
+    transaction_source = ?
 WHERE id = ?
 `
 
 type AssignNonPostedParams struct {
-	AssignTo sql.NullInt32 `json:"assign_to"`
-	ID       uint32        `json:"id"`
+	AssignTo          sql.NullInt32              `json:"assign_to"`
+	TransactionSource NonPostedTransactionSource `json:"transaction_source"`
+	ID                uint32                     `json:"id"`
 }
 
 func (q *Queries) AssignNonPosted(ctx context.Context, arg AssignNonPostedParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, assignNonPosted, arg.AssignTo, arg.ID)
+	return q.db.ExecContext(ctx, assignNonPosted, arg.AssignTo, arg.TransactionSource, arg.ID)
 }
 
 const createNonPosted = `-- name: CreateNonPosted :execresult
-INSERT INTO non_posted (transaction_number, account_number, phone_number, paying_name, amount, paid_date) 
+INSERT INTO non_posted (transaction_source, transaction_number, account_number, phone_number, paying_name, amount, paid_date, assign_to) 
 VALUES (
-    ?, ?, ?, ?, ?, ?
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
 )
 `
 
 type CreateNonPostedParams struct {
-	TransactionNumber string    `json:"transaction_number"`
-	AccountNumber     string    `json:"account_number"`
-	PhoneNumber       string    `json:"phone_number"`
-	PayingName        string    `json:"paying_name"`
-	Amount            float64   `json:"amount"`
-	PaidDate          time.Time `json:"paid_date"`
+	TransactionSource NonPostedTransactionSource `json:"transaction_source"`
+	TransactionNumber string                     `json:"transaction_number"`
+	AccountNumber     string                     `json:"account_number"`
+	PhoneNumber       string                     `json:"phone_number"`
+	PayingName        string                     `json:"paying_name"`
+	Amount            float64                    `json:"amount"`
+	PaidDate          time.Time                  `json:"paid_date"`
+	AssignTo          sql.NullInt32              `json:"assign_to"`
 }
 
 func (q *Queries) CreateNonPosted(ctx context.Context, arg CreateNonPostedParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, createNonPosted,
+		arg.TransactionSource,
 		arg.TransactionNumber,
 		arg.AccountNumber,
 		arg.PhoneNumber,
 		arg.PayingName,
 		arg.Amount,
 		arg.PaidDate,
+		arg.AssignTo,
 	)
 }
 
@@ -63,7 +76,7 @@ func (q *Queries) DeleteNonPosted(ctx context.Context, id uint32) error {
 }
 
 const getNonPosted = `-- name: GetNonPosted :one
-SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date FROM non_posted WHERE id = ? LIMIT 1
+SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date, transaction_source FROM non_posted WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetNonPosted(ctx context.Context, id uint32) (NonPosted, error) {
@@ -78,12 +91,13 @@ func (q *Queries) GetNonPosted(ctx context.Context, id uint32) (NonPosted, error
 		&i.Amount,
 		&i.AssignTo,
 		&i.PaidDate,
+		&i.TransactionSource,
 	)
 	return i, err
 }
 
 const listAllNonPosted = `-- name: ListAllNonPosted :many
-SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date FROM non_posted LIMIT ? OFFSET ?
+SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date, transaction_source FROM non_posted LIMIT ? OFFSET ?
 `
 
 type ListAllNonPostedParams struct {
@@ -109,6 +123,87 @@ func (q *Queries) ListAllNonPosted(ctx context.Context, arg ListAllNonPostedPara
 			&i.Amount,
 			&i.AssignTo,
 			&i.PaidDate,
+			&i.TransactionSource,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAllNonPostedByTransactionSource = `-- name: ListAllNonPostedByTransactionSource :many
+SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date, transaction_source FROM non_posted WHERE transaction_source = ?
+`
+
+func (q *Queries) ListAllNonPostedByTransactionSource(ctx context.Context, transactionSource NonPostedTransactionSource) ([]NonPosted, error) {
+	rows, err := q.db.QueryContext(ctx, listAllNonPostedByTransactionSource, transactionSource)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []NonPosted
+	for rows.Next() {
+		var i NonPosted
+		if err := rows.Scan(
+			&i.ID,
+			&i.TransactionNumber,
+			&i.AccountNumber,
+			&i.PhoneNumber,
+			&i.PayingName,
+			&i.Amount,
+			&i.AssignTo,
+			&i.PaidDate,
+			&i.TransactionSource,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listNonPostedByTransactionSource = `-- name: ListNonPostedByTransactionSource :many
+SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date, transaction_source FROM non_posted WHERE transaction_source = ? LIMIT ? OFFSET ?
+`
+
+type ListNonPostedByTransactionSourceParams struct {
+	TransactionSource NonPostedTransactionSource `json:"transaction_source"`
+	Limit             int32                      `json:"limit"`
+	Offset            int32                      `json:"offset"`
+}
+
+func (q *Queries) ListNonPostedByTransactionSource(ctx context.Context, arg ListNonPostedByTransactionSourceParams) ([]NonPosted, error) {
+	rows, err := q.db.QueryContext(ctx, listNonPostedByTransactionSource, arg.TransactionSource, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []NonPosted
+	for rows.Next() {
+		var i NonPosted
+		if err := rows.Scan(
+			&i.ID,
+			&i.TransactionNumber,
+			&i.AccountNumber,
+			&i.PhoneNumber,
+			&i.PayingName,
+			&i.Amount,
+			&i.AssignTo,
+			&i.PaidDate,
+			&i.TransactionSource,
 		); err != nil {
 			return nil, err
 		}
@@ -124,7 +219,7 @@ func (q *Queries) ListAllNonPosted(ctx context.Context, arg ListAllNonPostedPara
 }
 
 const listUnassignedNonPosted = `-- name: ListUnassignedNonPosted :many
-SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date FROM non_posted WHERE assign_to IS NULL LIMIT ? OFFSET ?
+SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date, transaction_source FROM non_posted WHERE assign_to IS NULL LIMIT ? OFFSET ?
 `
 
 type ListUnassignedNonPostedParams struct {
@@ -150,6 +245,7 @@ func (q *Queries) ListUnassignedNonPosted(ctx context.Context, arg ListUnassigne
 			&i.Amount,
 			&i.AssignTo,
 			&i.PaidDate,
+			&i.TransactionSource,
 		); err != nil {
 			return nil, err
 		}

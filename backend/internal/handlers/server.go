@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/payments"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 	"github.com/gin-gonic/gin"
 )
@@ -20,17 +22,20 @@ type Server struct {
 	config pkg.Config
 	maker  pkg.JWTMaker
 	repo   *mysql.MySQLRepo
+
+	payments services.PaymentService
 }
 
-func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo) *Server {
+func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, payment *payments.PaymentService) *Server {
 	r := gin.Default()
 
 	s := &Server{
-		router: r,
-		config: config,
-		maker:  maker,
-		repo:   repo,
-		ln:     nil,
+		router:   r,
+		config:   config,
+		maker:    maker,
+		repo:     repo,
+		payments: payment,
+		ln:       nil,
 	}
 
 	s.setUpRoutes()
@@ -67,14 +72,26 @@ func (s *Server) setUpRoutes() {
 	// non-posted routes
 	s.router.GET("/non-posted/all", s.listAllNonPostedPayments)
 	s.router.GET("/non-posted/unassigned", s.listUnassignedNonPostedPayments)
-	s.router.GET("/non-posted/:id", s.getNonPostedPayment)
-	s.router.PATCH("/non-posted/:id/assign", s.assignNonPostedPayment)
+	s.router.GET("/non-posted/by-id/:id", s.getNonPostedPayment)
+	s.router.GET("/non-posted/by-type/:type", s.listNonPostedByTransactionSource)
 
 	// branches routes
 	s.router.GET("/branch", s.listBranches)
 	s.router.GET("/branch/:id", s.getBranch)
 	s.router.POST("/branch", s.createBranch)
 	s.router.PATCH("/branch/:id", s.updateBranch)
+
+	// loans routes
+	s.router.POST("/loan", s.createLoan)
+	s.router.PATCH("/loan/:id/disburse", s.disburseLoan)
+	s.router.PATCH("/loan/:id/assign", s.transferLoanOfficer)
+	s.router.GET("/loan/:id", s.getLoan)
+	s.router.GET("/loan", s.listLoansByCategory)
+
+	// payments routes
+	s.router.POST("/payment/callback", s.paymentCallback)
+	s.router.PATCH("/payment/:id/assign", s.paymentByAdmin)
+	// payment of from credit to repay some loan(overpayment to pay loan)
 
 	s.srv = &http.Server{
 		Addr:    s.config.HTTP_PORT,

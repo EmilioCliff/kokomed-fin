@@ -20,9 +20,10 @@ type Payload struct {
 type JWTMaker struct {
 	PublicKey  *rsa.PublicKey
 	PrivateKey *rsa.PrivateKey
+	config     Config
 }
 
-func NewJWTMaker(privateKeyPEM string, publicKeyPEM string) (*JWTMaker, error) {
+func NewJWTMaker(privateKeyPEM string, publicKeyPEM string, config Config) (*JWTMaker, error) {
 	if privateKeyPEM == "" || publicKeyPEM == "" {
 		return nil, Errorf(INTERNAL_ERROR, "private key or public key is empty")
 	}
@@ -40,6 +41,7 @@ func NewJWTMaker(privateKeyPEM string, publicKeyPEM string) (*JWTMaker, error) {
 	maker := &JWTMaker{
 		PrivateKey: privateKey,
 		PublicKey:  publicKey,
+		config:     config,
 	}
 
 	return maker, nil

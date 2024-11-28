@@ -8,11 +8,28 @@ package generated
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
+const checkActiveLoanForClient = `-- name: CheckActiveLoanForClient :one
+SELECT EXISTS (
+    SELECT 1
+    FROM loans
+    WHERE client_id = ? AND status = 'ACTIVE'
+) AS has_active_loan LIMIT 1
+`
+
+func (q *Queries) CheckActiveLoanForClient(ctx context.Context, clientID uint32) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkActiveLoanForClient, clientID)
+	var has_active_loan bool
+	err := row.Scan(&has_active_loan)
+	return has_active_loan, err
+}
+
 const createLoan = `-- name: CreateLoan :execresult
-INSERT INTO loans (product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, created_by) 
+INSERT INTO loans (product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, fee_paid, created_by) 
 VALUES (
+    ?,
     ?,
     ?,
     ?,
@@ -42,6 +59,7 @@ type CreateLoanParams struct {
 	InstallmentsPeriod uint32         `json:"installments_period"`
 	Status             LoansStatus    `json:"status"`
 	ProcessingFee      float64        `json:"processing_fee"`
+	FeePaid            bool           `json:"fee_paid"`
 	CreatedBy          uint32         `json:"created_by"`
 }
 
@@ -59,6 +77,7 @@ func (q *Queries) CreateLoan(ctx context.Context, arg CreateLoanParams) (sql.Res
 		arg.InstallmentsPeriod,
 		arg.Status,
 		arg.ProcessingFee,
+		arg.FeePaid,
 		arg.CreatedBy,
 	)
 }
@@ -76,6 +95,7 @@ const disburseLoan = `-- name: DisburseLoan :execresult
 UPDATE loans 
     SET disbursed_on = ?,
     disbursed_by = ?,
+    status = ?,
     due_date = ?
 WHERE id = ?
 `
@@ -83,6 +103,7 @@ WHERE id = ?
 type DisburseLoanParams struct {
 	DisbursedOn sql.NullTime  `json:"disbursed_on"`
 	DisbursedBy sql.NullInt32 `json:"disbursed_by"`
+	Status      LoansStatus   `json:"status"`
 	DueDate     sql.NullTime  `json:"due_date"`
 	ID          uint32        `json:"id"`
 }
@@ -91,13 +112,30 @@ func (q *Queries) DisburseLoan(ctx context.Context, arg DisburseLoanParams) (sql
 	return q.db.ExecContext(ctx, disburseLoan,
 		arg.DisbursedOn,
 		arg.DisbursedBy,
+		arg.Status,
 		arg.DueDate,
 		arg.ID,
 	)
 }
 
+const getClientActiveLoan = `-- name: GetClientActiveLoan :one
+SELECT id FROM loans WHERE client_id = ? AND status = ? LIMIT 1
+`
+
+type GetClientActiveLoanParams struct {
+	ClientID uint32      `json:"client_id"`
+	Status   LoansStatus `json:"status"`
+}
+
+func (q *Queries) GetClientActiveLoan(ctx context.Context, arg GetClientActiveLoanParams) (uint32, error) {
+	row := q.db.QueryRowContext(ctx, getClientActiveLoan, arg.ClientID, arg.Status)
+	var id uint32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getLoan = `-- name: GetLoan :one
-SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at FROM loans WHERE id = ? LIMIT 1
+SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at, fee_paid FROM loans WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetLoan(ctx context.Context, id uint32) (Loan, error) {
@@ -121,28 +159,121 @@ func (q *Queries) GetLoan(ctx context.Context, id uint32) (Loan, error) {
 		&i.UpdatedBy,
 		&i.CreatedBy,
 		&i.CreatedAt,
+		&i.FeePaid,
+	)
+	return i, err
+}
+
+const getLoanPaymentData = `-- name: GetLoanPaymentData :one
+SELECT 
+    l.id AS loan_id,
+    l.client_id,
+    l.processing_fee,
+    l.fee_paid,
+    l.paid_amount,
+    c.phone_number,
+    p.repay_amount
+FROM loans l
+JOIN products p ON l.product_id = p.id
+JOIN clients c ON l.client_id = c.id
+WHERE l.id = ?
+LIMIT 1
+`
+
+type GetLoanPaymentDataRow struct {
+	LoanID        uint32  `json:"loan_id"`
+	ClientID      uint32  `json:"client_id"`
+	ProcessingFee float64 `json:"processing_fee"`
+	FeePaid       bool    `json:"fee_paid"`
+	PaidAmount    float64 `json:"paid_amount"`
+	PhoneNumber   string  `json:"phone_number"`
+	RepayAmount   float64 `json:"repay_amount"`
+}
+
+func (q *Queries) GetLoanPaymentData(ctx context.Context, id uint32) (GetLoanPaymentDataRow, error) {
+	row := q.db.QueryRowContext(ctx, getLoanPaymentData, id)
+	var i GetLoanPaymentDataRow
+	err := row.Scan(
+		&i.LoanID,
+		&i.ClientID,
+		&i.ProcessingFee,
+		&i.FeePaid,
+		&i.PaidAmount,
+		&i.PhoneNumber,
+		&i.RepayAmount,
 	)
 	return i, err
 }
 
 const listLoans = `-- name: ListLoans :many
-SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at FROM loans LIMIT ? OFFSET ?
+SELECT 
+    l.id, l.product_id, l.client_id, l.loan_officer, l.loan_purpose, l.due_date, l.approved_by, l.disbursed_on, l.disbursed_by, l.total_installments, l.installments_period, l.status, l.processing_fee, l.paid_amount, l.updated_by, l.created_by, l.created_at, l.fee_paid, 
+    p.branch_id 
+FROM loans l
+JOIN products p ON l.product_id = p.id
+WHERE 
+    (? IS NULL OR p.branch_id = ?)
+    AND (? IS NULL OR l.client_id = ?)
+    AND (? IS NULL OR l.loan_officer = ?)
+    AND (? IS NULL OR l.status = ?)
+LIMIT ? OFFSET ?
 `
 
 type ListLoansParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Column1     interface{} `json:"column_1"`
+	BranchID    uint32      `json:"branch_id"`
+	Column3     interface{} `json:"column_3"`
+	ClientID    uint32      `json:"client_id"`
+	Column5     interface{} `json:"column_5"`
+	LoanOfficer uint32      `json:"loan_officer"`
+	Column7     interface{} `json:"column_7"`
+	Status      LoansStatus `json:"status"`
+	Limit       int32       `json:"limit"`
+	Offset      int32       `json:"offset"`
 }
 
-func (q *Queries) ListLoans(ctx context.Context, arg ListLoansParams) ([]Loan, error) {
-	rows, err := q.db.QueryContext(ctx, listLoans, arg.Limit, arg.Offset)
+type ListLoansRow struct {
+	ID                 uint32         `json:"id"`
+	ProductID          uint32         `json:"product_id"`
+	ClientID           uint32         `json:"client_id"`
+	LoanOfficer        uint32         `json:"loan_officer"`
+	LoanPurpose        sql.NullString `json:"loan_purpose"`
+	DueDate            sql.NullTime   `json:"due_date"`
+	ApprovedBy         uint32         `json:"approved_by"`
+	DisbursedOn        sql.NullTime   `json:"disbursed_on"`
+	DisbursedBy        sql.NullInt32  `json:"disbursed_by"`
+	TotalInstallments  uint32         `json:"total_installments"`
+	InstallmentsPeriod uint32         `json:"installments_period"`
+	Status             LoansStatus    `json:"status"`
+	ProcessingFee      float64        `json:"processing_fee"`
+	PaidAmount         float64        `json:"paid_amount"`
+	UpdatedBy          sql.NullInt32  `json:"updated_by"`
+	CreatedBy          uint32         `json:"created_by"`
+	CreatedAt          time.Time      `json:"created_at"`
+	FeePaid            bool           `json:"fee_paid"`
+	BranchID           uint32         `json:"branch_id"`
+}
+
+func (q *Queries) ListLoans(ctx context.Context, arg ListLoansParams) ([]ListLoansRow, error) {
+	rows, err := q.db.QueryContext(ctx, listLoans,
+		arg.Column1,
+		arg.BranchID,
+		arg.Column3,
+		arg.ClientID,
+		arg.Column5,
+		arg.LoanOfficer,
+		arg.Column7,
+		arg.Status,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Loan
+	var items []ListLoansRow
 	for rows.Next() {
-		var i Loan
+		var i ListLoansRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
@@ -161,6 +292,8 @@ func (q *Queries) ListLoans(ctx context.Context, arg ListLoansParams) ([]Loan, e
 			&i.UpdatedBy,
 			&i.CreatedBy,
 			&i.CreatedAt,
+			&i.FeePaid,
+			&i.BranchID,
 		); err != nil {
 			return nil, err
 		}
@@ -176,7 +309,7 @@ func (q *Queries) ListLoans(ctx context.Context, arg ListLoansParams) ([]Loan, e
 }
 
 const listLoansByClient = `-- name: ListLoansByClient :many
-SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at FROM loans WHERE client_id = ? LIMIT ? OFFSET ?
+SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at, fee_paid FROM loans WHERE client_id = ? LIMIT ? OFFSET ?
 `
 
 type ListLoansByClientParams struct {
@@ -212,6 +345,7 @@ func (q *Queries) ListLoansByClient(ctx context.Context, arg ListLoansByClientPa
 			&i.UpdatedBy,
 			&i.CreatedBy,
 			&i.CreatedAt,
+			&i.FeePaid,
 		); err != nil {
 			return nil, err
 		}
@@ -227,7 +361,7 @@ func (q *Queries) ListLoansByClient(ctx context.Context, arg ListLoansByClientPa
 }
 
 const listLoansByLoanOfficer = `-- name: ListLoansByLoanOfficer :many
-SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at FROM loans WHERE loan_officer = ? LIMIT ? OFFSET ?
+SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at, fee_paid FROM loans WHERE loan_officer = ? LIMIT ? OFFSET ?
 `
 
 type ListLoansByLoanOfficerParams struct {
@@ -263,6 +397,7 @@ func (q *Queries) ListLoansByLoanOfficer(ctx context.Context, arg ListLoansByLoa
 			&i.UpdatedBy,
 			&i.CreatedBy,
 			&i.CreatedAt,
+			&i.FeePaid,
 		); err != nil {
 			return nil, err
 		}
@@ -278,7 +413,7 @@ func (q *Queries) ListLoansByLoanOfficer(ctx context.Context, arg ListLoansByLoa
 }
 
 const listLoansByStatus = `-- name: ListLoansByStatus :many
-SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at FROM loans WHERE status = ? LIMIT ? OFFSET ?
+SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at, fee_paid FROM loans WHERE status = ? LIMIT ? OFFSET ?
 `
 
 type ListLoansByStatusParams struct {
@@ -314,6 +449,7 @@ func (q *Queries) ListLoansByStatus(ctx context.Context, arg ListLoansByStatusPa
 			&i.UpdatedBy,
 			&i.CreatedBy,
 			&i.CreatedAt,
+			&i.FeePaid,
 		); err != nil {
 			return nil, err
 		}
@@ -329,7 +465,7 @@ func (q *Queries) ListLoansByStatus(ctx context.Context, arg ListLoansByStatusPa
 }
 
 const listNonDisbursedLoans = `-- name: ListNonDisbursedLoans :many
-SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at FROM loans WHERE disbursed_on IS NULL LIMIT ? OFFSET ?
+SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at, fee_paid FROM loans WHERE disbursed_on IS NULL LIMIT ? OFFSET ?
 `
 
 type ListNonDisbursedLoansParams struct {
@@ -364,6 +500,7 @@ func (q *Queries) ListNonDisbursedLoans(ctx context.Context, arg ListNonDisburse
 			&i.UpdatedBy,
 			&i.CreatedBy,
 			&i.CreatedAt,
+			&i.FeePaid,
 		); err != nil {
 			return nil, err
 		}
@@ -379,21 +516,22 @@ func (q *Queries) ListNonDisbursedLoans(ctx context.Context, arg ListNonDisburse
 }
 
 const transferLoan = `-- name: TransferLoan :execresult
-UPDATE loans SET loan_officer = ? WHERE id = ?
+UPDATE loans SET loan_officer = ?, updated_by = ? WHERE id = ?
 `
 
 type TransferLoanParams struct {
-	LoanOfficer uint32 `json:"loan_officer"`
-	ID          uint32 `json:"id"`
+	LoanOfficer uint32        `json:"loan_officer"`
+	UpdatedBy   sql.NullInt32 `json:"updated_by"`
+	ID          uint32        `json:"id"`
 }
 
 func (q *Queries) TransferLoan(ctx context.Context, arg TransferLoanParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, transferLoan, arg.LoanOfficer, arg.ID)
+	return q.db.ExecContext(ctx, transferLoan, arg.LoanOfficer, arg.UpdatedBy, arg.ID)
 }
 
 const updateLoan = `-- name: UpdateLoan :execresult
 UPDATE loans 
-    SET paid_amount = ?,
+    SET paid_amount = paid_amount + ?,
     updated_by = coalesce(?, updated_by)
 WHERE id = ?
 `
@@ -406,6 +544,19 @@ type UpdateLoanParams struct {
 
 func (q *Queries) UpdateLoan(ctx context.Context, arg UpdateLoanParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, updateLoan, arg.PaidAmount, arg.UpdatedBy, arg.ID)
+}
+
+const updateLoanProcessingFeeStatus = `-- name: UpdateLoanProcessingFeeStatus :execresult
+UPDATE loans SET fee_paid = ? WHERE id = ?
+`
+
+type UpdateLoanProcessingFeeStatusParams struct {
+	FeePaid bool   `json:"fee_paid"`
+	ID      uint32 `json:"id"`
+}
+
+func (q *Queries) UpdateLoanProcessingFeeStatus(ctx context.Context, arg UpdateLoanProcessingFeeStatusParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, updateLoanProcessingFeeStatus, arg.FeePaid, arg.ID)
 }
 
 const updateLoanStatus = `-- name: UpdateLoanStatus :execresult

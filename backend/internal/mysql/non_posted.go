@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -24,14 +25,24 @@ func NewNonPostedRepository(db *Store) *NonPostedRepository {
 }
 
 func (r *NonPostedRepository) CreateNonPosted(ctx context.Context, nonPosted *repository.NonPosted) (repository.NonPosted, error) {
-	execResult, err := r.queries.CreateNonPosted(ctx, generated.CreateNonPostedParams{
+	params := generated.CreateNonPostedParams{
+		TransactionSource: generated.NonPostedTransactionSource(nonPosted.TransactionSource),
 		TransactionNumber: nonPosted.TransactionNumber,
 		AccountNumber:     nonPosted.AccountNumber,
 		PhoneNumber:       nonPosted.PhoneNumber,
 		PayingName:        nonPosted.PayingName,
 		Amount:            nonPosted.Amount,
 		PaidDate:          nonPosted.PaidDate,
-	})
+	}
+
+	if nonPosted.AssignedTo != nil {
+		params.AssignTo = sql.NullInt32{
+			Valid: true,
+			Int32: int32(*nonPosted.AssignedTo),
+		}
+	}
+
+	execResult, err := r.queries.CreateNonPosted(ctx, params)
 	if err != nil {
 		return repository.NonPosted{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create non posted: %s", err.Error())
 	}
@@ -57,21 +68,6 @@ func (r *NonPostedRepository) GetNonPosted(ctx context.Context, id uint32) (repo
 	}
 
 	return convertGenerateNonPosted(nonPosted), nil
-}
-
-func (r *NonPostedRepository) AssignNonPosted(ctx context.Context, id uint32, assignedTo uint32) (repository.NonPosted, error) {
-	_, err := r.queries.AssignNonPosted(ctx, generated.AssignNonPostedParams{
-		ID: id,
-		AssignTo: sql.NullInt32{
-			Valid: true,
-			Int32: int32(assignedTo),
-		},
-	})
-	if err != nil {
-		return repository.NonPosted{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to assign non posted: %s", err.Error())
-	}
-
-	return r.GetNonPosted(ctx, id)
 }
 
 func (r *NonPostedRepository) ListNonPosted(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.NonPosted, error) {
@@ -118,6 +114,33 @@ func (r *NonPostedRepository) ListUnassignedNonPosted(ctx context.Context, pgDat
 	return rslt, nil
 }
 
+func (r *NonPostedRepository) ListNonPostedByTransactionSource(
+	ctx context.Context,
+	transactionSource string,
+	pgData *pkg.PaginationMetadata,
+) ([]repository.NonPosted, error) {
+	nonPosteds, err := r.queries.ListNonPostedByTransactionSource(ctx, generated.ListNonPostedByTransactionSourceParams{
+		TransactionSource: generated.NonPostedTransactionSource(strings.ToUpper(transactionSource)),
+		Limit:             pkg.GetPageSize(),
+		Offset:            pkg.CalculateOffset(pgData.CurrentPage),
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no non posted found")
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list non posted: %s", err.Error())
+	}
+
+	rslt := make([]repository.NonPosted, len(nonPosteds))
+
+	for i, nonPosted := range nonPosteds {
+		rslt[i] = convertGenerateNonPosted(nonPosted)
+	}
+
+	return rslt, nil
+}
+
 func (r *NonPostedRepository) DeleteNonPosted(ctx context.Context, id uint32) error {
 	err := r.queries.DeleteNonPosted(ctx, id)
 	if err != nil {
@@ -137,6 +160,7 @@ func convertGenerateNonPosted(nonPosted generated.NonPosted) repository.NonPoste
 
 	return repository.NonPosted{
 		ID:                nonPosted.ID,
+		TransactionSource: string(nonPosted.TransactionSource),
 		TransactionNumber: nonPosted.TransactionNumber,
 		AccountNumber:     nonPosted.AccountNumber,
 		PhoneNumber:       nonPosted.PhoneNumber,

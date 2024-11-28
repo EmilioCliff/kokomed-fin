@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -28,7 +29,7 @@ type createUserRequest struct {
 	PhoneNumber string `binding:"required"                   json:"phone_number"`
 	Email       string `binding:"required"                   json:"email"`
 	BranchID    uint32 `binding:"required"                   json:"branch_id"`
-	Role        string `binding:"required,oneof=ADMIN AGENT" json:"role"`
+	Role        string `binding:"required,oneof=admin agent" json:"role"`
 	CreatedBy   uint32 `binding:"required"                   json:"created_by"`
 }
 
@@ -53,13 +54,13 @@ func (s *Server) createUser(ctx *gin.Context) {
 		FullName:     req.Firstname + " " + req.Lastname,
 		PhoneNumber:  req.PhoneNumber,
 		Email:        req.Email,
-		Role:         req.Role,
+		Role:         strings.ToUpper(req.Role),
 		BranchID:     req.BranchID,
 		CreatedBy:    req.CreatedBy,
 		UpdatedAt:    time.Now(),
 		UpdatedBy:    req.CreatedBy,
 		Password:     hashPassword, // have a default password(firstname.role.last3phonedigits)
-		RefreshToken: "defaulted",  // generate his refresh token
+		RefreshToken: "defaulted",  // generate his refresh token(first login)
 	})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
@@ -67,7 +68,7 @@ func (s *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	// send verification email to user
+	// TODO: send verification email to user
 
 	v, err := s.convertGeneratedUser(ctx, &user)
 	if err != nil {
@@ -107,6 +108,7 @@ func (s *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
+	// create new password(first login)
 	if user.PasswordUpdated == 0 {
 		ctx.JSON(http.StatusConflict, gin.H{"status": "password not updated"})
 
@@ -169,6 +171,14 @@ func (s *Server) updateUserCredentials(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
+	}
+
+	if payload, ok := ctx.Get("Payload"); ok {
+		if payload.(*pkg.Payload).Email != req.Email {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+
+			return
+		}
 	}
 
 	hashpassword, err := pkg.GenerateHashPassword(req.NewPassword, s.config.PASSWORD_COST)
@@ -242,7 +252,7 @@ func (s *Server) refreshToken(ctx *gin.Context) {
 func (s *Server) getUser(ctx *gin.Context) {
 	id, err := pkg.StringToUint32(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 
 		return
 	}
@@ -267,7 +277,7 @@ func (s *Server) getUser(ctx *gin.Context) {
 func (s *Server) listUsers(ctx *gin.Context) {
 	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 
 		return
 	}
@@ -278,8 +288,6 @@ func (s *Server) listUsers(ctx *gin.Context) {
 
 		return
 	}
-
-	log.Println(len(users))
 
 	rsp := make([]userResponse, len(users))
 

@@ -64,6 +64,17 @@ func (q *Queries) GetProduct(ctx context.Context, id uint32) (Product, error) {
 	return i, err
 }
 
+const getProductRepayAmount = `-- name: GetProductRepayAmount :one
+SELECT repay_amount FROM products WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetProductRepayAmount(ctx context.Context, id uint32) (float64, error) {
+	row := q.db.QueryRowContext(ctx, getProductRepayAmount, id)
+	var repay_amount float64
+	err := row.Scan(&repay_amount)
+	return repay_amount, err
+}
+
 const listProducts = `-- name: ListProducts :many
 SELECT id, branch_id, loan_amount, repay_amount, interest_amount, updated_by, updated_at, created_at FROM products LIMIT ? OFFSET ?
 `

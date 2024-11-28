@@ -21,6 +21,7 @@ type Loan struct {
 	InstallmentsPeriod uint32     `json:"installments_period"`
 	Status             string     `json:"status"`
 	ProcessingFee      float64    `json:"processing_fee"`
+	FeePaid            bool       `json:"fee_paid"`
 	PaidAmount         float64    `json:"paid_amount"`
 	UpdatedBy          *uint32    `json:"updated_by"`
 	CreatedBy          uint32     `json:"created_by"`
@@ -58,21 +59,24 @@ type UpdateInstallment struct {
 	PaidAt          *time.Time `json:"paid_at"`
 }
 
+type Category struct {
+	BranchID    *uint32 `json:"branch_id"`
+	ClientID    *uint32 `json:"client_id"`
+	LoanOfficer *uint32 `json:"loan_officer"`
+	Status      *string `json:"status"`
+}
+
 type LoansRepository interface {
 	CreateLoan(ctx context.Context, loan *Loan) (Loan, error)
 	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) error
-	UpdateLoan(ctx context.Context, loan *UpdateLoan) (Loan, error)
-	TransferLoan(ctx context.Context, officerId uint32, loanId uint32) error
+	TransferLoan(ctx context.Context, officerId uint32, loanId uint32, adminId uint32) error
 	GetLoanByID(ctx context.Context, id uint32) (Loan, error)
-	ListLoans(ctx context.Context, pgData *pkg.PaginationMetadata) ([]Loan, error)
+	GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error)
+	ListLoans(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]Loan, error)
 	DeleteLoan(ctx context.Context, id uint32) error
-	GetAllClientsLoans(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]Loan, error)
-	GetAllUsersLoans(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]Loan, error)
-	ListLoansByStatus(ctx context.Context, status string, pgData *pkg.PaginationMetadata) ([]Loan, error)
-	ListNonDisbursedLoans(ctx context.Context, pgData *pkg.PaginationMetadata) ([]Loan, error)
-	UpdateLoanStatus(ctx context.Context, id uint32, status string) error
 
-	CreateInstallment(ctx context.Context, installment *Installment) (Installment, error)
+	// use client overpayment to pay loan
+
 	GetLoanInstallments(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]Installment, error)
 	GetInstallment(ctx context.Context, id uint32) (Installment, error)
 	UpdateInstallment(ctx context.Context, installment *UpdateInstallment) (Installment, error)

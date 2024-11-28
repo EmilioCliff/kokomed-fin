@@ -74,6 +74,7 @@ CREATE TABLE `loans` (
   `installments_period` INT NOT NULL DEFAULT 7,
   `status` ENUM('INACTIVE', 'ACTIVE', 'COMPLETED', 'DEFAULTED') NOT NULL,
   `processing_fee` DECIMAL(10,2) NOT NULL DEFAULT 400.00,
+  -- `fee_paid` BOOLEAN NOT NULL DEFAULT FALSE,
   `paid_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `updated_by` INT DEFAULT NULL,
   `created_by` INT NOT NULL,

@@ -7,6 +7,9 @@ VALUES (
 -- name: GetProduct :one
 SELECT * FROM products WHERE id = ? LIMIT 1;
 
+-- name: GetProductRepayAmount :one
+SELECT repay_amount FROM products WHERE id = ? LIMIT 1;
+
 -- name: ListProducts :many
 SELECT * FROM products LIMIT ? OFFSET ?;
 

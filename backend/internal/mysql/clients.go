@@ -99,6 +99,18 @@ func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.
 	return *client, nil
 }
 
+func (r *ClientRepository) UpdateClientOverpayment(ctx context.Context, phoneNumber string, overpayment float64) error {
+	_, err := r.queries.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
+		PhoneNumber: phoneNumber,
+		Overpayment: overpayment,
+	})
+	if err != nil {
+		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update client overpayment: %s", err.Error())
+	}
+
+	return nil
+}
+
 func (r *ClientRepository) ListClients(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {
 	clients, err := r.queries.ListClients(ctx, generated.ListClientsParams{
 		Limit:  pkg.GetPageSize(),
@@ -133,17 +145,17 @@ func (r *ClientRepository) GetClient(ctx context.Context, clientID uint32) (repo
 	return convertGeneratedClient(client), nil
 }
 
-func (r *ClientRepository) GetClientByPhoneNumber(ctx context.Context, phoneNumber string) (repository.Client, error) {
-	client, err := r.queries.GetClientByPhoneNumber(ctx, phoneNumber)
+func (r *ClientRepository) GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error) {
+	id, err := r.queries.GetClientIDByPhoneNumber(ctx, phoneNumber)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return repository.Client{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "client not found")
+			return 0, pkg.Errorf(pkg.NOT_FOUND_ERROR, "client not found")
 		}
 
-		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s", err.Error())
+		return 0, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s", err.Error())
 	}
 
-	return convertGeneratedClient(client), nil
+	return id, nil
 }
 
 func (r *ClientRepository) ListClientsByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {

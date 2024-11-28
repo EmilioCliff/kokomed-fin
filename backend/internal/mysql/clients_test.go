@@ -318,9 +318,9 @@ func TestClientRepository_GetClientByPhoneNumber(t *testing.T) {
 			name: "OK",
 			buildStubs: func(mockQueries *mockdb.MockQuerier) {
 				mockQueries.EXPECT().
-					GetClientByPhoneNumber(gomock.Any(), gomock.Any()).
+					GetClientIDByPhoneNumber(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(generated.Client{ID: 1, FullName: "test"}, nil)
+					Return(uint32(1), nil)
 			},
 			wantErr: false,
 			err:     nil,
@@ -333,9 +333,9 @@ func TestClientRepository_GetClientByPhoneNumber(t *testing.T) {
 			name: "Not Found",
 			buildStubs: func(mockQueries *mockdb.MockQuerier) {
 				mockQueries.EXPECT().
-					GetClientByPhoneNumber(gomock.Any(), gomock.Any()).
+					GetClientIDByPhoneNumber(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(generated.Client{}, sql.ErrNoRows)
+					Return(uint32(0), sql.ErrNoRows)
 			},
 			wantErr:    true,
 			err:        errors.New(pkg.NOT_FOUND_ERROR),
@@ -345,9 +345,9 @@ func TestClientRepository_GetClientByPhoneNumber(t *testing.T) {
 			name: "Internal Error",
 			buildStubs: func(mockQueries *mockdb.MockQuerier) {
 				mockQueries.EXPECT().
-					GetClientByPhoneNumber(gomock.Any(), gomock.Any()).
+					GetClientIDByPhoneNumber(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(generated.Client{}, errors.New("error"))
+					Return(uint32(0), errors.New("error"))
 			},
 			wantErr:    true,
 			err:        errors.New(pkg.INTERNAL_ERROR),
@@ -359,14 +359,14 @@ func TestClientRepository_GetClientByPhoneNumber(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.buildStubs(mockQueries)
 
-			result, err := r.GetClientByPhoneNumber(context.Background(), "test")
+			id, err := r.GetClientIDByPhoneNumber(context.Background(), "test")
 
 			if tc.wantErr {
 				require.Error(t, err)
 				require.EqualError(t, errors.New(pkg.ErrorCode(err)), tc.err.Error())
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.wantResult, result)
+				require.Equal(t, tc.wantResult.ID, id)
 			}
 		})
 	}

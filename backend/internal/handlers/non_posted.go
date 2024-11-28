@@ -11,6 +11,7 @@ import (
 
 type nonPostedResponse struct {
 	ID                uint32            `json:"id"`
+	TransactionSource string            `json:"transaction_source"`
 	TransactionNumber string            `json:"transaction_number"`
 	AccountNumber     string            `json:"account_number"`
 	PhoneNumber       string            `json:"phone_number"`
@@ -29,6 +30,48 @@ func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
 	}
 
 	payments, err := s.repo.NonPosted.ListNonPosted(ctx, &pkg.PaginationMetadata{CurrentPage: pageNo})
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	rsp := make([]nonPostedResponse, len(payments))
+
+	for idx, p := range payments {
+		v, err := s.structureNonPosted(&p, ctx)
+		if err != nil {
+			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+			return
+		}
+
+		rsp[idx] = v
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
+}
+
+func (s *Server) listNonPostedByTransactionSource(ctx *gin.Context) {
+	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	query := ctx.Param("type")
+	if query == "" || (query != "mpesa" && query != "internal") {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid transaction_type")))
+
+		return
+	}
+
+	payments, err := s.repo.NonPosted.ListNonPostedByTransactionSource(
+		ctx,
+		query,
+		&pkg.PaginationMetadata{CurrentPage: pageNo},
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -107,38 +150,46 @@ func (s *Server) getNonPostedPayment(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, v)
 }
 
-type assignNonPostedPaymentRequest struct {
-	ClientID uint32 `binding:"required" json:"client_id"`
-}
+// type assignNonPostedPaymentRequest struct {
+// 	ClientID uint32  `binding:"required" json:"client_id"`
+// 	AdminID  uint32  `binding:"required" json:"admin_id"`
+// 	Amount   float64 `binding:"required" json:"amount"`
+// }
 
-func (s *Server) assignNonPostedPayment(ctx *gin.Context) {
-	var req assignNonPostedPaymentRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+// func (s *Server) assignNonPostedPayment(ctx *gin.Context) {
+// 	var req assignNonPostedPaymentRequest
+// 	if err := ctx.ShouldBindJSON(&req); err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
-		return
-	}
+// 		return
+// 	}
 
-	id, err := pkg.StringToUint32(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 	id, err := pkg.StringToUint32(ctx.Param("id"))
+// 	if err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 
-		return
-	}
+// 		return
+// 	}
 
-	_, err = s.repo.NonPosted.AssignNonPosted(ctx, id, req.ClientID)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+// 	err = s.payments.TriggerManualPayment(ctx, services.ManualPaymentData{
+// 		LoanID:      id,
+// 		ClientID:    req.ClientID,
+// 		Amount:      req.Amount,
+// 		AdminUserID: req.AdminID,
+// 	})
+// 	if err != nil {
+// 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-		return
-	}
+// 		return
+// 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
-}
+// 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
+// }
 
 func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (nonPostedResponse, error) {
 	v := nonPostedResponse{
 		ID:                p.ID,
+		TransactionSource: string(p.TransactionSource),
 		TransactionNumber: p.TransactionNumber,
 		AccountNumber:     p.AccountNumber,
 		PhoneNumber:       p.PhoneNumber,
