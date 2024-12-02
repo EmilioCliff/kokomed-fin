@@ -9,6 +9,7 @@ import {
 	Globe,
 	HelpCircle,
 } from "lucide-react";
+import { Link } from "react-router";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -25,16 +26,20 @@ function Navbar() {
 
 	return (
 		<>
-			<header className='shadow-lg bg-white fixed top-0 left-0 z-[20] w-full flex items-center pe-2'>
-				<div
-					className={`flex-none flex border-r-2 py-6 px-2 gap-2 ${
-						open ? "w-64" : ""
-					}`}
-				>
-					<Calendar />
-					<h3 className='text-lg font-extrabold tracking-widest'>Kokomed</h3>
+			<header className='shared-header-sidebar-styles shadow-lg fixed top-0 left-0 z-[20] w-full flex items-center pe-2'>
+				<div>
+					<Link
+						style={{ color: "white" }}
+						className={`flex-none flex border-r-2 py-6 px-2 gap-2 ${
+							open ? "w-64" : ""
+						} hover:cursor-pointer border-indigo-200/20`}
+						to='/'
+					>
+						<Calendar />
+						<h3 className='text-lg font-extrabold tracking-widest'>Kokomed</h3>
+					</Link>
 				</div>
-				<div className='border-r-2 py-6 px-4 border-grey'>
+				<div className='border-r-2 py-6 px-4 border-indigo-200/20'>
 					<Calendar className='hover:cursor-pointer' onClick={toggleSidebar} />
 				</div>
 

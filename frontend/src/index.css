@@ -1,9 +1,9 @@
+/*===== GOOGLE FONTS =====*/
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400..900&family=Nunito:wght@400..700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/*===== GOOGLE FONTS =====*/
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400..900&family=Nunito:wght@400..700&display=swap");
 
 :root {
 	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -78,7 +78,7 @@ button:focus-visible {
 } */
 
 @media (prefers-color-scheme: light) {
-	:root {
+	/* :root {
 		color: #213547;
 		background-color: #ffffff;
 	}
@@ -87,7 +87,7 @@ button:focus-visible {
 	}
 	button {
 		background-color: #f9f9f9;
-	}
+	} */
 }
 
 @layer base {
@@ -117,6 +117,16 @@ button:focus-visible {
 		--chart-4: 43 74% 66%;
 		--chart-5: 27 87% 67%;
 		--radius: 0.5rem; */
+
+		/* --sidebar-background: 0 0% 98%;
+		--sidebar-foreground: 240 5.3% 26.1%;
+		--sidebar-primary: 240 5.9% 10%;
+		--sidebar-primary-foreground: 0 0% 98%;
+		--sidebar-accent: 240 4.8% 95.9%;
+		--sidebar-accent-foreground: 240 5.9% 10%;
+		--sidebar-border: 220 13% 91%;
+		--sidebar-ring: 217.2 91.2% 59.8%; */
+
 		--background: 222.2 84% 4.9%;
 		--foreground: 210 40% 98%;
 		--card: 222.2 84% 4.9%;
@@ -142,14 +152,15 @@ button:focus-visible {
 		--chart-4: 280 65% 60%;
 		--chart-5: 340 75% 55%;
 		--radius: 0.5rem;
-		--sidebar-background: 0 0% 98%;
-		--sidebar-foreground: 240 5.3% 26.1%;
-		--sidebar-primary: 240 5.9% 10%;
-		--sidebar-primary-foreground: 0 0% 98%;
-		--sidebar-accent: 240 4.8% 95.9%;
-		--sidebar-accent-foreground: 240 5.9% 10%;
-		--sidebar-border: 220 13% 91%;
-		--sidebar-ring: 217.2 91.2% 59.8%;
+
+		--sidebar-background: 217.2 32.6% 15%; /* Darker, muted background for contrast */
+		--sidebar-foreground: 210 40% 98%; /* Bright foreground for readability */
+		--sidebar-primary: 217.2 91.2% 59.8%; /* Matches primary for cohesive accents */
+		--sidebar-primary-foreground: 222.2 47.4% 11.2%; /* High contrast for primary elements */
+		--sidebar-accent: 224.3 76.3% 48%; /* Slightly vibrant for interactive elements */
+		--sidebar-accent-foreground: 210 40% 98%; /* Bright text on accent background */
+		--sidebar-border: 217.2 32.6% 25%; /* Subtle, slightly darker than background */
+		--sidebar-ring: 224.3 76.3% 48%; /* Matches interactive ring for focus */
 	}
 	.dark {
 		--background: 0 0% 3.9%;
@@ -240,4 +251,10 @@ button,
 body {
 	font-family: var(--primary-style);
 	font-size: var(--normal-font-size);
+}
+
+.shared-header-sidebar-styles {
+	background-color: hsl(var(--sidebar-background));
+	color: hsl(var(--sidebar-foreground));
+	border-bottom: 3px solid hsl(var(--sidebar-border));
 }

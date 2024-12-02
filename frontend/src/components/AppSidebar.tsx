@@ -6,6 +6,7 @@ import {
 	Settings,
 	ChevronRight,
 } from "lucide-react";
+import { Link } from "react-router";
 import {
 	Sidebar,
 	SidebarContent,
@@ -143,11 +144,6 @@ function AppSidebar() {
 				variant='sidebar'
 				collapsible='icon'
 			>
-				<SidebarHeader className='flex flex-row'>
-					<Home width={24} className='mx-auto flex-none' />
-					{open ? <h3 className='grow text-start'>Loan Management</h3> : ""}
-				</SidebarHeader>
-				<Separator className='mt-2 mb-4' />
 				<SidebarContent>
 					<SidebarGroup>
 						<SidebarGroupContent>
@@ -162,7 +158,7 @@ function AppSidebar() {
 											<CollapsibleTrigger asChild>
 												<SidebarMenuButton asChild className='text-black'>
 													{/* isActive */}
-													<a href={item.url}>
+													<a style={{ color: "white" }} href={item.url}>
 														<item.icon />
 														<span>{item.title}</span>
 													</a>
@@ -173,9 +169,9 @@ function AppSidebar() {
 													{item.links.map((link, index) => (
 														<SidebarMenuSubItem key={index}>
 															<SidebarMenuSubButton asChild>
-																<a href={link.url}>
+																<Link to={link.url}>
 																	<span>{link.title}</span>
-																</a>
+																</Link>
 															</SidebarMenuSubButton>
 														</SidebarMenuSubItem>
 													))}
