@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/*===== GOOGLE FONTS =====*/
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400..900&family=Nunito:wght@400..700&display=swap");
+
 :root {
 	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 	line-height: 1.5;
@@ -11,6 +14,16 @@
 	color: rgba(255, 255, 255, 0.87);
 	background-color: #242424;
 
+	--primary-style: "Poppins", sans-serif;
+	--secondary-style: "Nunito", Nunito;
+	--secondary-style-alt: "Roboto Mono", monospace;
+
+	--font-light: 400;
+	--font-medium: 500;
+	--font-semi-bold: 600;
+	--font-bold: 700;
+	--font-bolder: 900;
+
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
@@ -18,13 +31,19 @@
 }
 
 a {
+	text-decoration: none;
+	color: black;
+	font-weight: 500;
+}
+
+/* a {
 	font-weight: 500;
 	color: #646cff;
 	text-decoration: inherit;
-}
-a:hover {
+} */
+/* a:hover {
 	color: #535bf2;
-}
+} */
 
 body {
 	margin: 0;
@@ -46,17 +65,17 @@ button {
 	font-size: 1em;
 	font-weight: 500;
 	font-family: inherit;
-	background-color: #1a1a1a;
+	/* background-color: #1a1a1a; */
 	cursor: pointer;
 	transition: border-color 0.25s;
 }
-button:hover {
+/* button:hover {
 	border-color: #646cff;
 }
 button:focus,
 button:focus-visible {
-	outline: 4px auto -webkit-focus-ring-color;
-}
+	outline: 2px auto -webkit-focus-ring-color;
+} */
 
 @media (prefers-color-scheme: light) {
 	:root {
@@ -73,7 +92,7 @@ button:focus-visible {
 
 @layer base {
 	:root {
-		--background: 0 0% 100%;
+		/* --background: 0 0% 100%;
 		--foreground: 0 0% 3.9%;
 		--card: 0 0% 100%;
 		--card-foreground: 0 0% 3.9%;
@@ -97,6 +116,31 @@ button:focus-visible {
 		--chart-3: 197 37% 24%;
 		--chart-4: 43 74% 66%;
 		--chart-5: 27 87% 67%;
+		--radius: 0.5rem; */
+		--background: 222.2 84% 4.9%;
+		--foreground: 210 40% 98%;
+		--card: 222.2 84% 4.9%;
+		--card-foreground: 210 40% 98%;
+		--popover: 222.2 84% 4.9%;
+		--popover-foreground: 210 40% 98%;
+		--primary: 217.2 91.2% 59.8%;
+		--primary-foreground: 222.2 47.4% 11.2%;
+		--secondary: 217.2 32.6% 17.5%;
+		--secondary-foreground: 210 40% 98%;
+		--muted: 217.2 32.6% 17.5%;
+		--muted-foreground: 215 20.2% 65.1%;
+		--accent: 217.2 32.6% 17.5%;
+		--accent-foreground: 210 40% 98%;
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 210 40% 98%;
+		--border: 217.2 32.6% 17.5%;
+		--input: 217.2 32.6% 17.5%;
+		--ring: 224.3 76.3% 48%;
+		--chart-1: 220 70% 50%;
+		--chart-2: 160 60% 45%;
+		--chart-3: 30 80% 55%;
+		--chart-4: 280 65% 60%;
+		--chart-5: 340 75% 55%;
 		--radius: 0.5rem;
 		--sidebar-background: 0 0% 98%;
 		--sidebar-foreground: 240 5.3% 26.1%;
@@ -150,4 +194,50 @@ button:focus-visible {
 	body {
 		@apply bg-background text-foreground;
 	}
+}
+
+/*===== BASE =====*/
+*,
+::before,
+::after {
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+}
+
+html {
+	scroll-behavior: smooth;
+	overflow-x: hidden;
+}
+
+body {
+	font-family: var(--primary-style);
+	overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	font-weight: var(--font-medium);
+	font-family: var(--secondary-style);
+}
+
+ul {
+	list-style: none;
+}
+
+/* svg,
+img {
+	width: 100%;
+	height: auto;
+	display: block;
+} */
+
+input,
+textarea,
+button,
+body {
+	font-family: var(--primary-style);
+	font-size: var(--normal-font-size);
 }

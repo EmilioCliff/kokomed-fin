@@ -20,9 +20,9 @@ function App() {
 						<Routes>
 							<Route path='/login' element={<LoginPage />} />
 							<Route path='/' element={<Dashboard />} />
-							<Route path='/loans' element={<LoansPage />} />
-							<Route path='/customers' element={<CustomersPage />} />
-							<Route path='/payments' element={<PaymentsPage />} />
+							<Route path='/loans/overview' element={<LoansPage />} />
+							<Route path='/customers/overview' element={<CustomersPage />} />
+							<Route path='/payments/overview' element={<PaymentsPage />} />
 							<Route path='*' element={<h1 className='mt-10'>404</h1>} />
 						</Routes>
 					</div>

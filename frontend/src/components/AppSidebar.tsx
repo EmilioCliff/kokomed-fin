@@ -1,4 +1,3 @@
-import React from "react";
 import {
 	Calendar,
 	Home,
@@ -34,96 +33,99 @@ import { Separator } from "./ui/separator";
 
 const items = [
 	{
-		title: "Home",
+		title: "Loans Module",
 		url: "#",
 		icon: Home,
 		links: [
 			{
 				title: "Overview",
+				url: "/loans/overview",
+			},
+			{
+				title: "Loans Timeline",
 				url: "#",
 			},
 			{
-				title: "Something Timeline",
-				url: "#",
-			},
-			{
-				title: "Something Kanban",
+				title: "Reports",
 				url: "#",
 			},
 		],
 	},
 	{
-		title: "Inbox",
-		url: "#",
-		icon: Inbox,
-		links: [
-			{
-				title: "Overview",
-				url: "#",
-			},
-			{
-				title: "Something Timeline",
-				url: "#",
-			},
-			{
-				title: "Something Kanban",
-				url: "#",
-			},
-		],
-	},
-	{
-		title: "Calendar",
+		title: "Payments Module",
 		url: "#",
 		icon: Calendar,
 		links: [
 			{
 				title: "Overview",
+				url: "/payments/overview",
+			},
+			{
+				title: "Payments Calendar",
 				url: "#",
 			},
 			{
-				title: "Something Timeline",
-				url: "#",
-			},
-			{
-				title: "Something Kanban",
+				title: "Reports",
 				url: "#",
 			},
 		],
 	},
 	{
-		title: "Search",
+		title: "Products Module",
+		url: "#",
+		icon: Calendar,
+		links: [
+			{
+				title: "Overview",
+				url: "/products/overview",
+			},
+			{
+				title: "Reports",
+				url: "#",
+			},
+		],
+	},
+	{
+		title: "Customers Module",
+		url: "#",
+		icon: Inbox,
+		links: [
+			{
+				title: "Overview",
+				url: "/customers/overview",
+			},
+			{
+				title: "Reports",
+				url: "#",
+			},
+		],
+	},
+	{
+		title: "Users Module",
 		url: "#",
 		icon: Search,
 		links: [
 			{
 				title: "Overview",
-				url: "#",
+				url: "/users/overview",
 			},
 			{
-				title: "Something Timeline",
-				url: "#",
-			},
-			{
-				title: "Something Kanban",
+				title: "Reports",
 				url: "#",
 			},
 		],
 	},
 	{
-		title: "Settings",
+		title: "Branches",
 		url: "#",
 		icon: Settings,
 		links: [
 			{
 				title: "Overview",
-				url: "#",
+				url: "/branches/overview",
 			},
 			{
-				title: "Something Timeline",
-				url: "#",
-			},
-			{
-				title: "Something Kanban",
+				title: "Reports",
 				url: "#",
 			},
 		],

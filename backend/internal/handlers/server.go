@@ -91,11 +91,14 @@ func (s *Server) setUpRoutes() {
 	// payments routes
 	s.router.POST("/payment/callback", s.paymentCallback)
 	s.router.PATCH("/payment/:id/assign", s.paymentByAdmin)
+
 	// payment of from credit to repay some loan(overpayment to pay loan)
 
 	s.srv = &http.Server{
-		Addr:    s.config.HTTP_PORT,
-		Handler: s.router.Handler(),
+		Addr:         s.config.HTTP_PORT,
+		Handler:      s.router.Handler(),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 }
 

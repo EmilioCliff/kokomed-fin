@@ -74,7 +74,7 @@ export default function LoansPage() {
 	};
 
 	return (
-		<div className='p-6'>
+		<div className='p-2 mt-14'>
 			<div className='flex justify-between items-center mb-4'>
 				<h1 className='text-3xl font-bold'>Loans</h1>
 				<Dialog>
