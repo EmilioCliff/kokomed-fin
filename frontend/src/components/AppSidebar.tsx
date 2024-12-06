@@ -6,31 +6,25 @@ import {
 	Settings,
 	ChevronRight,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import {
 	Sidebar,
 	SidebarContent,
 	SidebarGroup,
-	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuItem,
 	SidebarMenuBadge,
-	SidebarMenuAction,
 	SidebarMenuButton,
 	SidebarMenuSub,
 	SidebarMenuSubItem,
 	SidebarMenuSubButton,
-	SidebarGroupLabel,
-	SidebarGroupAction,
 	SidebarGroupContent,
-	useSidebar,
 } from "@/components/ui/sidebar";
 import {
 	Collapsible,
 	CollapsibleTrigger,
 	CollapsibleContent,
 } from "./ui/collapsible";
-import { Separator } from "./ui/separator";
 
 const items = [
 	{
@@ -134,8 +128,6 @@ const items = [
 ];
 
 function AppSidebar() {
-	const { open } = useSidebar();
-
 	return (
 		<>
 			<Sidebar
@@ -157,7 +149,6 @@ function AppSidebar() {
 										<SidebarMenuItem key={item.title}>
 											<CollapsibleTrigger asChild>
 												<SidebarMenuButton asChild className='text-black'>
-													{/* isActive */}
 													<a style={{ color: "white" }} href={item.url}>
 														<item.icon />
 														<span>{item.title}</span>
@@ -166,15 +157,27 @@ function AppSidebar() {
 											</CollapsibleTrigger>
 											<CollapsibleContent>
 												<SidebarMenuSub>
-													{item.links.map((link, index) => (
-														<SidebarMenuSubItem key={index}>
-															<SidebarMenuSubButton asChild>
-																<Link to={link.url}>
-																	<span>{link.title}</span>
-																</Link>
-															</SidebarMenuSubButton>
-														</SidebarMenuSubItem>
-													))}
+													{item.links.map((link, index) => {
+														const location = useLocation();
+														const isActive = location.pathname === link.url;
+
+														return (
+															<SidebarMenuSubItem key={index}>
+																<SidebarMenuSubButton
+																	className={`${
+																		isActive
+																			? "bg-sidebar-accent text-sidebar-accent-foreground"
+																			: "bg-transparent text-gray-400"
+																	} `}
+																	asChild
+																>
+																	<Link to={link.url}>
+																		<span>{link.title}</span>
+																	</Link>
+																</SidebarMenuSubButton>
+															</SidebarMenuSubItem>
+														);
+													})}
 												</SidebarMenuSub>
 											</CollapsibleContent>
 											<SidebarMenuBadge>

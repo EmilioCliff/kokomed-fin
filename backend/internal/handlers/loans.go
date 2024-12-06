@@ -69,7 +69,6 @@ type createLoanRequest struct {
 	InstallmentsPeriod uint32  `binding:"required" json:"installments_period"`
 	ProcessingFee      float64 `binding:"required" json:"processing_fee"`
 	ProcessingFeePaid  bool    `                   json:"processing_fee_paid"`
-	CreatedBy          uint32  `binding:"required" json:"created_by"`
 }
 
 func (s *Server) createLoan(ctx *gin.Context) {
@@ -89,7 +88,7 @@ func (s *Server) createLoan(ctx *gin.Context) {
 		InstallmentsPeriod: req.InstallmentsPeriod,
 		ProcessingFee:      req.ProcessingFee,
 		FeePaid:            false,
-		CreatedBy:          req.CreatedBy,
+		CreatedBy:          req.ApprovedBy,
 	}
 
 	if req.ProcessingFeePaid {

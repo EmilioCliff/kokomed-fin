@@ -12,7 +12,6 @@
 
 	color-scheme: light dark;
 	color: rgba(255, 255, 255, 0.87);
-	background-color: #242424;
 
 	--primary-style: "Poppins", sans-serif;
 	--secondary-style: "Nunito", Nunito;
@@ -32,7 +31,6 @@
 
 a {
 	text-decoration: none;
-	color: black;
 	font-weight: 500;
 }
 
@@ -48,7 +46,7 @@ a {
 body {
 	margin: 0;
 	display: flex;
-	place-items: center;
+	/* place-items: center; */
 	min-width: 320px;
 	min-height: 100vh;
 }
@@ -92,7 +90,7 @@ button:focus-visible {
 
 @layer base {
 	:root {
-		/* --background: 0 0% 100%;
+		--background: 0 0% 100%;
 		--foreground: 0 0% 3.9%;
 		--card: 0 0% 100%;
 		--card-foreground: 0 0% 3.9%;
@@ -116,7 +114,7 @@ button:focus-visible {
 		--chart-3: 197 37% 24%;
 		--chart-4: 43 74% 66%;
 		--chart-5: 27 87% 67%;
-		--radius: 0.5rem; */
+		--radius: 0.5rem;
 
 		/* --sidebar-background: 0 0% 98%;
 		--sidebar-foreground: 240 5.3% 26.1%;
@@ -127,7 +125,7 @@ button:focus-visible {
 		--sidebar-border: 220 13% 91%;
 		--sidebar-ring: 217.2 91.2% 59.8%; */
 
-		--background: 222.2 84% 4.9%;
+		/* --background: 222.2 84% 4.9%;
 		--foreground: 210 40% 98%;
 		--card: 222.2 84% 4.9%;
 		--card-foreground: 210 40% 98%;
@@ -151,7 +149,7 @@ button:focus-visible {
 		--chart-3: 30 80% 55%;
 		--chart-4: 280 65% 60%;
 		--chart-5: 340 75% 55%;
-		--radius: 0.5rem;
+		--radius: 0.5rem; */
 
 		--sidebar-background: 217.2 32.6% 15%; /* Darker, muted background for contrast */
 		--sidebar-foreground: 210 40% 98%; /* Bright foreground for readability */
@@ -208,6 +206,10 @@ button:focus-visible {
 }
 
 /*===== BASE =====*/
+#root {
+	width: 100vw;
+}
+
 *,
 ::before,
 ::after {
@@ -218,7 +220,6 @@ button:focus-visible {
 
 html {
 	scroll-behavior: smooth;
-	overflow-x: hidden;
 }
 
 body {
@@ -257,4 +258,29 @@ body {
 	background-color: hsl(var(--sidebar-background));
 	color: hsl(var(--sidebar-foreground));
 	border-bottom: 3px solid hsl(var(--sidebar-border));
+}
+
+.custom-sheet-class {
+	max-width: 90% !important;
+}
+
+@media (min-width: 640px) {
+	/* sm breakpoint */
+	.custom-sheet-class {
+		max-width: 60% !important;
+	}
+}
+
+@media (min-width: 1024px) {
+	/* lg breakpoint */
+	.custom-sheet-class {
+		max-width: 45% !important;
+	}
+}
+
+@media (min-width: 1280px) {
+	/* xl breakpoint */
+	.custom-sheet-class {
+		max-width: 45% !important;
+	}
 }

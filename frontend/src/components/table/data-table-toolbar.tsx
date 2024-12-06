@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-// import { DataTableViewOptions } from "@/app/(app)/examples/tasks/components/data-table-view-options";
+import { DataTableViewOptions } from "./data-table-view-options";
 
 import { statuses } from "../../data/loan";
 import DataTableFacetedFilter from "./data-table-faceted-filter";
@@ -18,7 +18,7 @@ export function DataTableToolbar<TData>({
 	const isFiltered = table.getState().columnFilters.length > 0;
 
 	return (
-		<div className='flex items-center justify-between'>
+		<div className='flex items-center justify-between mt-2 mb-6'>
 			<div className='flex flex-1 items-center space-x-2'>
 				<Input
 					placeholder='Filter client name...'
@@ -48,7 +48,7 @@ export function DataTableToolbar<TData>({
 					</Button>
 				)}
 			</div>
-			{/* <DataTableViewOptions table={table} /> */}
+			<DataTableViewOptions table={table} />
 		</div>
 	);
 }

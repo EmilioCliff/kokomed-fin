@@ -8,14 +8,18 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 
-const recentPayments = [
-	{ id: 1, borrower: "John Doe", amount: 1000, date: "2023-04-15" },
-	{ id: 2, borrower: "Jane Smith", amount: 750, date: "2023-04-14" },
-	{ id: 3, borrower: "Bob Johnson", amount: 1200, date: "2023-04-13" },
-	{ id: 4, borrower: "Alice Brown", amount: 500, date: "2023-04-12" },
-];
+interface RecentPaymentsProps {
+	id: number;
+	borrower: string;
+	amount: number;
+	date: string;
+}
 
-function RecentPayments() {
+function RecentPayments({
+	recentPayments,
+}: {
+	recentPayments: RecentPaymentsProps[];
+}) {
 	return (
 		<Card className='col-span-1'>
 			<CardHeader>
@@ -31,7 +35,7 @@ function RecentPayments() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{recentPayments.map((payment) => (
+						{recentPayments.map((payment: RecentPaymentsProps) => (
 							<TableRow key={payment.id}>
 								<TableCell>{payment.borrower}</TableCell>
 								<TableCell>${payment.amount}</TableCell>

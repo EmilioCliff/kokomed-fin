@@ -10,44 +10,38 @@ export const loanColumns: ColumnDef<Loan>[] = [
 			<DataTableColumnHeader column={column} title='Loan ID' />
 		),
 		cell: ({ row }) => (
-			<div className='w-[80px]'>{`LN${String(row.getValue("id")).padStart(
+			<div className='text-center'>{`LN${String(row.getValue("id")).padStart(
 				3,
 				"0"
 			)}`}</div>
 		),
 		enableSorting: true,
-		enableHiding: false,
-	},
-	// // Loan amount column
-	// {
-	// 	accessorKey: "amount",
-	// 	header: ({ column }) => (
-	// 		<DataTableColumnHeader column={column} title='Amount' />
-	// 	),
-	// 	cell: ({ row }) => (
-	// 		<div className='text-right'>${row.getValue("amount").toFixed(2)}</div>
-	// 	),
-	// 	enableSorting: true,
-	// },
-
-	{
-		accessorKey: "repayAmount",
-		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Repay Amount' />
-		),
-		cell: ({ row }) => (
-			<div className='text-right'>
-				{/* .toFixed(2) */}${row.getValue("repayAmount")}
-			</div>
-		),
-		enableSorting: true,
+		enableHiding: true,
 	},
 	{
 		id: "clientName",
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title='Client Name' />
 		),
-		cell: ({ row }) => <div>{row.original.client.fullName}</div>,
+		cell: ({ row }) => (
+			<div className='w-[80]'>{row.original.client.fullName}</div>
+		),
+		enableSorting: true,
+		filterFn: (row, columnId, filterValue) => {
+			const fullName = row.original.client.fullName.toLowerCase();
+			return fullName.includes(filterValue.toLowerCase());
+		},
+	},
+	{
+		accessorKey: "repayAmount",
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title='Amount(Ksh)' />
+		),
+		cell: ({ row }) => (
+			<div className=''>
+				{Number(row.getValue("repayAmount")).toLocaleString()}
+			</div>
+		),
 		enableSorting: true,
 	},
 	{
@@ -58,14 +52,6 @@ export const loanColumns: ColumnDef<Loan>[] = [
 		cell: ({ row }) => <div>{row.original.loanOfficer.fullName}</div>,
 		enableSorting: true,
 	},
-	// {
-	// 	accessorKey: "loanPurpose",
-	// 	header: ({ column }) => (
-	// 		<DataTableColumnHeader column={column} title='Loan Purpose' />
-	// 	),
-	// 	cell: ({ row }) => <div>{row.getValue("loanPurpose") || "N/A"}</div>,
-	// 	enableSorting: false,
-	// },
 	{
 		accessorKey: "disbursedOn",
 		header: ({ column }) => (
@@ -113,7 +99,10 @@ export const loanColumns: ColumnDef<Loan>[] = [
 				</Badge>
 			);
 		},
-		filterFn: (row, id, value) => value.includes(row.getValue(id)),
+		filterFn: (row, id, filterValues: string[]) => {
+			const cellValue = row.getValue(id);
+			return filterValues.includes(String(cellValue).toLowerCase());
+		},
 	},
 	{
 		accessorKey: "feePaid",
@@ -129,7 +118,9 @@ export const loanColumns: ColumnDef<Loan>[] = [
 			<DataTableColumnHeader column={column} title='Paid Amount' />
 		),
 		cell: ({ row }) => (
-			<div className='text-right'>${row.getValue("paidAmount")}</div>
+			<div className=''>
+				{Number(row.getValue("paidAmount")).toLocaleString()}
+			</div>
 		),
 		enableSorting: true,
 	},

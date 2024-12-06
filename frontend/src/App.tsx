@@ -13,19 +13,17 @@ function App() {
 	return (
 		<Router>
 			<SidebarProvider>
-				<div className='flex'>
-					<AppSidebar />
-					<div className='flex-1'>
-						<Navbar />
-						<Routes>
-							<Route path='/login' element={<LoginPage />} />
-							<Route path='/' element={<Dashboard />} />
-							<Route path='/loans/overview' element={<LoansPage />} />
-							<Route path='/customers/overview' element={<CustomersPage />} />
-							<Route path='/payments/overview' element={<PaymentsPage />} />
-							<Route path='*' element={<h1 className='mt-10'>404</h1>} />
-						</Routes>
-					</div>
+				<AppSidebar />
+				<Navbar />
+				<div className='p-4 overflow-x-auto my-28 px-2'>
+					<Routes>
+						<Route path='/login' element={<LoginPage />} />
+						<Route path='/' element={<Dashboard />} />
+						<Route path='/loans/overview' element={<LoansPage />} />
+						<Route path='/customers/overview' element={<CustomersPage />} />
+						<Route path='/payments/overview' element={<PaymentsPage />} />
+						<Route path='*' element={<h1 className='mt-10'>404</h1>} />
+					</Routes>
 				</div>
 			</SidebarProvider>
 		</Router>

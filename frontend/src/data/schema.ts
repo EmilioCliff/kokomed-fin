@@ -54,6 +54,22 @@ export const loanSchema = z.object({
 		}),
 });
 
+export const inactiveLoanSchema = z.object({
+	id: z.number(),
+	amount: z.number(),
+	repayAmount: z.number(),
+	client: clientSchema,
+	loanOfficer: userSchema,
+	approvedBy: userSchema,
+	approvedOn: z
+		.string()
+		.optional()
+		.refine((dateString) => !dateString || !isNaN(Date.parse(dateString)), {
+			message: "Invalid date string!",
+		}),
+});
+
 export type User = z.infer<typeof userSchema>;
 export type Client = z.infer<typeof clientSchema>;
 export type Loan = z.infer<typeof loanSchema>;
+export type InactiveLoan = z.infer<typeof inactiveLoanSchema>;
