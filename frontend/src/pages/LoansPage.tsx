@@ -36,35 +36,21 @@ const fieldRenderers: Record<string, (value: any) => JSX.Element> = {
 	createdBy: (value) => <UserCardDisplay user={isUser(value)} />,
 };
 
+const generatedLoans = generateRandomLoans(30);
+const validatedLoans = z.array(loanSchema).parse(generatedLoans);
+
 export default function LoanPage() {
 	const [loans, setLoans] = useState<Loan[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
 	const [selectedRow, setSelectedRow] = useState<Loan | null>(null);
 
 	useEffect(() => {
-		async function fetchLoans() {
-			try {
-				const generatedLoans = generateRandomLoans(30);
-				const validatedLoans = z.array(loanSchema).parse(generatedLoans);
-				setLoans(validatedLoans);
-			} catch (err: unknown) {
-				setError("Failed to fetch loans");
-				console.error(err);
-			} finally {
-				setLoading(false);
-			}
-		}
-
-		fetchLoans();
-	}, []);
+		setLoans(validatedLoans);
+		setLoading(false);
+	}, [validatedLoans]);
 
 	if (loading) {
 		return <div>Loading...</div>;
-	}
-
-	if (error) {
-		return <div>Error: {error}</div>;
 	}
 
 	return (

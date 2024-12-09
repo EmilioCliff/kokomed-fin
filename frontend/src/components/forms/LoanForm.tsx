@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import VirtualizeddSelect from "../VisualizeddSelect";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
 	Form,
 	FormControl,
@@ -13,6 +14,12 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,6 +42,7 @@ const loanFormSchema = z.object({
 	installmentsPeriod: z.coerce.number().gt(0),
 	processingFee: z.coerce.number().gt(0),
 	processingFeePaid: z.boolean(),
+	dob: z.string().date().optional(),
 });
 
 const products = Array.from({ length: 200 }, (_, i) => ({
@@ -75,11 +83,18 @@ export default function LoanForm() {
 		console.log(values);
 	}
 
+	function onError(errors: any) {
+		console.log(errors);
+	}
+
 	const isAdmin = true;
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+			<form
+				onSubmit={form.handleSubmit(onSubmit, onError)}
+				className='space-y-8'
+			>
 				<div className='grid grid-cols-1 md:grid-cols-2 gap-4 py-4'>
 					<FormField
 						control={form.control}
@@ -187,56 +202,86 @@ export default function LoanForm() {
 							</FormItem>
 						)}
 					/>
-					{isAdmin && (
-						<FormField
+					<div>
+						<p className='mb-4'>Processing Fee Paid</p>
+						<Controller
 							control={form.control}
 							name='processingFeePaid'
 							render={({ field }) => (
-								<FormItem className='space-y-3'>
-									<FormLabel>Processing Fee Paid</FormLabel>
-									<FormControl>
-										<RadioGroup
-											onValueChange={(value) => field.onChange(value === "yes")}
-											value={field.value ? "yes" : "no"}
-											className='flex space-x-4'
-										>
-											<FormItem className='flex items-center space-x-3 space-y-0'>
-												<FormControl>
-													<RadioGroupItem
-														className='peer'
-														value='yes'
-														id='processing-fee-yes'
-													/>
-												</FormControl>
-												<FormLabel
-													htmlFor='processing-fee-yes'
-													className='font-normal peer-checked:text-blue-600'
-												>
-													Yes
-												</FormLabel>
-											</FormItem>
-											<FormItem className='flex items-center space-x-3 space-y-0'>
-												<FormControl>
-													<RadioGroupItem
-														className='peer'
-														value='no'
-														id='processing-fee-no'
-													/>
-												</FormControl>
-												<FormLabel
-													htmlFor='processing-fee-no'
-													className='font-normal peer-checked:text-blue-600'
-												>
-													No
-												</FormLabel>
-											</FormItem>
-										</RadioGroup>
-									</FormControl>
-								</FormItem>
+								<div className='flex gap-x-8'>
+									<label>
+										<input
+											type='radio'
+											onBlur={field.onBlur}
+											onChange={() => field.onChange(true)}
+											checked={field.value === true}
+											className='mr-2'
+										/>
+										Yes
+									</label>
+									<label>
+										<input
+											type='radio'
+											onBlur={field.onBlur}
+											onChange={() => field.onChange(false)}
+											checked={field.value === false}
+											className='mr-2'
+										/>
+										No
+									</label>
+								</div>
 							)}
 						/>
-					)}
+					</div>
 				</div>
+				<FormField
+					control={form.control}
+					name='dob'
+					render={({ field }) => (
+						<FormItem className='flex flex-col'>
+							<FormLabel>Date of birth</FormLabel>
+							<Popover>
+								<PopoverTrigger asChild>
+									<FormControl>
+										<Button
+											variant={"outline"}
+											className={cn(
+												"w-[240px] pl-3 text-left font-normal",
+												!field.value && "text-muted-foreground"
+											)}
+										>
+											{field.value ? (
+												format(field.value, "PPP")
+											) : (
+												<span>Pick a date</span>
+											)}
+											<CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
+										</Button>
+									</FormControl>
+								</PopoverTrigger>
+								<PopoverContent className='w-auto p-0' align='start'>
+									<Calendar
+										mode='single'
+										selected={field.value ? new Date(field.value) : undefined}
+										onSelect={(date) =>
+											date instanceof Date
+												? field.onChange(format(date, "yyyy-MM-dd"))
+												: null
+										}
+										disabled={(date) =>
+											date > new Date() || date < new Date("1900-01-01")
+										}
+										initialFocus
+									/>
+								</PopoverContent>
+							</Popover>
+							<FormDescription>
+								Your date of birth is used to calculate your age.
+							</FormDescription>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
 				<Button className='ml-auto block' type='submit'>
 					Add Loan
 				</Button>
