@@ -7,7 +7,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { cn } from "./lib/utils";
+import { cn } from "../lib/utils";
 
 interface UserCardDisplayProps {
 	user: User;
@@ -19,7 +19,7 @@ function UserCardDisplay({ user }: UserCardDisplayProps) {
 			<CardHeader className='p-0 mb-2'>
 				<CardTitle className='text-lg font-semibold'>{user.fullName}</CardTitle>
 			</CardHeader>
-			<div className='flex gap-x-2'>
+			<div className='flex gap-x-2 justify-between'>
 				<div>
 					<CardDescription className='text-sm text-muted-foreground'>
 						Name

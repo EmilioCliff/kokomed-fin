@@ -261,26 +261,23 @@ body {
 }
 
 .custom-sheet-class {
-	max-width: 90% !important;
+	width: 100% !important;
 }
 
 @media (min-width: 640px) {
-	/* sm breakpoint */
+	.custom-sheet-class {
+		max-width: 100% !important;
+	}
+}
+
+@media (min-width: 1024px) {
 	.custom-sheet-class {
 		max-width: 60% !important;
 	}
 }
 
-@media (min-width: 1024px) {
-	/* lg breakpoint */
-	.custom-sheet-class {
-		max-width: 45% !important;
-	}
-}
-
 @media (min-width: 1280px) {
-	/* xl breakpoint */
 	.custom-sheet-class {
-		max-width: 45% !important;
+		max-width: 60% !important;
 	}
 }

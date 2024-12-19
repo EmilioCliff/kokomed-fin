@@ -22,7 +22,7 @@ function ClientCardDisplay({ client }: ClientCardDisplayProps) {
 					{client.fullName}
 				</CardTitle>
 			</CardHeader>
-			<div className='flex gap-x-2'>
+			<div className='flex gap-x-2 justify-between'>
 				<div>
 					<CardDescription className='text-sm text-muted-foreground'>
 						Name
@@ -40,7 +40,7 @@ function ClientCardDisplay({ client }: ClientCardDisplayProps) {
 					</CardContent>
 				</div>
 			</div>
-			<CardDescription className='text-sm text-muted-foreground my-2'>
+			<CardDescription className='text-sm text-muted-foreground my-4'>
 				<Badge variant='outline'>{client.active ? "Active" : "Inactive"}</Badge>
 			</CardDescription>
 			{/* <CardContent className='p-0 text-start'>

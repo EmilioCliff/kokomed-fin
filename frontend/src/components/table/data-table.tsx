@@ -30,12 +30,26 @@ interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	setSelectedRow: React.Dispatch<any>;
+	searchableColumns?: {
+		id: string;
+		title: string;
+	}[];
+	facetedFilterColumns?: {
+		id: string;
+		title: string;
+		options: {
+			label: string;
+			value: string;
+		}[];
+	}[];
 }
 
 export function DataTable<TData, TValue>({
 	columns,
 	data,
 	setSelectedRow,
+	searchableColumns = [],
+	facetedFilterColumns = [],
 }: DataTableProps<TData, TValue>) {
 	const [rowSelection, setRowSelection] = useState({});
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -67,7 +81,11 @@ export function DataTable<TData, TValue>({
 	return (
 		<>
 			<div className=''>
-				<DataTableToolbar table={table} />
+				<DataTableToolbar
+					table={table}
+					searchableColumns={searchableColumns}
+					facetedFilterColumns={facetedFilterColumns}
+				/>
 				<div className='rounded-md border text-center'>
 					<Table>
 						<TableHeader>
@@ -75,7 +93,11 @@ export function DataTable<TData, TValue>({
 								<TableRow key={headerGroup.id}>
 									{headerGroup.headers.map((header) => {
 										return (
-											<TableHead key={header.id} colSpan={header.colSpan}>
+											<TableHead
+												className='text-center'
+												key={header.id}
+												colSpan={header.colSpan}
+											>
 												{header.isPlaceholder
 													? null
 													: flexRender(

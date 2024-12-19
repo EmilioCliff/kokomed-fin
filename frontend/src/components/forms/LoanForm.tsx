@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
-import VirtualizeddSelect from "../VisualizeddSelect";
+import VirtualizeddSelect from "../VisualizedSelect";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -264,9 +264,7 @@ export default function LoanForm() {
 										mode='single'
 										selected={field.value ? new Date(field.value) : undefined}
 										onSelect={(date) =>
-											date instanceof Date
-												? field.onChange(format(date, "yyyy-MM-dd"))
-												: null
+											field.onChange(format(date!, "yyyy-MM-dd"))
 										}
 										disabled={(date) =>
 											date > new Date() || date < new Date("1900-01-01")

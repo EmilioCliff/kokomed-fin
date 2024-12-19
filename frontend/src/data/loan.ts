@@ -16,3 +16,25 @@ export const statuses = [
 		label: "DEFAULTED",
 	},
 ];
+
+export const roles = [
+	{
+		value: "admin",
+		label: "ADMIN",
+	},
+	{
+		value: "agent",
+		label: "AGENT",
+	},
+];
+
+export const clientStatus = [
+	{
+		value: "true",
+		label: "ACTIVE",
+	},
+	{
+		value: "false",
+		label: "INACTIVE",
+	},
+];

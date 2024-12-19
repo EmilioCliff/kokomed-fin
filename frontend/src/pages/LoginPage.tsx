@@ -1,176 +1,68 @@
-import { Table } from "@/components/Table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+	Card,
+	CardHeader,
+	CardTitle,
+	CardDescription,
+	CardContent,
+} from "@/components/ui/card";
 import { useState } from "react";
-import {
-	Sheet,
-	SheetContent,
-	SheetHeader,
-	SheetTitle,
-	SheetTrigger,
-} from "@/components/ui/sheet";
+import { Eye, EyeOff } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-const columns = [
-	{ key: "id", label: "ID", sortable: true },
-	{ key: "customerName", label: "Customer Name", sortable: true },
-	{ key: "amount", label: "Amount", sortable: true },
-	{
-		key: "status",
-		label: "Status",
-		sortable: true,
-		render: (value: string) => (
-			// variant={value === "Active" ? "success" : "secondary"}
-			<Badge>{value}</Badge>
-		),
-	},
-	{ key: "dueDate", label: "Due Date", sortable: true },
-];
-
-const initialData = [
-	{
-		id: 1,
-		customerName: "John Doe",
-		amount: 5000,
-		status: "Active",
-		dueDate: "2023-12-31",
-	},
-	{
-		id: 2,
-		customerName: "Jane Smith",
-		amount: 7500,
-		status: "Inactive",
-		dueDate: "2023-11-30",
-	},
-	{
-		id: 3,
-		customerName: "Bob Johnson",
-		amount: 10000,
-		status: "Active",
-		dueDate: "2024-01-15",
-	},
-];
-
-export default function LoansPage() {
-	const [data, setData] = useState(initialData);
-	const [newLoan, setNewLoan] = useState({
-		customerName: "",
-		amount: "",
-		status: "Active",
-		dueDate: "",
-	});
-	const [selectedRow, setSelectedRow] = useState<
-		(typeof initialData)[0] | null
-	>(null);
-
-	const handleAddLoan = () => {
-		const newId = Math.max(...data.map((loan) => loan.id)) + 1;
-		setData([
-			...data,
-			{ id: newId, ...newLoan, amount: Number(newLoan.amount) },
-		]);
-		setNewLoan({ customerName: "", amount: "", status: "Active", dueDate: "" });
-	};
+export default function Component() {
+	const [showPassword, setShowPassword] = useState(false);
 
 	return (
-		<div className='p-6'>
-			<div className='flex justify-between items-center mb-4'>
-				<h1 className='text-3xl font-bold'>Loans</h1>
-				<Dialog>
-					<DialogTrigger asChild>
-						<Button>Add New Loan</Button>
-					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Add New Loan</DialogTitle>
-							<DialogDescription>
-								Enter the details for the new loan.
-							</DialogDescription>
-						</DialogHeader>
-						<div className='grid gap-4 py-4'>
-							<div className='grid grid-cols-4 items-center gap-4'>
-								<Label htmlFor='customerName' className='text-right'>
-									Customer Name
-								</Label>
+		<div className='grid grid-cols-2 min-h-full'>
+			<div className='bg-slate-500 bg-custom-bg bg-cover bg-center'></div>
+			<div className='w-full min-h-full flex justify-center items-center'>
+				<Card className='mx-auto max-w-4xl border-none shadow-none flex-col text-center'>
+					<CardHeader className='space-y-1 gap-4'>
+						<CardTitle className='text-2xl font-bold'>LOGIN</CardTitle>
+						<CardDescription className=''>
+							Welcome to Kokomed Finance System
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div className='space-y-4'>
+							<div className='space-y-2'>
 								<Input
-									id='customerName'
-									value={newLoan.customerName}
-									onChange={(e) =>
-										setNewLoan({ ...newLoan, customerName: e.target.value })
-									}
-									className='col-span-3'
+									id='email'
+									type='email'
+									placeholder='m@example.com'
+									required
 								/>
 							</div>
-							<div className='grid grid-cols-4 items-center gap-4'>
-								<Label htmlFor='amount' className='text-right'>
-									Amount
-								</Label>
+							<div className='space-y-2 relative'>
 								<Input
-									id='amount'
-									type='number'
-									value={newLoan.amount}
-									onChange={(e) =>
-										setNewLoan({ ...newLoan, amount: e.target.value })
-									}
-									className='col-span-3'
+									id='password'
+									className='pr-10'
+									placeholder='Password'
+									type={showPassword ? "text" : "password"}
+									required
+									autoComplete='off'
 								/>
+								<button
+									type='button'
+									className='absolute right-3 top-1/3 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none'
+									onClick={() => setShowPassword((prevState) => !prevState)}
+									aria-label={showPassword ? "Hide password" : "Show password"}
+								>
+									{showPassword ? (
+										<EyeOff className='h-5 w-5' />
+									) : (
+										<Eye className='h-5 w-5' />
+									)}
+								</button>
 							</div>
-							<div className='grid grid-cols-4 items-center gap-4'>
-								<Label htmlFor='dueDate' className='text-right'>
-									Due Date
-								</Label>
-								<Input
-									id='dueDate'
-									type='date'
-									value={newLoan.dueDate}
-									onChange={(e) =>
-										setNewLoan({ ...newLoan, dueDate: e.target.value })
-									}
-									className='col-span-3'
-								/>
-							</div>
+							<Button type='submit' className='w-full'>
+								Login
+							</Button>
 						</div>
-						<DialogFooter>
-							<Button onClick={handleAddLoan}>Add Loan</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
+					</CardContent>
+				</Card>
 			</div>
-			<Table
-				columns={columns}
-				data={data}
-				onRowClick={(row) => setSelectedRow(row)}
-			/>
-			<Sheet
-				open={!!selectedRow}
-				onOpenChange={(open) => !open && setSelectedRow(null)}
-			>
-				<SheetContent>
-					<SheetHeader>
-						<SheetTitle>Loan Details</SheetTitle>
-					</SheetHeader>
-					{selectedRow && (
-						<div className='py-4'>
-							{Object.entries(selectedRow).map(([key, value]) => (
-								<div key={key} className='flex justify-between py-2'>
-									<span className='font-medium'>{key}</span>
-									<span>{value}</span>
-								</div>
-							))}
-						</div>
-					)}
-				</SheetContent>
-			</Sheet>
 		</div>
 	);
 }

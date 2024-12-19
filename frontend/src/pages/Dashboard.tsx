@@ -5,10 +5,11 @@ import { Wallet, Flag, DollarSign, Users } from "lucide-react";
 import { InactiveLoan, inactiveLoanSchema } from "@/data/schema";
 import { useState, useEffect } from "react";
 import { z } from "zod";
-import { generateRandomInactiveLoans } from "@/components/lib/generator";
+import { generateRandomInactiveLoans } from "@/lib/generator";
 import { DataTable } from "@/components/table/data-table";
-import { inactiveLoanColumns } from "@/components/table/inactive-loan-columns";
+import { inactiveLoanColumns } from "@/components/table/columns/inactive-loan";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DashboardSkeleton from "@/components/DashboardSkeleton";
 
 const widgets = [
 	{
@@ -76,7 +77,7 @@ function Dashboard() {
 				setError("Failed to fetch loans");
 				console.error(err);
 			} finally {
-				setLoading(false);
+				// setLoading(false);
 			}
 		}
 
@@ -84,7 +85,7 @@ function Dashboard() {
 	}, []);
 
 	if (loading) {
-		return <div>Loading...</div>;
+		return <DashboardSkeleton />;
 	}
 
 	if (error) {

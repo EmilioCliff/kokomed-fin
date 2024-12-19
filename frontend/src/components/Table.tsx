@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
 	Table as ShadcnTable,
 	TableBody,
@@ -33,7 +33,7 @@ interface TableProps {
 export function Table({ columns, data, onRowClick }: TableProps) {
 	const [sortColumn, setSortColumn] = useState<string | null>(null);
 	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-	const [selectedRow, setSelectedRow] = useState<any | null>(null);
+	// const [selectedRow, setSelectedRow] = useState<any | null>(null);
 
 	const handleSort = (column: string) => {
 		if (sortColumn === column) {
@@ -44,7 +44,7 @@ export function Table({ columns, data, onRowClick }: TableProps) {
 		}
 	};
 
-	const sortedData = React.useMemo(() => {
+	const sortedData = useMemo(() => {
 		if (!sortColumn) return data;
 
 		return [...data].sort((a, b) => {
