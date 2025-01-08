@@ -66,6 +66,8 @@ export default function LoanPage() {
 		setLoading(false);
 	}, [validatedLoans]);
 
+	console.log("Here")
+
 	const fieldRenderers: Record<string, (value: any) => JSX.Element> = {
 		id: (value) => (
 			<Input
