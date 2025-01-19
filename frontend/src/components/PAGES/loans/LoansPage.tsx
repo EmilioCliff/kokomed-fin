@@ -48,12 +48,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { useQuery } from "@tanstack/react-query";
+import { useAuthContext } from "@/context/AuthContext";
+import { getUser } from "@/services/getUsers";
+
 const isAdmin = true;
 
 const generatedLoans = generateRandomLoans(30);
 const validatedLoans = z.array(loanSchema).parse(generatedLoans);
 
 export default function LoanPage() {
+	const data2 = useAuthContext();
+	const { isLoading, error, data } = useQuery({
+		queryKey: ["loans", {pageNo: 0}],
+		queryFn: getUser,
+	})
+	console.log(data)
+	console.log(data2)
+
 	const [loans, setLoans] = useState<Loan[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [selectedRow, setSelectedRow] = useState<Loan | null>(null);
