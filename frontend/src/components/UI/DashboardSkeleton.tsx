@@ -1,4 +1,4 @@
-import { Skeleton } from "./ui/skeleton";
+import { Skeleton } from "../ui/skeleton";
 import TableSkeleton from "./TableSkeleton";
 
 function DashboardSkeleton() {

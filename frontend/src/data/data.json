@@ -1,0 +1,4989 @@
+{
+    "branches": [
+      {
+        "id": 58,
+        "branchName": "Schultz, Beahan and Metz"
+      },
+      {
+        "id": 60,
+        "branchName": "Predovic - Hartmann"
+      },
+      {
+        "id": 68,
+        "branchName": "Swift and Sons"
+      },
+      {
+        "id": 52,
+        "branchName": "Walsh, Veum and Douglas"
+      },
+      {
+        "id": 92,
+        "branchName": "Walker, Krajcik and Schultz"
+      },
+      {
+        "id": 53,
+        "branchName": "Schulist Inc"
+      },
+      {
+        "id": 43,
+        "branchName": "Lesch - O'Conner"
+      },
+      {
+        "id": 91,
+        "branchName": "Tillman, Cassin and Cummings"
+      },
+      {
+        "id": 46,
+        "branchName": "Wiza - Cole"
+      },
+      {
+        "id": 27,
+        "branchName": "Pollich - Considine"
+      },
+      {
+        "id": 29,
+        "branchName": "Deckow Group"
+      },
+      {
+        "id": 15,
+        "branchName": "Littel - Howe"
+      },
+      {
+        "id": 3,
+        "branchName": "Cremin - Leuschke"
+      },
+      {
+        "id": 8,
+        "branchName": "Greenfelder Group"
+      },
+      {
+        "id": 91,
+        "branchName": "Walker, Crist and Cormier"
+      },
+      {
+        "id": 78,
+        "branchName": "Hilll Group"
+      },
+      {
+        "id": 18,
+        "branchName": "Bashirian, Cummerata and Bruen"
+      },
+      {
+        "id": 37,
+        "branchName": "Stamm, Bechtelar and Mitchell"
+      },
+      {
+        "id": 60,
+        "branchName": "O'Keefe - Prohaska"
+      },
+      {
+        "id": 25,
+        "branchName": "Zboncak LLC"
+      },
+      {
+        "id": 72,
+        "branchName": "Rau, Abbott and Weber"
+      },
+      {
+        "id": 38,
+        "branchName": "Ebert - Ruecker"
+      },
+      {
+        "id": 13,
+        "branchName": "Lesch Group"
+      },
+      {
+        "id": 74,
+        "branchName": "Satterfield LLC"
+      },
+      {
+        "id": 89,
+        "branchName": "Bashirian - Luettgen"
+      },
+      {
+        "id": 52,
+        "branchName": "Douglas, Rohan and Hamill"
+      },
+      {
+        "id": 100,
+        "branchName": "Schmidt, Quitzon and Bahringer"
+      },
+      {
+        "id": 84,
+        "branchName": "Braun - Zieme"
+      },
+      {
+        "id": 18,
+        "branchName": "Gleichner - Krajcik"
+      },
+      {
+        "id": 56,
+        "branchName": "Becker and Sons"
+      }
+    ],
+    "customers": [
+      {
+        "id": 26,
+        "fullName": "Georgia Lindgren",
+        "phoneNumber": "+13482879202",
+        "idNumber": "43407444",
+        "dob": "2024-02-02",
+        "gender": "FEMALE",
+        "active": false,
+        "branchName": "Dibbert, Reilly and Brown",
+        "assignedStaff": {
+          "id": 9,
+          "fullName": "Lucas Homenick",
+          "phoneNumber": "+14967156366",
+          "email": "Laury71@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Doyle Group",
+          "createdAt": "2024-07-29"
+        },
+        "overpayment": 1774,
+        "dueAmount": 6978,
+        "createdBy": {
+          "id": 87,
+          "fullName": "Mrs. Genevieve Grady",
+          "phoneNumber": "+18638166707",
+          "email": "Destin.Witting@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Bernhard, Muller and Bailey",
+          "createdAt": "2024-06-06"
+        },
+        "createdAt": "2024-06-01"
+      },
+      {
+        "id": 12,
+        "fullName": "Darrel Crist-Schultz",
+        "phoneNumber": "+17279930405",
+        "idNumber": "43001447",
+        "dob": "2024-04-21",
+        "gender": "FEMALE",
+        "active": true,
+        "branchName": "Morar Group",
+        "assignedStaff": {
+          "id": 95,
+          "fullName": "Evelyn Hessel II",
+          "phoneNumber": "+17775816605",
+          "email": "Price.Brakus@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Huels and Sons",
+          "createdAt": "2024-05-19"
+        },
+        "overpayment": 9982,
+        "dueAmount": 1217,
+        "createdBy": {
+          "id": 9,
+          "fullName": "Rebecca Bahringer",
+          "phoneNumber": "+17796687013",
+          "email": "Bell.Reichert@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Keebler LLC",
+          "createdAt": "2024-12-01"
+        },
+        "createdAt": "2024-01-19"
+      },
+      {
+        "id": 95,
+        "fullName": "Gabriel McGlynn",
+        "phoneNumber": "+16646079125",
+        "idNumber": "38241832",
+        "dob": "2024-03-29",
+        "gender": "FEMALE",
+        "active": true,
+        "branchName": "Shanahan - Williamson",
+        "assignedStaff": {
+          "id": 63,
+          "fullName": "Jacqueline Carter",
+          "phoneNumber": "+19132014567",
+          "email": "Syble_Kuhic76@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Roob, Hodkiewicz and Lemke",
+          "createdAt": "2024-08-29"
+        },
+        "overpayment": 8146,
+        "dueAmount": 4531,
+        "createdBy": {
+          "id": 63,
+          "fullName": "Justin Yost",
+          "phoneNumber": "+14614115705",
+          "email": "Bertram.Lind5@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Boehm - Rempel",
+          "createdAt": "2024-05-22"
+        },
+        "createdAt": "2024-12-25"
+      },
+      {
+        "id": 37,
+        "fullName": "Sue Abshire",
+        "phoneNumber": "+16012723675",
+        "idNumber": "32477585",
+        "dob": "2024-08-31",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Moore LLC",
+        "assignedStaff": {
+          "id": 67,
+          "fullName": "Eddie Gerlach",
+          "phoneNumber": "+16047553401",
+          "email": "Delfina1@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hills - Armstrong",
+          "createdAt": "2024-06-06"
+        },
+        "overpayment": 2101,
+        "dueAmount": 1102,
+        "createdBy": {
+          "id": 43,
+          "fullName": "Jamie McDermott",
+          "phoneNumber": "+18783869371",
+          "email": "Emmy.Bergnaum@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Mosciski, Osinski and Swaniawski",
+          "createdAt": "2024-09-30"
+        },
+        "createdAt": "2024-02-20"
+      },
+      {
+        "id": 91,
+        "fullName": "Pat Wehner",
+        "phoneNumber": "+12485676424",
+        "idNumber": "76395844",
+        "dob": "2024-08-03",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Pollich - Walter",
+        "assignedStaff": {
+          "id": 89,
+          "fullName": "Eugene Botsford",
+          "phoneNumber": "+15783430034",
+          "email": "Marlene.Mohr@gmail.com",
+          "role": "AGENT",
+          "branchName": "Feeney - Hudson",
+          "createdAt": "2024-06-09"
+        },
+        "overpayment": 1707,
+        "dueAmount": 8375,
+        "createdBy": {
+          "id": 46,
+          "fullName": "Dwight Gleason",
+          "phoneNumber": "+19975395053",
+          "email": "Keenan_Baumbach20@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Lakin - Bechtelar",
+          "createdAt": "2024-02-22"
+        },
+        "createdAt": "2024-04-17"
+      },
+      {
+        "id": 45,
+        "fullName": "Opal Gulgowski",
+        "phoneNumber": "+14405965555",
+        "idNumber": "82443858",
+        "dob": "2024-06-21",
+        "gender": "FEMALE",
+        "active": true,
+        "branchName": "Sauer and Sons",
+        "assignedStaff": {
+          "id": 88,
+          "fullName": "Mr. Bryant Cronin",
+          "phoneNumber": "+15304729923",
+          "email": "Lyla93@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Schroeder - Schneider",
+          "createdAt": "2024-03-22"
+        },
+        "overpayment": 9417,
+        "dueAmount": 6404,
+        "createdBy": {
+          "id": 27,
+          "fullName": "Roman Bergnaum",
+          "phoneNumber": "+17604084835",
+          "email": "Olen20@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Stanton - Ebert",
+          "createdAt": "2024-04-08"
+        },
+        "createdAt": "2024-08-06"
+      },
+      {
+        "id": 99,
+        "fullName": "Elbert Pfeffer",
+        "phoneNumber": "+15919993169",
+        "idNumber": "86647942",
+        "dob": "2024-11-26",
+        "gender": "FEMALE",
+        "active": false,
+        "branchName": "Rodriguez, McClure and Botsford",
+        "assignedStaff": {
+          "id": 49,
+          "fullName": "Darrell Dare V",
+          "phoneNumber": "+12708424150",
+          "email": "Linnie_Rohan@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Fay - Schmeler",
+          "createdAt": "2024-03-04"
+        },
+        "overpayment": 5328,
+        "dueAmount": 5182,
+        "createdBy": {
+          "id": 3,
+          "fullName": "Faith Trantow",
+          "phoneNumber": "+19597702442",
+          "email": "Katlyn.Witting@gmail.com",
+          "role": "AGENT",
+          "branchName": "Padberg, Schmitt and Braun",
+          "createdAt": "2024-06-18"
+        },
+        "createdAt": "2024-06-22"
+      },
+      {
+        "id": 61,
+        "fullName": "Kristin Larkin",
+        "phoneNumber": "+16296855226",
+        "idNumber": "00424905",
+        "dob": "2024-06-11",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Bechtelar - Jenkins",
+        "assignedStaff": {
+          "id": 76,
+          "fullName": "Sylvester Romaguera III",
+          "phoneNumber": "+14934765296",
+          "email": "Loraine.Fahey-Bergstrom39@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Wintheiser Inc",
+          "createdAt": "2024-09-29"
+        },
+        "overpayment": 9914,
+        "dueAmount": 2258,
+        "createdBy": {
+          "id": 74,
+          "fullName": "Jeff Larson",
+          "phoneNumber": "+15712146565",
+          "email": "Candace_Rodriguez@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Schmeler, Waters and Shanahan",
+          "createdAt": "2024-02-21"
+        },
+        "createdAt": "2024-10-30"
+      },
+      {
+        "id": 8,
+        "fullName": "Wanda Emard",
+        "phoneNumber": "+19047306943",
+        "idNumber": "59903832",
+        "dob": "2024-03-01",
+        "gender": "FEMALE",
+        "active": false,
+        "branchName": "Veum LLC",
+        "assignedStaff": {
+          "id": 26,
+          "fullName": "Jorge Morar",
+          "phoneNumber": "+12575397813",
+          "email": "Augustus18@gmail.com",
+          "role": "AGENT",
+          "branchName": "Gottlieb - Dietrich",
+          "createdAt": "2024-12-25"
+        },
+        "overpayment": 5266,
+        "dueAmount": 8312,
+        "createdBy": {
+          "id": 45,
+          "fullName": "Maggie Grady",
+          "phoneNumber": "+19296432539",
+          "email": "Rey.Kassulke5@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Bauch - Kessler",
+          "createdAt": "2024-12-04"
+        },
+        "createdAt": "2024-12-28"
+      },
+      {
+        "id": 2,
+        "fullName": "Reginald O'Connell",
+        "phoneNumber": "+12962477164",
+        "idNumber": "49285405",
+        "dob": "2024-04-09",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Fisher, Lynch and Gleason",
+        "assignedStaff": {
+          "id": 20,
+          "fullName": "Mr. Lorenzo Sporer",
+          "phoneNumber": "+19782731151",
+          "email": "Nikko.Mosciski@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Upton Group",
+          "createdAt": "2024-07-12"
+        },
+        "overpayment": 1504,
+        "dueAmount": 736,
+        "createdBy": {
+          "id": 37,
+          "fullName": "Sherri Hickle DVM",
+          "phoneNumber": "+15618586141",
+          "email": "Cleveland_Greenfelder81@gmail.com",
+          "role": "AGENT",
+          "branchName": "Swift, Renner and Littel",
+          "createdAt": "2024-08-07"
+        },
+        "createdAt": "2024-06-09"
+      },
+      {
+        "id": 11,
+        "fullName": "Kay Gorczany",
+        "phoneNumber": "+14257862308",
+        "idNumber": "24421095",
+        "dob": "2024-09-20",
+        "gender": "FEMALE",
+        "active": true,
+        "branchName": "Wehner - Lowe",
+        "assignedStaff": {
+          "id": 90,
+          "fullName": "Derek Pagac",
+          "phoneNumber": "+13124049989",
+          "email": "Joe_Ortiz22@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Dietrich, Bahringer and Feil",
+          "createdAt": "2024-07-22"
+        },
+        "overpayment": 7620,
+        "dueAmount": 2527,
+        "createdBy": {
+          "id": 46,
+          "fullName": "Wilbur Volkman",
+          "phoneNumber": "+13245868860",
+          "email": "Estelle_Daugherty@gmail.com",
+          "role": "AGENT",
+          "branchName": "Towne LLC",
+          "createdAt": "2024-03-21"
+        },
+        "createdAt": "2024-09-28"
+      },
+      {
+        "id": 99,
+        "fullName": "Caleb Schinner III",
+        "phoneNumber": "+18669915440",
+        "idNumber": "74482849",
+        "dob": "2024-01-31",
+        "gender": "FEMALE",
+        "active": true,
+        "branchName": "Lubowitz Inc",
+        "assignedStaff": {
+          "id": 24,
+          "fullName": "Howard Jones",
+          "phoneNumber": "+13303443065",
+          "email": "Harold.Langworth-Barrows87@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "McKenzie, Sauer and Kirlin",
+          "createdAt": "2024-04-02"
+        },
+        "overpayment": 8679,
+        "dueAmount": 9397,
+        "createdBy": {
+          "id": 39,
+          "fullName": "Ada Frami",
+          "phoneNumber": "+19514546820",
+          "email": "Ethel98@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Kreiger Inc",
+          "createdAt": "2024-03-02"
+        },
+        "createdAt": "2024-02-12"
+      },
+      {
+        "id": 42,
+        "fullName": "Mike Jacobson",
+        "phoneNumber": "+17637938276",
+        "idNumber": "76963517",
+        "dob": "2024-11-06",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "McGlynn LLC",
+        "assignedStaff": {
+          "id": 62,
+          "fullName": "Doreen Jacobi",
+          "phoneNumber": "+12019351274",
+          "email": "Estell87@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Zulauf and Sons",
+          "createdAt": "2024-12-08"
+        },
+        "overpayment": 6381,
+        "dueAmount": 1242,
+        "createdBy": {
+          "id": 80,
+          "fullName": "Erin Kuhn",
+          "phoneNumber": "+14186013158",
+          "email": "Hunter_Dare29@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Olson, Halvorson and Quigley",
+          "createdAt": "2024-10-26"
+        },
+        "createdAt": "2024-12-31"
+      },
+      {
+        "id": 51,
+        "fullName": "Loren Nienow",
+        "phoneNumber": "+14889276581",
+        "idNumber": "86069778",
+        "dob": "2024-08-06",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Lebsack - Hamill",
+        "assignedStaff": {
+          "id": 65,
+          "fullName": "Vanessa Daniel",
+          "phoneNumber": "+19577844877",
+          "email": "Pansy.Cartwright3@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Ratke - Pouros",
+          "createdAt": "2024-03-19"
+        },
+        "overpayment": 7506,
+        "dueAmount": 7294,
+        "createdBy": {
+          "id": 95,
+          "fullName": "Dr. Linda Hauck",
+          "phoneNumber": "+15728120939",
+          "email": "Juanita.Lebsack87@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Doyle, Jacobi and Thompson",
+          "createdAt": "2024-11-01"
+        },
+        "createdAt": "2024-12-05"
+      },
+      {
+        "id": 99,
+        "fullName": "Krista Ernser Sr.",
+        "phoneNumber": "+16109587385",
+        "idNumber": "44343058",
+        "dob": "2024-04-10",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Goyette Group",
+        "assignedStaff": {
+          "id": 69,
+          "fullName": "Norma Jakubowski",
+          "phoneNumber": "+19619618184",
+          "email": "Marilyne55@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Roberts, Mertz and Smitham",
+          "createdAt": "2024-11-19"
+        },
+        "overpayment": 2677,
+        "dueAmount": 3780,
+        "createdBy": {
+          "id": 69,
+          "fullName": "Roy Kub",
+          "phoneNumber": "+18257592865",
+          "email": "Javonte.Parker@gmail.com",
+          "role": "AGENT",
+          "branchName": "Conn LLC",
+          "createdAt": "2024-04-18"
+        },
+        "createdAt": "2025-01-13"
+      },
+      {
+        "id": 40,
+        "fullName": "Sylvester Reynolds",
+        "phoneNumber": "+14393583394",
+        "idNumber": "87504122",
+        "dob": "2024-05-10",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Predovic - Dach",
+        "assignedStaff": {
+          "id": 41,
+          "fullName": "Mattie Schaefer",
+          "phoneNumber": "+17057579455",
+          "email": "Corine_Predovic63@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Medhurst, Heller and Gulgowski",
+          "createdAt": "2025-01-02"
+        },
+        "overpayment": 7494,
+        "dueAmount": 8798,
+        "createdBy": {
+          "id": 69,
+          "fullName": "Dr. Corey Grady",
+          "phoneNumber": "+18922217562",
+          "email": "Lambert.Kub-Conn@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Green Inc",
+          "createdAt": "2024-03-18"
+        },
+        "createdAt": "2024-05-07"
+      },
+      {
+        "id": 33,
+        "fullName": "Israel Moen",
+        "phoneNumber": "+17023711405",
+        "idNumber": "35263634",
+        "dob": "2024-04-15",
+        "gender": "FEMALE",
+        "active": true,
+        "branchName": "Ryan, Terry and Collins",
+        "assignedStaff": {
+          "id": 9,
+          "fullName": "Alan Hand",
+          "phoneNumber": "+16944866045",
+          "email": "Vivianne65@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Reilly Inc",
+          "createdAt": "2024-09-28"
+        },
+        "overpayment": 9439,
+        "dueAmount": 9234,
+        "createdBy": {
+          "id": 81,
+          "fullName": "Theodore Reinger",
+          "phoneNumber": "+14778955475",
+          "email": "Haylee_DuBuque@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Hauck, Anderson and Williamson",
+          "createdAt": "2024-03-10"
+        },
+        "createdAt": "2024-05-05"
+      },
+      {
+        "id": 74,
+        "fullName": "Carla Ortiz",
+        "phoneNumber": "+12403155198",
+        "idNumber": "01882620",
+        "dob": "2024-11-27",
+        "gender": "FEMALE",
+        "active": false,
+        "branchName": "Shields - Barton",
+        "assignedStaff": {
+          "id": 97,
+          "fullName": "Suzanne Rolfson",
+          "phoneNumber": "+18615999619",
+          "email": "Clay46@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Schiller - Mraz",
+          "createdAt": "2024-06-02"
+        },
+        "overpayment": 2541,
+        "dueAmount": 5641,
+        "createdBy": {
+          "id": 100,
+          "fullName": "Kristin Tromp",
+          "phoneNumber": "+14374003686",
+          "email": "Nedra16@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "MacGyver - Gislason",
+          "createdAt": "2024-09-15"
+        },
+        "createdAt": "2024-06-29"
+      },
+      {
+        "id": 94,
+        "fullName": "Phil Dicki",
+        "phoneNumber": "+19679009157",
+        "idNumber": "96144726",
+        "dob": "2025-01-01",
+        "gender": "FEMALE",
+        "active": false,
+        "branchName": "Morar LLC",
+        "assignedStaff": {
+          "id": 26,
+          "fullName": "Arnold Becker",
+          "phoneNumber": "+15579269568",
+          "email": "Alison.Ullrich22@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Kub - Kulas",
+          "createdAt": "2024-02-13"
+        },
+        "overpayment": 6406,
+        "dueAmount": 9314,
+        "createdBy": {
+          "id": 10,
+          "fullName": "Stuart DuBuque",
+          "phoneNumber": "+15743431363",
+          "email": "Josefina.Okuneva@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Hayes and Sons",
+          "createdAt": "2024-10-13"
+        },
+        "createdAt": "2024-07-13"
+      },
+      {
+        "id": 99,
+        "fullName": "Nora Jenkins",
+        "phoneNumber": "+19509215923",
+        "idNumber": "61912618",
+        "dob": "2024-01-25",
+        "gender": "MALE",
+        "active": false,
+        "branchName": "Watsica, McLaughlin and Kilback",
+        "assignedStaff": {
+          "id": 82,
+          "fullName": "Roberto Hayes",
+          "phoneNumber": "+18054201387",
+          "email": "Bria.Lakin91@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "MacGyver, Spencer and Cormier",
+          "createdAt": "2024-06-04"
+        },
+        "overpayment": 808,
+        "dueAmount": 9278,
+        "createdBy": {
+          "id": 29,
+          "fullName": "Mr. Emilio Stroman",
+          "phoneNumber": "+16993900080",
+          "email": "Frankie83@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Leannon, King and Johnson",
+          "createdAt": "2024-12-02"
+        },
+        "createdAt": "2024-02-22"
+      },
+      {
+        "id": 40,
+        "fullName": "Courtney Jakubowski",
+        "phoneNumber": "+13808075848",
+        "idNumber": "63990253",
+        "dob": "2024-11-14",
+        "gender": "FEMALE",
+        "active": false,
+        "branchName": "Wiza, Roberts and Carroll",
+        "assignedStaff": {
+          "id": 69,
+          "fullName": "Raul Yost II",
+          "phoneNumber": "+12118726598",
+          "email": "Jedidiah.Herzog@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Schultz, Parisian and Corwin",
+          "createdAt": "2024-05-13"
+        },
+        "overpayment": 7611,
+        "dueAmount": 3229,
+        "createdBy": {
+          "id": 47,
+          "fullName": "Jodi Lowe",
+          "phoneNumber": "+18643244386",
+          "email": "Triston_Cole@gmail.com",
+          "role": "AGENT",
+          "branchName": "Keebler - Wuckert",
+          "createdAt": "2024-05-28"
+        },
+        "createdAt": "2024-02-28"
+      },
+      {
+        "id": 48,
+        "fullName": "Martha Ward",
+        "phoneNumber": "+12072053513",
+        "idNumber": "78427397",
+        "dob": "2024-06-09",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Jast - Reynolds",
+        "assignedStaff": {
+          "id": 91,
+          "fullName": "Hubert Ziemann",
+          "phoneNumber": "+13026103974",
+          "email": "Thurman37@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Lemke, Hills and O'Hara",
+          "createdAt": "2024-12-24"
+        },
+        "overpayment": 2722,
+        "dueAmount": 6697,
+        "createdBy": {
+          "id": 46,
+          "fullName": "Randal Strosin V",
+          "phoneNumber": "+16365180708",
+          "email": "Scarlett21@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Ortiz, Paucek and Abernathy",
+          "createdAt": "2024-07-22"
+        },
+        "createdAt": "2024-09-30"
+      },
+      {
+        "id": 92,
+        "fullName": "Kari Barton MD",
+        "phoneNumber": "+14865956350",
+        "idNumber": "83571608",
+        "dob": "2025-01-17",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Bruen LLC",
+        "assignedStaff": {
+          "id": 96,
+          "fullName": "Hannah Franecki",
+          "phoneNumber": "+12579879424",
+          "email": "Warren.Hudson@gmail.com",
+          "role": "AGENT",
+          "branchName": "Kerluke and Sons",
+          "createdAt": "2024-11-21"
+        },
+        "overpayment": 2261,
+        "dueAmount": 5765,
+        "createdBy": {
+          "id": 35,
+          "fullName": "Jeff Will",
+          "phoneNumber": "+15194144902",
+          "email": "Reese_Gusikowski@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Zboncak - Kris",
+          "createdAt": "2024-12-02"
+        },
+        "createdAt": "2024-10-30"
+      },
+      {
+        "id": 65,
+        "fullName": "Melinda Rippin-Quitzon",
+        "phoneNumber": "+14878820852",
+        "idNumber": "91620321",
+        "dob": "2024-03-27",
+        "gender": "MALE",
+        "active": false,
+        "branchName": "Waters LLC",
+        "assignedStaff": {
+          "id": 81,
+          "fullName": "Terrell Wilkinson",
+          "phoneNumber": "+17969325925",
+          "email": "Lura_Spinka@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Lockman, Bergnaum and Aufderhar",
+          "createdAt": "2024-12-29"
+        },
+        "overpayment": 1365,
+        "dueAmount": 2949,
+        "createdBy": {
+          "id": 75,
+          "fullName": "Mr. Seth Walsh",
+          "phoneNumber": "+12618850558",
+          "email": "Kurt.Simonis@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Welch Inc",
+          "createdAt": "2024-06-21"
+        },
+        "createdAt": "2024-05-21"
+      },
+      {
+        "id": 33,
+        "fullName": "Dr. Mark Jerde",
+        "phoneNumber": "+16974252162",
+        "idNumber": "09308719",
+        "dob": "2024-04-06",
+        "gender": "FEMALE",
+        "active": true,
+        "branchName": "Tremblay, Borer and Ryan",
+        "assignedStaff": {
+          "id": 21,
+          "fullName": "Vera Schmitt-Stehr",
+          "phoneNumber": "+12465757676",
+          "email": "Orval.Moore@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Schmeler, Bode and Rau",
+          "createdAt": "2024-04-12"
+        },
+        "overpayment": 5335,
+        "dueAmount": 2903,
+        "createdBy": {
+          "id": 86,
+          "fullName": "Faye Lehner",
+          "phoneNumber": "+13038996751",
+          "email": "Regan.Herzog@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Wyman and Sons",
+          "createdAt": "2024-07-12"
+        },
+        "createdAt": "2024-12-09"
+      },
+      {
+        "id": 86,
+        "fullName": "Mr. Antonio Bauch",
+        "phoneNumber": "+14423013977",
+        "idNumber": "20472996",
+        "dob": "2024-04-22",
+        "gender": "FEMALE",
+        "active": true,
+        "branchName": "Herman, Ruecker and Fadel",
+        "assignedStaff": {
+          "id": 9,
+          "fullName": "Peggy O'Hara",
+          "phoneNumber": "+17197414885",
+          "email": "Derek.Dach20@gmail.com",
+          "role": "AGENT",
+          "branchName": "Kozey - King",
+          "createdAt": "2024-04-17"
+        },
+        "overpayment": 4091,
+        "dueAmount": 30,
+        "createdBy": {
+          "id": 88,
+          "fullName": "Luther Brown",
+          "phoneNumber": "+15589629164",
+          "email": "Marlen91@gmail.com",
+          "role": "AGENT",
+          "branchName": "Mitchell and Sons",
+          "createdAt": "2024-05-30"
+        },
+        "createdAt": "2024-11-27"
+      },
+      {
+        "id": 75,
+        "fullName": "Dean Durgan",
+        "phoneNumber": "+17029555340",
+        "idNumber": "77318804",
+        "dob": "2024-11-02",
+        "gender": "MALE",
+        "active": false,
+        "branchName": "Wiza Inc",
+        "assignedStaff": {
+          "id": 58,
+          "fullName": "Clifford Cummerata",
+          "phoneNumber": "+15747394201",
+          "email": "Patience86@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Wiegand - Stokes",
+          "createdAt": "2024-04-13"
+        },
+        "overpayment": 3386,
+        "dueAmount": 599,
+        "createdBy": {
+          "id": 98,
+          "fullName": "Susie Crooks",
+          "phoneNumber": "+14763416518",
+          "email": "Jaden_Strosin@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Nolan - Purdy",
+          "createdAt": "2024-09-16"
+        },
+        "createdAt": "2024-04-20"
+      },
+      {
+        "id": 57,
+        "fullName": "Jennifer Metz PhD",
+        "phoneNumber": "+14352691898",
+        "idNumber": "70408997",
+        "dob": "2024-04-06",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Deckow - Hamill",
+        "assignedStaff": {
+          "id": 97,
+          "fullName": "Charlotte Homenick",
+          "phoneNumber": "+13915217162",
+          "email": "Johnny69@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Durgan - Yundt",
+          "createdAt": "2024-08-14"
+        },
+        "overpayment": 174,
+        "dueAmount": 9626,
+        "createdBy": {
+          "id": 84,
+          "fullName": "Daryl Zieme",
+          "phoneNumber": "+13147844743",
+          "email": "Arvid61@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Jast - Ullrich",
+          "createdAt": "2024-05-06"
+        },
+        "createdAt": "2024-04-10"
+      },
+      {
+        "id": 74,
+        "fullName": "Margarita Mayer",
+        "phoneNumber": "+18227695224",
+        "idNumber": "84952271",
+        "dob": "2024-11-29",
+        "gender": "MALE",
+        "active": true,
+        "branchName": "Kunde, Runte and Zboncak",
+        "assignedStaff": {
+          "id": 95,
+          "fullName": "Paula Stoltenberg IV",
+          "phoneNumber": "+15694113468",
+          "email": "Felton.Hagenes41@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Wunsch - Harris",
+          "createdAt": "2024-06-24"
+        },
+        "overpayment": 6802,
+        "dueAmount": 5490,
+        "createdBy": {
+          "id": 33,
+          "fullName": "Yolanda Monahan",
+          "phoneNumber": "+12877620355",
+          "email": "Raymond.Reilly@gmail.com",
+          "role": "AGENT",
+          "branchName": "Kessler, Walker and Friesen",
+          "createdAt": "2024-08-13"
+        },
+        "createdAt": "2024-07-28"
+      },
+      {
+        "id": 95,
+        "fullName": "Tabitha Hackett",
+        "phoneNumber": "+18825050683",
+        "idNumber": "40071038",
+        "dob": "2024-09-15",
+        "gender": "FEMALE",
+        "active": true,
+        "branchName": "Sawayn Inc",
+        "assignedStaff": {
+          "id": 71,
+          "fullName": "Judith Cummings",
+          "phoneNumber": "+17476064100",
+          "email": "Clementina.Shanahan41@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Roberts, Schuppe and Schuster",
+          "createdAt": "2024-01-19"
+        },
+        "overpayment": 6452,
+        "dueAmount": 7838,
+        "createdBy": {
+          "id": 21,
+          "fullName": "Bryan White",
+          "phoneNumber": "+12007225893",
+          "email": "Taurean.Kshlerin@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Armstrong - White",
+          "createdAt": "2024-07-25"
+        },
+        "createdAt": "2024-04-08"
+      }
+    ],
+    "inactiveLoans": [
+      {
+        "id": 46,
+        "amount": 1732,
+        "repayAmount": 4195,
+        "client": {
+          "id": 73,
+          "fullName": "Reginald Pfannerstill",
+          "phoneNumber": "+17336572437",
+          "idNumber": "45138856",
+          "dob": "2024-12-26",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Dickinson Inc",
+          "assignedStaff": {
+            "id": 32,
+            "fullName": "Hector Ferry",
+            "phoneNumber": "+17586597625",
+            "email": "Jo89@hotmail.com",
+            "role": "AGENT",
+            "branchName": "McCullough, Gusikowski and Sporer",
+            "createdAt": "2024-05-18"
+          },
+          "overpayment": 5395,
+          "dueAmount": 9320,
+          "createdBy": {
+            "id": 29,
+            "fullName": "Donnie Dickinson",
+            "phoneNumber": "+15587666723",
+            "email": "Irving.Rosenbaum@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Ziemann and Sons",
+            "createdAt": "2024-09-11"
+          },
+          "createdAt": "2024-05-01"
+        },
+        "loanOfficer": {
+          "id": 46,
+          "fullName": "Rosemary Bernier",
+          "phoneNumber": "+15522951946",
+          "email": "Delaney35@gmail.com",
+          "role": "AGENT",
+          "branchName": "Parker, Tillman and Von",
+          "createdAt": "2024-04-05"
+        },
+        "approvedBy": {
+          "id": 46,
+          "fullName": "Rosemary Bernier",
+          "phoneNumber": "+15522951946",
+          "email": "Delaney35@gmail.com",
+          "role": "AGENT",
+          "branchName": "Parker, Tillman and Von",
+          "createdAt": "2024-04-05"
+        },
+        "approvedOn": "2024-02-15"
+      },
+      {
+        "id": 51,
+        "amount": 5219,
+        "repayAmount": 1351,
+        "client": {
+          "id": 48,
+          "fullName": "Dale Nader",
+          "phoneNumber": "+12813050079",
+          "idNumber": "03122936",
+          "dob": "2024-07-23",
+          "gender": "MALE",
+          "active": true,
+          "branchName": "Halvorson, Torphy and Rau",
+          "assignedStaff": {
+            "id": 36,
+            "fullName": "Alfonso Kirlin",
+            "phoneNumber": "+13238736310",
+            "email": "Kathleen71@gmail.com",
+            "role": "AGENT",
+            "branchName": "Streich - Gutkowski",
+            "createdAt": "2024-06-11"
+          },
+          "overpayment": 8315,
+          "dueAmount": 5653,
+          "createdBy": {
+            "id": 5,
+            "fullName": "Molly Hansen",
+            "phoneNumber": "+16375597238",
+            "email": "Akeem_Spencer@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Willms Group",
+            "createdAt": "2024-11-15"
+          },
+          "createdAt": "2025-01-13"
+        },
+        "loanOfficer": {
+          "id": 24,
+          "fullName": "Dr. Myron Reynolds",
+          "phoneNumber": "+18425476728",
+          "email": "Dustin.Wehner69@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Purdy - Thompson",
+          "createdAt": "2024-07-24"
+        },
+        "approvedBy": {
+          "id": 24,
+          "fullName": "Dr. Myron Reynolds",
+          "phoneNumber": "+18425476728",
+          "email": "Dustin.Wehner69@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Purdy - Thompson",
+          "createdAt": "2024-07-24"
+        },
+        "approvedOn": "2024-08-19"
+      },
+      {
+        "id": 51,
+        "amount": 16149,
+        "repayAmount": 4656,
+        "client": {
+          "id": 95,
+          "fullName": "Mr. Jonathan Becker",
+          "phoneNumber": "+18546238140",
+          "idNumber": "17688732",
+          "dob": "2024-11-22",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Turner Group",
+          "assignedStaff": {
+            "id": 2,
+            "fullName": "Dianna Corkery",
+            "phoneNumber": "+14285399455",
+            "email": "Megane.Hermann71@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Huels - Beahan",
+            "createdAt": "2024-04-28"
+          },
+          "overpayment": 9959,
+          "dueAmount": 4206,
+          "createdBy": {
+            "id": 23,
+            "fullName": "Gail Kohler Jr.",
+            "phoneNumber": "+15094347291",
+            "email": "Moises_Ruecker1@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Blick, Friesen and Casper",
+            "createdAt": "2024-02-05"
+          },
+          "createdAt": "2024-08-14"
+        },
+        "loanOfficer": {
+          "id": 100,
+          "fullName": "Jody Cole",
+          "phoneNumber": "+12526437146",
+          "email": "Sincere.Reinger@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Schuster Group",
+          "createdAt": "2024-10-06"
+        },
+        "approvedBy": {
+          "id": 100,
+          "fullName": "Jody Cole",
+          "phoneNumber": "+12526437146",
+          "email": "Sincere.Reinger@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Schuster Group",
+          "createdAt": "2024-10-06"
+        },
+        "approvedOn": "2024-03-24"
+      },
+      {
+        "id": 53,
+        "amount": 3722,
+        "repayAmount": 10774,
+        "client": {
+          "id": 49,
+          "fullName": "Brenda Murray DDS",
+          "phoneNumber": "+12713525718",
+          "idNumber": "39451478",
+          "dob": "2025-01-01",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Torphy, Hahn and Thompson",
+          "assignedStaff": {
+            "id": 39,
+            "fullName": "Rodolfo Wisozk",
+            "phoneNumber": "+15585899957",
+            "email": "Jevon.Rau@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Ernser - White",
+            "createdAt": "2024-10-03"
+          },
+          "overpayment": 7804,
+          "dueAmount": 1052,
+          "createdBy": {
+            "id": 75,
+            "fullName": "Oliver Gottlieb",
+            "phoneNumber": "+18416671288",
+            "email": "Brenda63@hotmail.com",
+            "role": "ADMIN",
+            "branchName": "Cummings Inc",
+            "createdAt": "2024-04-23"
+          },
+          "createdAt": "2024-11-11"
+        },
+        "loanOfficer": {
+          "id": 42,
+          "fullName": "Janie Koch",
+          "phoneNumber": "+17337593114",
+          "email": "Linwood_Christiansen63@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Reichel and Sons",
+          "createdAt": "2024-04-19"
+        },
+        "approvedBy": {
+          "id": 42,
+          "fullName": "Janie Koch",
+          "phoneNumber": "+17337593114",
+          "email": "Linwood_Christiansen63@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Reichel and Sons",
+          "createdAt": "2024-04-19"
+        },
+        "approvedOn": "2024-02-05"
+      },
+      {
+        "id": 47,
+        "amount": 9206,
+        "repayAmount": 18984,
+        "client": {
+          "id": 36,
+          "fullName": "Gabriel Hyatt",
+          "phoneNumber": "+12012741394",
+          "idNumber": "19056993",
+          "dob": "2024-12-30",
+          "gender": "FEMALE",
+          "active": false,
+          "branchName": "Simonis, Wyman and Mills",
+          "assignedStaff": {
+            "id": 99,
+            "fullName": "Betty Heller",
+            "phoneNumber": "+12292180661",
+            "email": "Beaulah.Windler80@yahoo.com",
+            "role": "ADMIN",
+            "branchName": "Robel and Sons",
+            "createdAt": "2024-08-27"
+          },
+          "overpayment": 5423,
+          "dueAmount": 2327,
+          "createdBy": {
+            "id": 49,
+            "fullName": "Justin Fisher",
+            "phoneNumber": "+12958473732",
+            "email": "Norene59@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Hessel - Fahey",
+            "createdAt": "2024-10-08"
+          },
+          "createdAt": "2024-06-10"
+        },
+        "loanOfficer": {
+          "id": 23,
+          "fullName": "Miss Margaret Romaguera",
+          "phoneNumber": "+17495478475",
+          "email": "Isabelle.Beatty68@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Mraz - Thompson",
+          "createdAt": "2024-12-13"
+        },
+        "approvedBy": {
+          "id": 23,
+          "fullName": "Miss Margaret Romaguera",
+          "phoneNumber": "+17495478475",
+          "email": "Isabelle.Beatty68@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Mraz - Thompson",
+          "createdAt": "2024-12-13"
+        },
+        "approvedOn": "2024-05-10"
+      },
+      {
+        "id": 64,
+        "amount": 14706,
+        "repayAmount": 7863,
+        "client": {
+          "id": 65,
+          "fullName": "Nicholas Schaefer",
+          "phoneNumber": "+15134289703",
+          "idNumber": "29573554",
+          "dob": "2024-06-26",
+          "gender": "MALE",
+          "active": true,
+          "branchName": "Murray - Howell",
+          "assignedStaff": {
+            "id": 99,
+            "fullName": "Julia Hessel",
+            "phoneNumber": "+15926921273",
+            "email": "Ike50@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Ryan LLC",
+            "createdAt": "2024-11-06"
+          },
+          "overpayment": 4666,
+          "dueAmount": 9746,
+          "createdBy": {
+            "id": 59,
+            "fullName": "Eileen Maggio",
+            "phoneNumber": "+17057501969",
+            "email": "Lilliana_Pacocha@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Schaden and Sons",
+            "createdAt": "2024-04-26"
+          },
+          "createdAt": "2024-11-01"
+        },
+        "loanOfficer": {
+          "id": 7,
+          "fullName": "Dwayne Kiehn",
+          "phoneNumber": "+18486442471",
+          "email": "Briana_Dooley-Bernhard@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Jenkins Group",
+          "createdAt": "2024-07-01"
+        },
+        "approvedBy": {
+          "id": 7,
+          "fullName": "Dwayne Kiehn",
+          "phoneNumber": "+18486442471",
+          "email": "Briana_Dooley-Bernhard@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Jenkins Group",
+          "createdAt": "2024-07-01"
+        },
+        "approvedOn": "2024-03-18"
+      },
+      {
+        "id": 43,
+        "amount": 9797,
+        "repayAmount": 16043,
+        "client": {
+          "id": 65,
+          "fullName": "Faye Lockman",
+          "phoneNumber": "+18533970906",
+          "idNumber": "56364125",
+          "dob": "2024-09-28",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Schultz - Kreiger",
+          "assignedStaff": {
+            "id": 16,
+            "fullName": "Raquel McDermott",
+            "phoneNumber": "+13894234327",
+            "email": "Jarrett_Oberbrunner@gmail.com",
+            "role": "AGENT",
+            "branchName": "Schaefer, Hansen and Leffler",
+            "createdAt": "2024-02-12"
+          },
+          "overpayment": 8716,
+          "dueAmount": 859,
+          "createdBy": {
+            "id": 18,
+            "fullName": "Joyce Heathcote",
+            "phoneNumber": "+15472575559",
+            "email": "Lonnie_Grady16@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Klocko, Prosacco and Wiza",
+            "createdAt": "2024-02-29"
+          },
+          "createdAt": "2024-08-04"
+        },
+        "loanOfficer": {
+          "id": 8,
+          "fullName": "Anthony Farrell",
+          "phoneNumber": "+15058451923",
+          "email": "Candido99@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Cole, Gerlach and Metz",
+          "createdAt": "2024-11-15"
+        },
+        "approvedBy": {
+          "id": 8,
+          "fullName": "Anthony Farrell",
+          "phoneNumber": "+15058451923",
+          "email": "Candido99@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Cole, Gerlach and Metz",
+          "createdAt": "2024-11-15"
+        },
+        "approvedOn": "2024-12-07"
+      },
+      {
+        "id": 93,
+        "amount": 16503,
+        "repayAmount": 4877,
+        "client": {
+          "id": 95,
+          "fullName": "Yvonne Little",
+          "phoneNumber": "+19285446171",
+          "idNumber": "94092732",
+          "dob": "2024-04-10",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Runolfsson - Dicki",
+          "assignedStaff": {
+            "id": 28,
+            "fullName": "Jessie Mueller PhD",
+            "phoneNumber": "+13976014287",
+            "email": "Berneice_Kozey79@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Schmeler, Thompson and O'Hara",
+            "createdAt": "2024-01-31"
+          },
+          "overpayment": 1196,
+          "dueAmount": 1197,
+          "createdBy": {
+            "id": 50,
+            "fullName": "Paul Schamberger",
+            "phoneNumber": "+12394425788",
+            "email": "Jessyca.Kozey-Murazik32@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Bednar, Jacobson and Koepp",
+            "createdAt": "2024-11-09"
+          },
+          "createdAt": "2024-12-04"
+        },
+        "loanOfficer": {
+          "id": 93,
+          "fullName": "Miguel Kuhn",
+          "phoneNumber": "+18074800041",
+          "email": "Tom_Reynolds@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Crist, Schoen and Schoen",
+          "createdAt": "2024-05-07"
+        },
+        "approvedBy": {
+          "id": 93,
+          "fullName": "Miguel Kuhn",
+          "phoneNumber": "+18074800041",
+          "email": "Tom_Reynolds@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Crist, Schoen and Schoen",
+          "createdAt": "2024-05-07"
+        },
+        "approvedOn": "2024-10-24"
+      },
+      {
+        "id": 18,
+        "amount": 9166,
+        "repayAmount": 5633,
+        "client": {
+          "id": 41,
+          "fullName": "Vickie Renner",
+          "phoneNumber": "+17752594128",
+          "idNumber": "64710640",
+          "dob": "2024-11-01",
+          "gender": "FEMALE",
+          "active": false,
+          "branchName": "Vandervort - Bergstrom",
+          "assignedStaff": {
+            "id": 17,
+            "fullName": "Curtis O'Reilly",
+            "phoneNumber": "+15574657044",
+            "email": "Ayla99@gmail.com",
+            "role": "AGENT",
+            "branchName": "Schaefer Inc",
+            "createdAt": "2024-11-13"
+          },
+          "overpayment": 631,
+          "dueAmount": 6935,
+          "createdBy": {
+            "id": 85,
+            "fullName": "Ora Hills",
+            "phoneNumber": "+14955506717",
+            "email": "Corene_Heller@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Dooley Group",
+            "createdAt": "2024-08-23"
+          },
+          "createdAt": "2024-08-24"
+        },
+        "loanOfficer": {
+          "id": 9,
+          "fullName": "Mathew Anderson",
+          "phoneNumber": "+18068216122",
+          "email": "Jaylen7@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "D'Amore, Dooley and Schroeder",
+          "createdAt": "2024-11-27"
+        },
+        "approvedBy": {
+          "id": 9,
+          "fullName": "Mathew Anderson",
+          "phoneNumber": "+18068216122",
+          "email": "Jaylen7@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "D'Amore, Dooley and Schroeder",
+          "createdAt": "2024-11-27"
+        },
+        "approvedOn": "2024-01-20"
+      },
+      {
+        "id": 50,
+        "amount": 19976,
+        "repayAmount": 16615,
+        "client": {
+          "id": 29,
+          "fullName": "Stanley Thompson",
+          "phoneNumber": "+18873050921",
+          "idNumber": "94509735",
+          "dob": "2024-11-28",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Rosenbaum, Towne and Armstrong",
+          "assignedStaff": {
+            "id": 23,
+            "fullName": "Sharon Kemmer",
+            "phoneNumber": "+12265586566",
+            "email": "Austen26@hotmail.com",
+            "role": "ADMIN",
+            "branchName": "Wunsch Inc",
+            "createdAt": "2024-03-01"
+          },
+          "overpayment": 3104,
+          "dueAmount": 1227,
+          "createdBy": {
+            "id": 75,
+            "fullName": "Felix Conn-Fadel MD",
+            "phoneNumber": "+12083046832",
+            "email": "Joseph.Braun25@hotmail.com",
+            "role": "ADMIN",
+            "branchName": "Stroman, Heller and Rempel",
+            "createdAt": "2024-02-13"
+          },
+          "createdAt": "2024-03-02"
+        },
+        "loanOfficer": {
+          "id": 80,
+          "fullName": "April Spencer III",
+          "phoneNumber": "+13347656829",
+          "email": "Aubrey_Bauch@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Windler LLC",
+          "createdAt": "2024-10-01"
+        },
+        "approvedBy": {
+          "id": 80,
+          "fullName": "April Spencer III",
+          "phoneNumber": "+13347656829",
+          "email": "Aubrey_Bauch@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Windler LLC",
+          "createdAt": "2024-10-01"
+        },
+        "approvedOn": "2024-02-29"
+      },
+      {
+        "id": 78,
+        "amount": 17179,
+        "repayAmount": 14452,
+        "client": {
+          "id": 73,
+          "fullName": "Javier Gleason",
+          "phoneNumber": "+12022182766",
+          "idNumber": "13438424",
+          "dob": "2024-07-12",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Emard, Turner and Swaniawski",
+          "assignedStaff": {
+            "id": 31,
+            "fullName": "Mrs. Betty Hauck",
+            "phoneNumber": "+16442933263",
+            "email": "Brett.Osinski99@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Rath - Jaskolski",
+            "createdAt": "2024-08-19"
+          },
+          "overpayment": 2626,
+          "dueAmount": 8893,
+          "createdBy": {
+            "id": 38,
+            "fullName": "Ruth Wilkinson",
+            "phoneNumber": "+12195682344",
+            "email": "Cassandre.Hagenes68@yahoo.com",
+            "role": "ADMIN",
+            "branchName": "Christiansen - Nienow",
+            "createdAt": "2024-07-06"
+          },
+          "createdAt": "2024-09-14"
+        },
+        "loanOfficer": {
+          "id": 10,
+          "fullName": "Helen Kling",
+          "phoneNumber": "+12416635370",
+          "email": "Ricky.Keeling81@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Larson, Hackett and Green",
+          "createdAt": "2024-07-03"
+        },
+        "approvedBy": {
+          "id": 10,
+          "fullName": "Helen Kling",
+          "phoneNumber": "+12416635370",
+          "email": "Ricky.Keeling81@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Larson, Hackett and Green",
+          "createdAt": "2024-07-03"
+        },
+        "approvedOn": "2024-04-25"
+      },
+      {
+        "id": 100,
+        "amount": 8659,
+        "repayAmount": 8608,
+        "client": {
+          "id": 100,
+          "fullName": "Kelly Harvey",
+          "phoneNumber": "+17826742372",
+          "idNumber": "65542255",
+          "dob": "2024-08-13",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Greenfelder and Sons",
+          "assignedStaff": {
+            "id": 58,
+            "fullName": "Marcos Moen-Daniel",
+            "phoneNumber": "+16005256765",
+            "email": "Jennings.Dooley@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Towne - Erdman",
+            "createdAt": "2024-09-08"
+          },
+          "overpayment": 2816,
+          "dueAmount": 469,
+          "createdBy": {
+            "id": 14,
+            "fullName": "Mr. Cedric Raynor",
+            "phoneNumber": "+15955712245",
+            "email": "Cecile_McKenzie@yahoo.com",
+            "role": "ADMIN",
+            "branchName": "Durgan - Barrows",
+            "createdAt": "2024-11-09"
+          },
+          "createdAt": "2024-10-04"
+        },
+        "loanOfficer": {
+          "id": 5,
+          "fullName": "Mr. Edmond Keebler",
+          "phoneNumber": "+12227280566",
+          "email": "Skye91@gmail.com",
+          "role": "AGENT",
+          "branchName": "Boyer - Gorczany",
+          "createdAt": "2025-01-05"
+        },
+        "approvedBy": {
+          "id": 5,
+          "fullName": "Mr. Edmond Keebler",
+          "phoneNumber": "+12227280566",
+          "email": "Skye91@gmail.com",
+          "role": "AGENT",
+          "branchName": "Boyer - Gorczany",
+          "createdAt": "2025-01-05"
+        },
+        "approvedOn": "2024-03-30"
+      },
+      {
+        "id": 36,
+        "amount": 983,
+        "repayAmount": 22857,
+        "client": {
+          "id": 89,
+          "fullName": "Miss Mae Aufderhar",
+          "phoneNumber": "+13779163429",
+          "idNumber": "26275735",
+          "dob": "2024-05-22",
+          "gender": "MALE",
+          "active": true,
+          "branchName": "Bayer - Moen",
+          "assignedStaff": {
+            "id": 19,
+            "fullName": "Catherine Feil-Haag",
+            "phoneNumber": "+18108199572",
+            "email": "Beatrice5@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Klocko, Reinger and Littel",
+            "createdAt": "2024-10-16"
+          },
+          "overpayment": 3028,
+          "dueAmount": 1443,
+          "createdBy": {
+            "id": 6,
+            "fullName": "Dr. Sylvester Mosciski",
+            "phoneNumber": "+18996102180",
+            "email": "Nayeli_Bartoletti@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Paucek, Crooks and Hackett",
+            "createdAt": "2024-10-03"
+          },
+          "createdAt": "2024-02-26"
+        },
+        "loanOfficer": {
+          "id": 93,
+          "fullName": "Taylor Kassulke DVM",
+          "phoneNumber": "+14932491655",
+          "email": "Gregoria_Wisoky@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Ortiz, Schoen and Vandervort",
+          "createdAt": "2024-02-23"
+        },
+        "approvedBy": {
+          "id": 93,
+          "fullName": "Taylor Kassulke DVM",
+          "phoneNumber": "+14932491655",
+          "email": "Gregoria_Wisoky@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Ortiz, Schoen and Vandervort",
+          "createdAt": "2024-02-23"
+        },
+        "approvedOn": "2024-05-03"
+      }
+    ],
+    "loans": [
+      {
+        "id": 2,
+        "amount": 6054,
+        "repayAmount": 14035,
+        "client": {
+          "id": 13,
+          "fullName": "Harold Denesik",
+          "phoneNumber": "+19626684063",
+          "idNumber": "11046162",
+          "dob": "2024-04-07",
+          "gender": "FEMALE",
+          "active": false,
+          "branchName": "O'Connell, Stroman and Kris",
+          "assignedStaff": {
+            "id": 83,
+            "fullName": "Mr. Wm Towne",
+            "phoneNumber": "+16339263792",
+            "email": "Kristopher_Lesch@yahoo.com",
+            "role": "ADMIN",
+            "branchName": "Emard LLC",
+            "createdAt": "2024-10-07"
+          },
+          "overpayment": 3284,
+          "dueAmount": 181,
+          "createdBy": {
+            "id": 9,
+            "fullName": "Angel Ledner",
+            "phoneNumber": "+19064651548",
+            "email": "Chaya41@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Mante Inc",
+            "createdAt": "2024-07-30"
+          },
+          "createdAt": "2024-09-09"
+        },
+        "loanOfficer": {
+          "id": 80,
+          "fullName": "Roosevelt Heller",
+          "phoneNumber": "+12628597647",
+          "email": "Owen96@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Schmitt Group",
+          "createdAt": "2024-02-17"
+        },
+        "loanPurpose": "Neque adsidue ver esse.",
+        "dueDate": "2025-11-28",
+        "approvedBy": {
+          "id": 80,
+          "fullName": "Roosevelt Heller",
+          "phoneNumber": "+12628597647",
+          "email": "Owen96@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Schmitt Group",
+          "createdAt": "2024-02-17"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 80,
+          "fullName": "Roosevelt Heller",
+          "phoneNumber": "+12628597647",
+          "email": "Owen96@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Schmitt Group",
+          "createdAt": "2024-02-17"
+        },
+        "noOfInstallments": 4,
+        "installmentsPeriod": 12,
+        "status": "INACTIVE",
+        "processingFee": 131,
+        "feePaid": true,
+        "paidAmount": 7540,
+        "updatedBy": {
+          "id": 80,
+          "fullName": "Roosevelt Heller",
+          "phoneNumber": "+12628597647",
+          "email": "Owen96@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Schmitt Group",
+          "createdAt": "2024-02-17"
+        },
+        "createdBy": {
+          "id": 80,
+          "fullName": "Roosevelt Heller",
+          "phoneNumber": "+12628597647",
+          "email": "Owen96@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Schmitt Group",
+          "createdAt": "2024-02-17"
+        },
+        "createdAt": "2024-10-30"
+      },
+      {
+        "id": 94,
+        "amount": 9202,
+        "repayAmount": 13355,
+        "client": {
+          "id": 10,
+          "fullName": "Inez Anderson",
+          "phoneNumber": "+15545657905",
+          "idNumber": "64187093",
+          "dob": "2024-10-23",
+          "gender": "FEMALE",
+          "active": false,
+          "branchName": "Renner - Runolfsdottir",
+          "assignedStaff": {
+            "id": 76,
+            "fullName": "Mr. Marlon Koelpin",
+            "phoneNumber": "+18412512508",
+            "email": "Hudson28@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Hudson LLC",
+            "createdAt": "2024-05-11"
+          },
+          "overpayment": 6796,
+          "dueAmount": 8269,
+          "createdBy": {
+            "id": 96,
+            "fullName": "Carlos Rodriguez",
+            "phoneNumber": "+14924663856",
+            "email": "Maiya_Ferry57@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Tromp LLC",
+            "createdAt": "2024-05-13"
+          },
+          "createdAt": "2024-06-26"
+        },
+        "loanOfficer": {
+          "id": 19,
+          "fullName": "Cynthia Dietrich",
+          "phoneNumber": "+14295754389",
+          "email": "Doyle_Bradtke55@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Boyer - King",
+          "createdAt": "2024-03-25"
+        },
+        "loanPurpose": "Absconditus vinculum tamdiu videlicet tubineus ventus veritas varietas.",
+        "dueDate": "2025-11-18",
+        "approvedBy": {
+          "id": 19,
+          "fullName": "Cynthia Dietrich",
+          "phoneNumber": "+14295754389",
+          "email": "Doyle_Bradtke55@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Boyer - King",
+          "createdAt": "2024-03-25"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 19,
+          "fullName": "Cynthia Dietrich",
+          "phoneNumber": "+14295754389",
+          "email": "Doyle_Bradtke55@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Boyer - King",
+          "createdAt": "2024-03-25"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 12,
+        "status": "INACTIVE",
+        "processingFee": 367,
+        "feePaid": false,
+        "paidAmount": 6858,
+        "updatedBy": {
+          "id": 19,
+          "fullName": "Cynthia Dietrich",
+          "phoneNumber": "+14295754389",
+          "email": "Doyle_Bradtke55@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Boyer - King",
+          "createdAt": "2024-03-25"
+        },
+        "createdBy": {
+          "id": 19,
+          "fullName": "Cynthia Dietrich",
+          "phoneNumber": "+14295754389",
+          "email": "Doyle_Bradtke55@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Boyer - King",
+          "createdAt": "2024-03-25"
+        },
+        "createdAt": "2025-01-01"
+      },
+      {
+        "id": 85,
+        "amount": 17519,
+        "repayAmount": 7839,
+        "client": {
+          "id": 66,
+          "fullName": "Ray Osinski",
+          "phoneNumber": "+17675142310",
+          "idNumber": "03403360",
+          "dob": "2024-10-25",
+          "gender": "MALE",
+          "active": true,
+          "branchName": "Romaguera Inc",
+          "assignedStaff": {
+            "id": 85,
+            "fullName": "Antonio Trantow",
+            "phoneNumber": "+19443223733",
+            "email": "Trystan.Wuckert-Jenkins@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Bogan - Greenholt",
+            "createdAt": "2024-12-19"
+          },
+          "overpayment": 5708,
+          "dueAmount": 844,
+          "createdBy": {
+            "id": 19,
+            "fullName": "Mr. Bernard Crist",
+            "phoneNumber": "+13489559742",
+            "email": "Mustafa_Heller80@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Predovic, Lakin and Corwin",
+            "createdAt": "2024-05-13"
+          },
+          "createdAt": "2024-01-21"
+        },
+        "loanOfficer": {
+          "id": 95,
+          "fullName": "Benny Carroll",
+          "phoneNumber": "+14109762055",
+          "email": "Kory_Gislason@gmail.com",
+          "role": "AGENT",
+          "branchName": "Parisian - Witting",
+          "createdAt": "2024-02-04"
+        },
+        "loanPurpose": "Cavus amicitia cado sursum tabesco.",
+        "dueDate": "2025-05-31",
+        "approvedBy": {
+          "id": 95,
+          "fullName": "Benny Carroll",
+          "phoneNumber": "+14109762055",
+          "email": "Kory_Gislason@gmail.com",
+          "role": "AGENT",
+          "branchName": "Parisian - Witting",
+          "createdAt": "2024-02-04"
+        },
+        "disbursedOn": "2025-01-16",
+        "disbursedBy": {
+          "id": 95,
+          "fullName": "Benny Carroll",
+          "phoneNumber": "+14109762055",
+          "email": "Kory_Gislason@gmail.com",
+          "role": "AGENT",
+          "branchName": "Parisian - Witting",
+          "createdAt": "2024-02-04"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 5,
+        "status": "ACTIVE",
+        "processingFee": 169,
+        "feePaid": true,
+        "paidAmount": 15176,
+        "updatedBy": {
+          "id": 95,
+          "fullName": "Benny Carroll",
+          "phoneNumber": "+14109762055",
+          "email": "Kory_Gislason@gmail.com",
+          "role": "AGENT",
+          "branchName": "Parisian - Witting",
+          "createdAt": "2024-02-04"
+        },
+        "createdBy": {
+          "id": 95,
+          "fullName": "Benny Carroll",
+          "phoneNumber": "+14109762055",
+          "email": "Kory_Gislason@gmail.com",
+          "role": "AGENT",
+          "branchName": "Parisian - Witting",
+          "createdAt": "2024-02-04"
+        },
+        "createdAt": "2024-04-15"
+      },
+      {
+        "id": 58,
+        "amount": 18488,
+        "repayAmount": 14610,
+        "client": {
+          "id": 96,
+          "fullName": "Bryan Lebsack",
+          "phoneNumber": "+15446345666",
+          "idNumber": "23119994",
+          "dob": "2024-06-26",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Kulas - D'Amore",
+          "assignedStaff": {
+            "id": 40,
+            "fullName": "Albert Heller",
+            "phoneNumber": "+19834803486",
+            "email": "Oscar55@gmail.com",
+            "role": "AGENT",
+            "branchName": "Wolf Group",
+            "createdAt": "2024-04-19"
+          },
+          "overpayment": 5583,
+          "dueAmount": 5321,
+          "createdBy": {
+            "id": 6,
+            "fullName": "Ida Green",
+            "phoneNumber": "+18238755732",
+            "email": "Stephon30@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Larson Inc",
+            "createdAt": "2024-07-07"
+          },
+          "createdAt": "2024-04-16"
+        },
+        "loanOfficer": {
+          "id": 84,
+          "fullName": "Miss Regina Bashirian",
+          "phoneNumber": "+16148975138",
+          "email": "Reuben23@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Ferry - Barton",
+          "createdAt": "2024-11-30"
+        },
+        "loanPurpose": "Utpote tandem crastinus tego.",
+        "dueDate": "2025-10-30",
+        "approvedBy": {
+          "id": 84,
+          "fullName": "Miss Regina Bashirian",
+          "phoneNumber": "+16148975138",
+          "email": "Reuben23@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Ferry - Barton",
+          "createdAt": "2024-11-30"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 84,
+          "fullName": "Miss Regina Bashirian",
+          "phoneNumber": "+16148975138",
+          "email": "Reuben23@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Ferry - Barton",
+          "createdAt": "2024-11-30"
+        },
+        "noOfInstallments": 1,
+        "installmentsPeriod": 8,
+        "status": "INACTIVE",
+        "processingFee": 150,
+        "feePaid": true,
+        "paidAmount": 24063,
+        "updatedBy": {
+          "id": 84,
+          "fullName": "Miss Regina Bashirian",
+          "phoneNumber": "+16148975138",
+          "email": "Reuben23@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Ferry - Barton",
+          "createdAt": "2024-11-30"
+        },
+        "createdBy": {
+          "id": 84,
+          "fullName": "Miss Regina Bashirian",
+          "phoneNumber": "+16148975138",
+          "email": "Reuben23@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Ferry - Barton",
+          "createdAt": "2024-11-30"
+        },
+        "createdAt": "2024-07-03"
+      },
+      {
+        "id": 85,
+        "amount": 1805,
+        "repayAmount": 23038,
+        "client": {
+          "id": 29,
+          "fullName": "Marjorie Fadel",
+          "phoneNumber": "+13555916073",
+          "idNumber": "86144204",
+          "dob": "2024-07-15",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Krajcik - Howell",
+          "assignedStaff": {
+            "id": 88,
+            "fullName": "Sharon Franecki",
+            "phoneNumber": "+17676709818",
+            "email": "Cora84@gmail.com",
+            "role": "AGENT",
+            "branchName": "Torp Inc",
+            "createdAt": "2024-05-09"
+          },
+          "overpayment": 9600,
+          "dueAmount": 2418,
+          "createdBy": {
+            "id": 4,
+            "fullName": "Sandra Lynch",
+            "phoneNumber": "+15694256107",
+            "email": "Aglae67@hotmail.com",
+            "role": "ADMIN",
+            "branchName": "Schaden Group",
+            "createdAt": "2024-06-27"
+          },
+          "createdAt": "2024-10-17"
+        },
+        "loanOfficer": {
+          "id": 91,
+          "fullName": "Kay Blanda",
+          "phoneNumber": "+13474333521",
+          "email": "Braulio_Treutel47@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Cruickshank - Stiedemann",
+          "createdAt": "2024-08-03"
+        },
+        "loanPurpose": "Demulceo conforto ait sint comminor utroque beneficium eveniet perferendis.",
+        "dueDate": "2025-03-14",
+        "approvedBy": {
+          "id": 91,
+          "fullName": "Kay Blanda",
+          "phoneNumber": "+13474333521",
+          "email": "Braulio_Treutel47@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Cruickshank - Stiedemann",
+          "createdAt": "2024-08-03"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 91,
+          "fullName": "Kay Blanda",
+          "phoneNumber": "+13474333521",
+          "email": "Braulio_Treutel47@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Cruickshank - Stiedemann",
+          "createdAt": "2024-08-03"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 11,
+        "status": "INACTIVE",
+        "processingFee": 263,
+        "feePaid": false,
+        "paidAmount": 16852,
+        "updatedBy": {
+          "id": 91,
+          "fullName": "Kay Blanda",
+          "phoneNumber": "+13474333521",
+          "email": "Braulio_Treutel47@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Cruickshank - Stiedemann",
+          "createdAt": "2024-08-03"
+        },
+        "createdBy": {
+          "id": 91,
+          "fullName": "Kay Blanda",
+          "phoneNumber": "+13474333521",
+          "email": "Braulio_Treutel47@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Cruickshank - Stiedemann",
+          "createdAt": "2024-08-03"
+        },
+        "createdAt": "2024-03-21"
+      },
+      {
+        "id": 16,
+        "amount": 3716,
+        "repayAmount": 19438,
+        "client": {
+          "id": 18,
+          "fullName": "Brad Trantow I",
+          "phoneNumber": "+18558484008",
+          "idNumber": "59031360",
+          "dob": "2024-02-22",
+          "gender": "FEMALE",
+          "active": false,
+          "branchName": "Lueilwitz Inc",
+          "assignedStaff": {
+            "id": 41,
+            "fullName": "Mae Sawayn",
+            "phoneNumber": "+16265231927",
+            "email": "Sandrine41@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Buckridge Inc",
+            "createdAt": "2024-11-27"
+          },
+          "overpayment": 2514,
+          "dueAmount": 1559,
+          "createdBy": {
+            "id": 15,
+            "fullName": "Vicki Braun V",
+            "phoneNumber": "+12402762552",
+            "email": "Judge_Mohr@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Altenwerth - Kris",
+            "createdAt": "2024-08-02"
+          },
+          "createdAt": "2025-01-01"
+        },
+        "loanOfficer": {
+          "id": 38,
+          "fullName": "Manuel Wehner",
+          "phoneNumber": "+19017979698",
+          "email": "Alta11@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Daugherty, Breitenberg and Crooks",
+          "createdAt": "2024-01-31"
+        },
+        "loanPurpose": "Attonbitus cupio nihil.",
+        "dueDate": "2025-03-10",
+        "approvedBy": {
+          "id": 38,
+          "fullName": "Manuel Wehner",
+          "phoneNumber": "+19017979698",
+          "email": "Alta11@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Daugherty, Breitenberg and Crooks",
+          "createdAt": "2024-01-31"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 38,
+          "fullName": "Manuel Wehner",
+          "phoneNumber": "+19017979698",
+          "email": "Alta11@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Daugherty, Breitenberg and Crooks",
+          "createdAt": "2024-01-31"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 12,
+        "status": "INACTIVE",
+        "processingFee": 180,
+        "feePaid": false,
+        "paidAmount": 22684,
+        "updatedBy": {
+          "id": 38,
+          "fullName": "Manuel Wehner",
+          "phoneNumber": "+19017979698",
+          "email": "Alta11@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Daugherty, Breitenberg and Crooks",
+          "createdAt": "2024-01-31"
+        },
+        "createdBy": {
+          "id": 38,
+          "fullName": "Manuel Wehner",
+          "phoneNumber": "+19017979698",
+          "email": "Alta11@yahoo.com",
+          "role": "ADMIN",
+          "branchName": "Daugherty, Breitenberg and Crooks",
+          "createdAt": "2024-01-31"
+        },
+        "createdAt": "2024-01-30"
+      },
+      {
+        "id": 11,
+        "amount": 10133,
+        "repayAmount": 13360,
+        "client": {
+          "id": 97,
+          "fullName": "Faith Mann",
+          "phoneNumber": "+13874083822",
+          "idNumber": "15714293",
+          "dob": "2024-05-17",
+          "gender": "FEMALE",
+          "active": false,
+          "branchName": "Kuphal, Zemlak and Schinner",
+          "assignedStaff": {
+            "id": 20,
+            "fullName": "Dr. Lucille Corwin",
+            "phoneNumber": "+12603379602",
+            "email": "Rhea_Von75@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Walker, Waters and Schaefer",
+            "createdAt": "2024-06-18"
+          },
+          "overpayment": 4397,
+          "dueAmount": 7501,
+          "createdBy": {
+            "id": 74,
+            "fullName": "Dr. Tony Tromp",
+            "phoneNumber": "+16886381550",
+            "email": "Pete.Pollich43@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Schumm - Ward",
+            "createdAt": "2024-04-07"
+          },
+          "createdAt": "2024-06-26"
+        },
+        "loanOfficer": {
+          "id": 77,
+          "fullName": "Alison Thompson",
+          "phoneNumber": "+18066126209",
+          "email": "Brennan_Goodwin47@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Erdman - Brown",
+          "createdAt": "2024-02-06"
+        },
+        "loanPurpose": "Subiungo appono ciminatio bestia fuga sponte deludo blandior.",
+        "dueDate": "2025-04-11",
+        "approvedBy": {
+          "id": 77,
+          "fullName": "Alison Thompson",
+          "phoneNumber": "+18066126209",
+          "email": "Brennan_Goodwin47@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Erdman - Brown",
+          "createdAt": "2024-02-06"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 77,
+          "fullName": "Alison Thompson",
+          "phoneNumber": "+18066126209",
+          "email": "Brennan_Goodwin47@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Erdman - Brown",
+          "createdAt": "2024-02-06"
+        },
+        "noOfInstallments": 6,
+        "installmentsPeriod": 30,
+        "status": "DEFAULTED",
+        "processingFee": 399,
+        "feePaid": true,
+        "paidAmount": 17667,
+        "updatedBy": {
+          "id": 77,
+          "fullName": "Alison Thompson",
+          "phoneNumber": "+18066126209",
+          "email": "Brennan_Goodwin47@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Erdman - Brown",
+          "createdAt": "2024-02-06"
+        },
+        "createdBy": {
+          "id": 77,
+          "fullName": "Alison Thompson",
+          "phoneNumber": "+18066126209",
+          "email": "Brennan_Goodwin47@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Erdman - Brown",
+          "createdAt": "2024-02-06"
+        },
+        "createdAt": "2024-04-26"
+      },
+      {
+        "id": 45,
+        "amount": 12865,
+        "repayAmount": 19694,
+        "client": {
+          "id": 24,
+          "fullName": "Bridget Funk",
+          "phoneNumber": "+18382428851",
+          "idNumber": "78471325",
+          "dob": "2024-03-18",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Rath, Bernhard and Bins",
+          "assignedStaff": {
+            "id": 83,
+            "fullName": "Mrs. June Hermann",
+            "phoneNumber": "+14444717758",
+            "email": "Alysa.Berge@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Crist, Orn and Price",
+            "createdAt": "2024-09-07"
+          },
+          "overpayment": 3568,
+          "dueAmount": 7169,
+          "createdBy": {
+            "id": 17,
+            "fullName": "Milton Shanahan",
+            "phoneNumber": "+16097082046",
+            "email": "Marjolaine.Kiehn@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Bartoletti and Sons",
+            "createdAt": "2024-03-19"
+          },
+          "createdAt": "2024-05-04"
+        },
+        "loanOfficer": {
+          "id": 24,
+          "fullName": "Gloria Thompson Jr.",
+          "phoneNumber": "+18146583317",
+          "email": "Shayne.Schmeler@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Treutel Group",
+          "createdAt": "2024-03-03"
+        },
+        "loanPurpose": "Aestus deporto deripio amor suppellex.",
+        "dueDate": "2025-09-10",
+        "approvedBy": {
+          "id": 24,
+          "fullName": "Gloria Thompson Jr.",
+          "phoneNumber": "+18146583317",
+          "email": "Shayne.Schmeler@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Treutel Group",
+          "createdAt": "2024-03-03"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 24,
+          "fullName": "Gloria Thompson Jr.",
+          "phoneNumber": "+18146583317",
+          "email": "Shayne.Schmeler@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Treutel Group",
+          "createdAt": "2024-03-03"
+        },
+        "noOfInstallments": 1,
+        "installmentsPeriod": 4,
+        "status": "INACTIVE",
+        "processingFee": 369,
+        "feePaid": true,
+        "paidAmount": 23460,
+        "updatedBy": {
+          "id": 24,
+          "fullName": "Gloria Thompson Jr.",
+          "phoneNumber": "+18146583317",
+          "email": "Shayne.Schmeler@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Treutel Group",
+          "createdAt": "2024-03-03"
+        },
+        "createdBy": {
+          "id": 24,
+          "fullName": "Gloria Thompson Jr.",
+          "phoneNumber": "+18146583317",
+          "email": "Shayne.Schmeler@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Treutel Group",
+          "createdAt": "2024-03-03"
+        },
+        "createdAt": "2024-02-13"
+      },
+      {
+        "id": 16,
+        "amount": 15135,
+        "repayAmount": 9293,
+        "client": {
+          "id": 96,
+          "fullName": "Geneva Baumbach",
+          "phoneNumber": "+16527770599",
+          "idNumber": "64906932",
+          "dob": "2024-11-15",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Moen - Hackett",
+          "assignedStaff": {
+            "id": 3,
+            "fullName": "Wilma O'Connell",
+            "phoneNumber": "+18526851160",
+            "email": "Chyna.Lindgren4@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Murphy LLC",
+            "createdAt": "2024-06-28"
+          },
+          "overpayment": 9732,
+          "dueAmount": 8285,
+          "createdBy": {
+            "id": 43,
+            "fullName": "Kent Walter",
+            "phoneNumber": "+17916343298",
+            "email": "Freeman60@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Schamberger - Schaden",
+            "createdAt": "2025-01-16"
+          },
+          "createdAt": "2024-07-27"
+        },
+        "loanOfficer": {
+          "id": 11,
+          "fullName": "Lonnie Trantow",
+          "phoneNumber": "+15005610005",
+          "email": "Samson71@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Rath, Kautzer and Rutherford",
+          "createdAt": "2024-06-26"
+        },
+        "loanPurpose": "Comis argentum venio cura vilicus.",
+        "dueDate": "2025-03-15",
+        "approvedBy": {
+          "id": 11,
+          "fullName": "Lonnie Trantow",
+          "phoneNumber": "+15005610005",
+          "email": "Samson71@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Rath, Kautzer and Rutherford",
+          "createdAt": "2024-06-26"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 11,
+          "fullName": "Lonnie Trantow",
+          "phoneNumber": "+15005610005",
+          "email": "Samson71@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Rath, Kautzer and Rutherford",
+          "createdAt": "2024-06-26"
+        },
+        "noOfInstallments": 4,
+        "installmentsPeriod": 27,
+        "status": "ACTIVE",
+        "processingFee": 179,
+        "feePaid": true,
+        "paidAmount": 4851,
+        "updatedBy": {
+          "id": 11,
+          "fullName": "Lonnie Trantow",
+          "phoneNumber": "+15005610005",
+          "email": "Samson71@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Rath, Kautzer and Rutherford",
+          "createdAt": "2024-06-26"
+        },
+        "createdBy": {
+          "id": 11,
+          "fullName": "Lonnie Trantow",
+          "phoneNumber": "+15005610005",
+          "email": "Samson71@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Rath, Kautzer and Rutherford",
+          "createdAt": "2024-06-26"
+        },
+        "createdAt": "2024-09-29"
+      },
+      {
+        "id": 59,
+        "amount": 16004,
+        "repayAmount": 1442,
+        "client": {
+          "id": 3,
+          "fullName": "Dawn Nienow",
+          "phoneNumber": "+17138490069",
+          "idNumber": "82759535",
+          "dob": "2024-09-05",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Pouros - Cartwright",
+          "assignedStaff": {
+            "id": 4,
+            "fullName": "Sadie Kris",
+            "phoneNumber": "+18966541337",
+            "email": "Myles_Torp@gmail.com",
+            "role": "AGENT",
+            "branchName": "Windler and Sons",
+            "createdAt": "2024-08-17"
+          },
+          "overpayment": 5360,
+          "dueAmount": 7116,
+          "createdBy": {
+            "id": 15,
+            "fullName": "Micheal Collier",
+            "phoneNumber": "+19633257664",
+            "email": "Yasmin12@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Lebsack, Klein and Stokes",
+            "createdAt": "2024-12-20"
+          },
+          "createdAt": "2024-09-13"
+        },
+        "loanOfficer": {
+          "id": 23,
+          "fullName": "Luis Hills",
+          "phoneNumber": "+17965755612",
+          "email": "Domenica_Hegmann@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Volkman LLC",
+          "createdAt": "2024-12-12"
+        },
+        "loanPurpose": "Annus tepidus thermae deficio quibusdam corpus cuppedia absque depereo aperiam.",
+        "dueDate": "2025-11-04",
+        "approvedBy": {
+          "id": 23,
+          "fullName": "Luis Hills",
+          "phoneNumber": "+17965755612",
+          "email": "Domenica_Hegmann@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Volkman LLC",
+          "createdAt": "2024-12-12"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 23,
+          "fullName": "Luis Hills",
+          "phoneNumber": "+17965755612",
+          "email": "Domenica_Hegmann@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Volkman LLC",
+          "createdAt": "2024-12-12"
+        },
+        "noOfInstallments": 6,
+        "installmentsPeriod": 6,
+        "status": "DEFAULTED",
+        "processingFee": 402,
+        "feePaid": false,
+        "paidAmount": 17909,
+        "updatedBy": {
+          "id": 23,
+          "fullName": "Luis Hills",
+          "phoneNumber": "+17965755612",
+          "email": "Domenica_Hegmann@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Volkman LLC",
+          "createdAt": "2024-12-12"
+        },
+        "createdBy": {
+          "id": 23,
+          "fullName": "Luis Hills",
+          "phoneNumber": "+17965755612",
+          "email": "Domenica_Hegmann@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Volkman LLC",
+          "createdAt": "2024-12-12"
+        },
+        "createdAt": "2024-08-18"
+      },
+      {
+        "id": 46,
+        "amount": 5781,
+        "repayAmount": 19166,
+        "client": {
+          "id": 99,
+          "fullName": "Josephine Bode",
+          "phoneNumber": "+15034851926",
+          "idNumber": "44754794",
+          "dob": "2024-03-02",
+          "gender": "MALE",
+          "active": true,
+          "branchName": "Cruickshank - Bosco",
+          "assignedStaff": {
+            "id": 85,
+            "fullName": "Elena Ryan",
+            "phoneNumber": "+12559446558",
+            "email": "Jayde68@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Johns and Sons",
+            "createdAt": "2024-05-05"
+          },
+          "overpayment": 7863,
+          "dueAmount": 7932,
+          "createdBy": {
+            "id": 12,
+            "fullName": "Dr. Sue Hoeger",
+            "phoneNumber": "+19318276023",
+            "email": "Austen.Boyle@gmail.com",
+            "role": "AGENT",
+            "branchName": "Thompson - Leffler",
+            "createdAt": "2024-10-31"
+          },
+          "createdAt": "2024-02-19"
+        },
+        "loanOfficer": {
+          "id": 93,
+          "fullName": "Linda Roberts",
+          "phoneNumber": "+16642520405",
+          "email": "Dejuan_Sawayn-Kozey50@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Wilkinson - Kris",
+          "createdAt": "2024-04-15"
+        },
+        "loanPurpose": "Thema sapiente combibo adipisci hic validus ambulo spoliatio iusto fugit.",
+        "dueDate": "2025-08-10",
+        "approvedBy": {
+          "id": 93,
+          "fullName": "Linda Roberts",
+          "phoneNumber": "+16642520405",
+          "email": "Dejuan_Sawayn-Kozey50@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Wilkinson - Kris",
+          "createdAt": "2024-04-15"
+        },
+        "disbursedOn": "2025-01-16",
+        "disbursedBy": {
+          "id": 93,
+          "fullName": "Linda Roberts",
+          "phoneNumber": "+16642520405",
+          "email": "Dejuan_Sawayn-Kozey50@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Wilkinson - Kris",
+          "createdAt": "2024-04-15"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 21,
+        "status": "ACTIVE",
+        "processingFee": 111,
+        "feePaid": true,
+        "paidAmount": 7734,
+        "updatedBy": {
+          "id": 93,
+          "fullName": "Linda Roberts",
+          "phoneNumber": "+16642520405",
+          "email": "Dejuan_Sawayn-Kozey50@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Wilkinson - Kris",
+          "createdAt": "2024-04-15"
+        },
+        "createdBy": {
+          "id": 93,
+          "fullName": "Linda Roberts",
+          "phoneNumber": "+16642520405",
+          "email": "Dejuan_Sawayn-Kozey50@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Wilkinson - Kris",
+          "createdAt": "2024-04-15"
+        },
+        "createdAt": "2024-03-15"
+      },
+      {
+        "id": 43,
+        "amount": 8591,
+        "repayAmount": 13334,
+        "client": {
+          "id": 4,
+          "fullName": "Cecil Kunze",
+          "phoneNumber": "+12248939645",
+          "idNumber": "79489356",
+          "dob": "2024-01-25",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "McGlynn, Kunze and Gerlach",
+          "assignedStaff": {
+            "id": 71,
+            "fullName": "Sam Monahan",
+            "phoneNumber": "+14844831359",
+            "email": "Jaclyn26@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Tremblay, Howell and Greenholt",
+            "createdAt": "2024-07-28"
+          },
+          "overpayment": 4538,
+          "dueAmount": 1436,
+          "createdBy": {
+            "id": 1,
+            "fullName": "Isabel Connelly",
+            "phoneNumber": "+16559826862",
+            "email": "Leonel99@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Mueller and Sons",
+            "createdAt": "2024-03-29"
+          },
+          "createdAt": "2024-07-21"
+        },
+        "loanOfficer": {
+          "id": 25,
+          "fullName": "Philip Mills",
+          "phoneNumber": "+19463948773",
+          "email": "Francesca_Kulas-Little66@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Farrell",
+          "createdAt": "2024-11-24"
+        },
+        "loanPurpose": "Adeo conitor amitto contra creber turpis depromo.",
+        "dueDate": "2025-05-30",
+        "approvedBy": {
+          "id": 25,
+          "fullName": "Philip Mills",
+          "phoneNumber": "+19463948773",
+          "email": "Francesca_Kulas-Little66@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Farrell",
+          "createdAt": "2024-11-24"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 25,
+          "fullName": "Philip Mills",
+          "phoneNumber": "+19463948773",
+          "email": "Francesca_Kulas-Little66@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Farrell",
+          "createdAt": "2024-11-24"
+        },
+        "noOfInstallments": 5,
+        "installmentsPeriod": 28,
+        "status": "COMPLETED",
+        "processingFee": 481,
+        "feePaid": true,
+        "paidAmount": 19627,
+        "updatedBy": {
+          "id": 25,
+          "fullName": "Philip Mills",
+          "phoneNumber": "+19463948773",
+          "email": "Francesca_Kulas-Little66@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Farrell",
+          "createdAt": "2024-11-24"
+        },
+        "createdBy": {
+          "id": 25,
+          "fullName": "Philip Mills",
+          "phoneNumber": "+19463948773",
+          "email": "Francesca_Kulas-Little66@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Farrell",
+          "createdAt": "2024-11-24"
+        },
+        "createdAt": "2024-07-20"
+      },
+      {
+        "id": 44,
+        "amount": 15589,
+        "repayAmount": 1803,
+        "client": {
+          "id": 69,
+          "fullName": "Velma Gulgowski",
+          "phoneNumber": "+17842708909",
+          "idNumber": "42967825",
+          "dob": "2024-06-03",
+          "gender": "FEMALE",
+          "active": false,
+          "branchName": "White - Botsford",
+          "assignedStaff": {
+            "id": 42,
+            "fullName": "Joyce Frami",
+            "phoneNumber": "+12965006435",
+            "email": "Grayce_Feest@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Pagac Group",
+            "createdAt": "2024-12-22"
+          },
+          "overpayment": 2827,
+          "dueAmount": 1703,
+          "createdBy": {
+            "id": 37,
+            "fullName": "Miss Rosie Corkery",
+            "phoneNumber": "+18894313754",
+            "email": "Rosetta_Walsh@gmail.com",
+            "role": "AGENT",
+            "branchName": "Boyle, Fisher and Will",
+            "createdAt": "2024-06-05"
+          },
+          "createdAt": "2024-03-12"
+        },
+        "loanOfficer": {
+          "id": 83,
+          "fullName": "Rosalie Botsford",
+          "phoneNumber": "+19994101188",
+          "email": "Aniyah.Kautzer@gmail.com",
+          "role": "ADMIN",
+          "branchName": "King, Jast and Walker",
+          "createdAt": "2024-11-30"
+        },
+        "loanPurpose": "Cribro alias verumtamen minus talio fugit arbitro.",
+        "dueDate": "2025-02-27",
+        "approvedBy": {
+          "id": 83,
+          "fullName": "Rosalie Botsford",
+          "phoneNumber": "+19994101188",
+          "email": "Aniyah.Kautzer@gmail.com",
+          "role": "ADMIN",
+          "branchName": "King, Jast and Walker",
+          "createdAt": "2024-11-30"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 83,
+          "fullName": "Rosalie Botsford",
+          "phoneNumber": "+19994101188",
+          "email": "Aniyah.Kautzer@gmail.com",
+          "role": "ADMIN",
+          "branchName": "King, Jast and Walker",
+          "createdAt": "2024-11-30"
+        },
+        "noOfInstallments": 5,
+        "installmentsPeriod": 17,
+        "status": "ACTIVE",
+        "processingFee": 280,
+        "feePaid": false,
+        "paidAmount": 2709,
+        "updatedBy": {
+          "id": 83,
+          "fullName": "Rosalie Botsford",
+          "phoneNumber": "+19994101188",
+          "email": "Aniyah.Kautzer@gmail.com",
+          "role": "ADMIN",
+          "branchName": "King, Jast and Walker",
+          "createdAt": "2024-11-30"
+        },
+        "createdBy": {
+          "id": 83,
+          "fullName": "Rosalie Botsford",
+          "phoneNumber": "+19994101188",
+          "email": "Aniyah.Kautzer@gmail.com",
+          "role": "ADMIN",
+          "branchName": "King, Jast and Walker",
+          "createdAt": "2024-11-30"
+        },
+        "createdAt": "2024-06-29"
+      },
+      {
+        "id": 92,
+        "amount": 19794,
+        "repayAmount": 19519,
+        "client": {
+          "id": 30,
+          "fullName": "Willis Upton",
+          "phoneNumber": "+18985838821",
+          "idNumber": "72325948",
+          "dob": "2024-02-27",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Willms Inc",
+          "assignedStaff": {
+            "id": 80,
+            "fullName": "Cecilia Ruecker",
+            "phoneNumber": "+16208780306",
+            "email": "Favian64@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Block, West and Huel",
+            "createdAt": "2024-09-05"
+          },
+          "overpayment": 9560,
+          "dueAmount": 3114,
+          "createdBy": {
+            "id": 14,
+            "fullName": "Eduardo McCullough",
+            "phoneNumber": "+16469674431",
+            "email": "Rahsaan27@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Schimmel - Kunde",
+            "createdAt": "2024-12-29"
+          },
+          "createdAt": "2024-09-08"
+        },
+        "loanOfficer": {
+          "id": 86,
+          "fullName": "Angela Koch II",
+          "phoneNumber": "+12705007107",
+          "email": "Raymundo_Nitzsche-Yost@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Walsh - Kulas",
+          "createdAt": "2024-09-15"
+        },
+        "loanPurpose": "Unde admiratio ceno tamen.",
+        "dueDate": "2025-03-29",
+        "approvedBy": {
+          "id": 86,
+          "fullName": "Angela Koch II",
+          "phoneNumber": "+12705007107",
+          "email": "Raymundo_Nitzsche-Yost@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Walsh - Kulas",
+          "createdAt": "2024-09-15"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 86,
+          "fullName": "Angela Koch II",
+          "phoneNumber": "+12705007107",
+          "email": "Raymundo_Nitzsche-Yost@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Walsh - Kulas",
+          "createdAt": "2024-09-15"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 22,
+        "status": "COMPLETED",
+        "processingFee": 233,
+        "feePaid": false,
+        "paidAmount": 19044,
+        "updatedBy": {
+          "id": 86,
+          "fullName": "Angela Koch II",
+          "phoneNumber": "+12705007107",
+          "email": "Raymundo_Nitzsche-Yost@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Walsh - Kulas",
+          "createdAt": "2024-09-15"
+        },
+        "createdBy": {
+          "id": 86,
+          "fullName": "Angela Koch II",
+          "phoneNumber": "+12705007107",
+          "email": "Raymundo_Nitzsche-Yost@gmail.com",
+          "role": "ADMIN",
+          "branchName": "Walsh - Kulas",
+          "createdAt": "2024-09-15"
+        },
+        "createdAt": "2024-12-31"
+      },
+      {
+        "id": 88,
+        "amount": 6266,
+        "repayAmount": 4809,
+        "client": {
+          "id": 75,
+          "fullName": "Shari Kuvalis Jr.",
+          "phoneNumber": "+14018430751",
+          "idNumber": "41080214",
+          "dob": "2024-08-21",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Renner, Ebert and Reilly",
+          "assignedStaff": {
+            "id": 57,
+            "fullName": "Jeff Gusikowski",
+            "phoneNumber": "+13693915130",
+            "email": "Lori.Mayert25@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Pfannerstill - O'Keefe",
+            "createdAt": "2024-02-15"
+          },
+          "overpayment": 6391,
+          "dueAmount": 8499,
+          "createdBy": {
+            "id": 87,
+            "fullName": "Johnathan Adams",
+            "phoneNumber": "+13244977058",
+            "email": "Rachel.Hegmann@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Heller - Green",
+            "createdAt": "2024-10-17"
+          },
+          "createdAt": "2024-04-18"
+        },
+        "loanOfficer": {
+          "id": 89,
+          "fullName": "Mrs. Crystal Moore-Romaguera",
+          "phoneNumber": "+17734796505",
+          "email": "Katherine_Hilpert82@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Stamm, Daniel and McKenzie",
+          "createdAt": "2024-10-25"
+        },
+        "loanPurpose": "Adhuc esse cornu demonstro brevis alias suadeo spes truculenter creo.",
+        "dueDate": "2025-01-18",
+        "approvedBy": {
+          "id": 89,
+          "fullName": "Mrs. Crystal Moore-Romaguera",
+          "phoneNumber": "+17734796505",
+          "email": "Katherine_Hilpert82@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Stamm, Daniel and McKenzie",
+          "createdAt": "2024-10-25"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 89,
+          "fullName": "Mrs. Crystal Moore-Romaguera",
+          "phoneNumber": "+17734796505",
+          "email": "Katherine_Hilpert82@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Stamm, Daniel and McKenzie",
+          "createdAt": "2024-10-25"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 16,
+        "status": "INACTIVE",
+        "processingFee": 496,
+        "feePaid": false,
+        "paidAmount": 6827,
+        "updatedBy": {
+          "id": 89,
+          "fullName": "Mrs. Crystal Moore-Romaguera",
+          "phoneNumber": "+17734796505",
+          "email": "Katherine_Hilpert82@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Stamm, Daniel and McKenzie",
+          "createdAt": "2024-10-25"
+        },
+        "createdBy": {
+          "id": 89,
+          "fullName": "Mrs. Crystal Moore-Romaguera",
+          "phoneNumber": "+17734796505",
+          "email": "Katherine_Hilpert82@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Stamm, Daniel and McKenzie",
+          "createdAt": "2024-10-25"
+        },
+        "createdAt": "2025-01-17"
+      },
+      {
+        "id": 29,
+        "amount": 379,
+        "repayAmount": 19053,
+        "client": {
+          "id": 49,
+          "fullName": "Mr. Brad Botsford",
+          "phoneNumber": "+15245543629",
+          "idNumber": "30847105",
+          "dob": "2024-04-27",
+          "gender": "FEMALE",
+          "active": false,
+          "branchName": "Gutmann - Moen",
+          "assignedStaff": {
+            "id": 43,
+            "fullName": "Mr. Edwin Wolff",
+            "phoneNumber": "+16072703386",
+            "email": "Shaun.Adams8@yahoo.com",
+            "role": "ADMIN",
+            "branchName": "Hand - Muller",
+            "createdAt": "2024-12-07"
+          },
+          "overpayment": 4627,
+          "dueAmount": 3237,
+          "createdBy": {
+            "id": 76,
+            "fullName": "Martha Blanda Jr.",
+            "phoneNumber": "+19768996631",
+            "email": "Brooklyn34@hotmail.com",
+            "role": "ADMIN",
+            "branchName": "Borer and Sons",
+            "createdAt": "2024-11-27"
+          },
+          "createdAt": "2024-07-26"
+        },
+        "loanOfficer": {
+          "id": 47,
+          "fullName": "Jasmine Nicolas",
+          "phoneNumber": "+13189232463",
+          "email": "Pablo73@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hodkiewicz - Brown",
+          "createdAt": "2024-09-28"
+        },
+        "loanPurpose": "Calcar addo officiis valens defetiscor veritas.",
+        "dueDate": "2025-10-21",
+        "approvedBy": {
+          "id": 47,
+          "fullName": "Jasmine Nicolas",
+          "phoneNumber": "+13189232463",
+          "email": "Pablo73@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hodkiewicz - Brown",
+          "createdAt": "2024-09-28"
+        },
+        "disbursedOn": "2025-01-16",
+        "disbursedBy": {
+          "id": 47,
+          "fullName": "Jasmine Nicolas",
+          "phoneNumber": "+13189232463",
+          "email": "Pablo73@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hodkiewicz - Brown",
+          "createdAt": "2024-09-28"
+        },
+        "noOfInstallments": 6,
+        "installmentsPeriod": 11,
+        "status": "COMPLETED",
+        "processingFee": 189,
+        "feePaid": false,
+        "paidAmount": 2575,
+        "updatedBy": {
+          "id": 47,
+          "fullName": "Jasmine Nicolas",
+          "phoneNumber": "+13189232463",
+          "email": "Pablo73@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hodkiewicz - Brown",
+          "createdAt": "2024-09-28"
+        },
+        "createdBy": {
+          "id": 47,
+          "fullName": "Jasmine Nicolas",
+          "phoneNumber": "+13189232463",
+          "email": "Pablo73@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hodkiewicz - Brown",
+          "createdAt": "2024-09-28"
+        },
+        "createdAt": "2024-04-19"
+      },
+      {
+        "id": 35,
+        "amount": 1763,
+        "repayAmount": 15872,
+        "client": {
+          "id": 70,
+          "fullName": "Lauren Stiedemann",
+          "phoneNumber": "+19006956761",
+          "idNumber": "95075576",
+          "dob": "2024-05-08",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Feest - Kemmer",
+          "assignedStaff": {
+            "id": 69,
+            "fullName": "Courtney Glover",
+            "phoneNumber": "+12205210400",
+            "email": "Nichole_Jacobi@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Kuvalis, Nitzsche and Kling",
+            "createdAt": "2024-03-11"
+          },
+          "overpayment": 2554,
+          "dueAmount": 6482,
+          "createdBy": {
+            "id": 44,
+            "fullName": "Rolando Prosacco",
+            "phoneNumber": "+19067189252",
+            "email": "Jackson92@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Skiles - Corwin",
+            "createdAt": "2024-02-11"
+          },
+          "createdAt": "2024-07-19"
+        },
+        "loanOfficer": {
+          "id": 55,
+          "fullName": "Johanna Tillman",
+          "phoneNumber": "+15933048629",
+          "email": "Rosemarie82@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Anderson Group",
+          "createdAt": "2024-12-31"
+        },
+        "loanPurpose": "Copia sopor aperio totam carcer conculco cunctatio sonitus conitor.",
+        "dueDate": "2025-10-25",
+        "approvedBy": {
+          "id": 55,
+          "fullName": "Johanna Tillman",
+          "phoneNumber": "+15933048629",
+          "email": "Rosemarie82@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Anderson Group",
+          "createdAt": "2024-12-31"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 55,
+          "fullName": "Johanna Tillman",
+          "phoneNumber": "+15933048629",
+          "email": "Rosemarie82@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Anderson Group",
+          "createdAt": "2024-12-31"
+        },
+        "noOfInstallments": 5,
+        "installmentsPeriod": 18,
+        "status": "ACTIVE",
+        "processingFee": 298,
+        "feePaid": false,
+        "paidAmount": 3315,
+        "updatedBy": {
+          "id": 55,
+          "fullName": "Johanna Tillman",
+          "phoneNumber": "+15933048629",
+          "email": "Rosemarie82@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Anderson Group",
+          "createdAt": "2024-12-31"
+        },
+        "createdBy": {
+          "id": 55,
+          "fullName": "Johanna Tillman",
+          "phoneNumber": "+15933048629",
+          "email": "Rosemarie82@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Anderson Group",
+          "createdAt": "2024-12-31"
+        },
+        "createdAt": "2024-03-31"
+      },
+      {
+        "id": 52,
+        "amount": 14899,
+        "repayAmount": 15910,
+        "client": {
+          "id": 91,
+          "fullName": "Nick Gutkowski",
+          "phoneNumber": "+15794873713",
+          "idNumber": "53354536",
+          "dob": "2024-10-01",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Buckridge, Hammes and Walter",
+          "assignedStaff": {
+            "id": 44,
+            "fullName": "Velma Schumm",
+            "phoneNumber": "+17756376169",
+            "email": "Maeve_Schowalter@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Vandervort LLC",
+            "createdAt": "2024-02-01"
+          },
+          "overpayment": 5257,
+          "dueAmount": 1516,
+          "createdBy": {
+            "id": 51,
+            "fullName": "Jennifer Howe",
+            "phoneNumber": "+17049099011",
+            "email": "Gregg_Waters59@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Wiza, Steuber and Simonis",
+            "createdAt": "2024-01-19"
+          },
+          "createdAt": "2024-05-22"
+        },
+        "loanOfficer": {
+          "id": 38,
+          "fullName": "Tyler Rowe",
+          "phoneNumber": "+15355024153",
+          "email": "Garry_Denesik@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Goyette - O'Conner",
+          "createdAt": "2024-04-20"
+        },
+        "loanPurpose": "Color denique ambitus.",
+        "dueDate": "2025-07-01",
+        "approvedBy": {
+          "id": 38,
+          "fullName": "Tyler Rowe",
+          "phoneNumber": "+15355024153",
+          "email": "Garry_Denesik@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Goyette - O'Conner",
+          "createdAt": "2024-04-20"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 38,
+          "fullName": "Tyler Rowe",
+          "phoneNumber": "+15355024153",
+          "email": "Garry_Denesik@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Goyette - O'Conner",
+          "createdAt": "2024-04-20"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 12,
+        "status": "INACTIVE",
+        "processingFee": 89,
+        "feePaid": true,
+        "paidAmount": 6556,
+        "updatedBy": {
+          "id": 38,
+          "fullName": "Tyler Rowe",
+          "phoneNumber": "+15355024153",
+          "email": "Garry_Denesik@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Goyette - O'Conner",
+          "createdAt": "2024-04-20"
+        },
+        "createdBy": {
+          "id": 38,
+          "fullName": "Tyler Rowe",
+          "phoneNumber": "+15355024153",
+          "email": "Garry_Denesik@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Goyette - O'Conner",
+          "createdAt": "2024-04-20"
+        },
+        "createdAt": "2024-07-27"
+      },
+      {
+        "id": 70,
+        "amount": 1003,
+        "repayAmount": 20241,
+        "client": {
+          "id": 31,
+          "fullName": "Rosemarie Cartwright",
+          "phoneNumber": "+19378003466",
+          "idNumber": "29940720",
+          "dob": "2024-05-07",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Stark and Sons",
+          "assignedStaff": {
+            "id": 22,
+            "fullName": "Isaac McCullough",
+            "phoneNumber": "+16179694144",
+            "email": "Blanca_VonRueden62@gmail.com",
+            "role": "AGENT",
+            "branchName": "Keebler Group",
+            "createdAt": "2024-09-10"
+          },
+          "overpayment": 6394,
+          "dueAmount": 2843,
+          "createdBy": {
+            "id": 36,
+            "fullName": "Meredith Marvin",
+            "phoneNumber": "+17077405286",
+            "email": "Larue_Thiel29@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Kautzer LLC",
+            "createdAt": "2025-01-13"
+          },
+          "createdAt": "2024-12-14"
+        },
+        "loanOfficer": {
+          "id": 56,
+          "fullName": "Samuel Kiehn",
+          "phoneNumber": "+12325394841",
+          "email": "Darby_Fay@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Goyette, Schaden and Sauer",
+          "createdAt": "2024-09-25"
+        },
+        "loanPurpose": "Desparatus texo condico artificiose alo voluptatem volubilis acceptus.",
+        "dueDate": "2025-03-27",
+        "approvedBy": {
+          "id": 56,
+          "fullName": "Samuel Kiehn",
+          "phoneNumber": "+12325394841",
+          "email": "Darby_Fay@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Goyette, Schaden and Sauer",
+          "createdAt": "2024-09-25"
+        },
+        "disbursedOn": "2025-01-16",
+        "disbursedBy": {
+          "id": 56,
+          "fullName": "Samuel Kiehn",
+          "phoneNumber": "+12325394841",
+          "email": "Darby_Fay@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Goyette, Schaden and Sauer",
+          "createdAt": "2024-09-25"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 6,
+        "status": "DEFAULTED",
+        "processingFee": 17,
+        "feePaid": true,
+        "paidAmount": 16670,
+        "updatedBy": {
+          "id": 56,
+          "fullName": "Samuel Kiehn",
+          "phoneNumber": "+12325394841",
+          "email": "Darby_Fay@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Goyette, Schaden and Sauer",
+          "createdAt": "2024-09-25"
+        },
+        "createdBy": {
+          "id": 56,
+          "fullName": "Samuel Kiehn",
+          "phoneNumber": "+12325394841",
+          "email": "Darby_Fay@yahoo.com",
+          "role": "AGENT",
+          "branchName": "Goyette, Schaden and Sauer",
+          "createdAt": "2024-09-25"
+        },
+        "createdAt": "2024-06-07"
+      },
+      {
+        "id": 31,
+        "amount": 5243,
+        "repayAmount": 2648,
+        "client": {
+          "id": 3,
+          "fullName": "Alison Mueller",
+          "phoneNumber": "+19918782595",
+          "idNumber": "53212328",
+          "dob": "2024-09-26",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Dietrich - Raynor",
+          "assignedStaff": {
+            "id": 99,
+            "fullName": "Sherman Heidenreich-Will",
+            "phoneNumber": "+19599868637",
+            "email": "Wilfredo_Gulgowski24@hotmail.com",
+            "role": "AGENT",
+            "branchName": "White - Gutkowski",
+            "createdAt": "2024-10-06"
+          },
+          "overpayment": 6104,
+          "dueAmount": 5842,
+          "createdBy": {
+            "id": 74,
+            "fullName": "Earl Okuneva",
+            "phoneNumber": "+18824112293",
+            "email": "Nicola_Kunze39@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Welch - Blick",
+            "createdAt": "2024-02-06"
+          },
+          "createdAt": "2024-02-23"
+        },
+        "loanOfficer": {
+          "id": 66,
+          "fullName": "Kristopher Waelchi",
+          "phoneNumber": "+15852519741",
+          "email": "Jerad.Kilback@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Collins - Anderson",
+          "createdAt": "2024-12-07"
+        },
+        "loanPurpose": "Curatio cui ars candidus.",
+        "dueDate": "2025-05-15",
+        "approvedBy": {
+          "id": 66,
+          "fullName": "Kristopher Waelchi",
+          "phoneNumber": "+15852519741",
+          "email": "Jerad.Kilback@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Collins - Anderson",
+          "createdAt": "2024-12-07"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 66,
+          "fullName": "Kristopher Waelchi",
+          "phoneNumber": "+15852519741",
+          "email": "Jerad.Kilback@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Collins - Anderson",
+          "createdAt": "2024-12-07"
+        },
+        "noOfInstallments": 4,
+        "installmentsPeriod": 2,
+        "status": "DEFAULTED",
+        "processingFee": 213,
+        "feePaid": true,
+        "paidAmount": 3144,
+        "updatedBy": {
+          "id": 66,
+          "fullName": "Kristopher Waelchi",
+          "phoneNumber": "+15852519741",
+          "email": "Jerad.Kilback@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Collins - Anderson",
+          "createdAt": "2024-12-07"
+        },
+        "createdBy": {
+          "id": 66,
+          "fullName": "Kristopher Waelchi",
+          "phoneNumber": "+15852519741",
+          "email": "Jerad.Kilback@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Collins - Anderson",
+          "createdAt": "2024-12-07"
+        },
+        "createdAt": "2024-03-29"
+      },
+      {
+        "id": 74,
+        "amount": 11513,
+        "repayAmount": 16921,
+        "client": {
+          "id": 56,
+          "fullName": "Terence Bogisich",
+          "phoneNumber": "+18168186114",
+          "idNumber": "17349806",
+          "dob": "2024-04-26",
+          "gender": "MALE",
+          "active": true,
+          "branchName": "Balistreri Inc",
+          "assignedStaff": {
+            "id": 45,
+            "fullName": "Benny Kihn",
+            "phoneNumber": "+17597736756",
+            "email": "Jarrett.Kovacek56@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Stokes, Price and Haley",
+            "createdAt": "2024-07-29"
+          },
+          "overpayment": 37,
+          "dueAmount": 1154,
+          "createdBy": {
+            "id": 7,
+            "fullName": "Rodney Ondricka-Carroll",
+            "phoneNumber": "+18068821196",
+            "email": "Bulah.Oberbrunner85@gmail.com",
+            "role": "AGENT",
+            "branchName": "Grimes, Beier and Boyle",
+            "createdAt": "2024-07-09"
+          },
+          "createdAt": "2024-07-28"
+        },
+        "loanOfficer": {
+          "id": 67,
+          "fullName": "Darin Mertz",
+          "phoneNumber": "+15692174921",
+          "email": "Theodore.Kessler62@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Cruickshank - Keeling",
+          "createdAt": "2024-08-11"
+        },
+        "loanPurpose": "Assentator statua vulnero credo voluptatibus defaeco.",
+        "dueDate": "2025-08-15",
+        "approvedBy": {
+          "id": 67,
+          "fullName": "Darin Mertz",
+          "phoneNumber": "+15692174921",
+          "email": "Theodore.Kessler62@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Cruickshank - Keeling",
+          "createdAt": "2024-08-11"
+        },
+        "disbursedOn": "2025-01-16",
+        "disbursedBy": {
+          "id": 67,
+          "fullName": "Darin Mertz",
+          "phoneNumber": "+15692174921",
+          "email": "Theodore.Kessler62@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Cruickshank - Keeling",
+          "createdAt": "2024-08-11"
+        },
+        "noOfInstallments": 3,
+        "installmentsPeriod": 11,
+        "status": "INACTIVE",
+        "processingFee": 427,
+        "feePaid": true,
+        "paidAmount": 10027,
+        "updatedBy": {
+          "id": 67,
+          "fullName": "Darin Mertz",
+          "phoneNumber": "+15692174921",
+          "email": "Theodore.Kessler62@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Cruickshank - Keeling",
+          "createdAt": "2024-08-11"
+        },
+        "createdBy": {
+          "id": 67,
+          "fullName": "Darin Mertz",
+          "phoneNumber": "+15692174921",
+          "email": "Theodore.Kessler62@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Cruickshank - Keeling",
+          "createdAt": "2024-08-11"
+        },
+        "createdAt": "2024-02-27"
+      },
+      {
+        "id": 8,
+        "amount": 8921,
+        "repayAmount": 13391,
+        "client": {
+          "id": 74,
+          "fullName": "Dr. Neal Doyle",
+          "phoneNumber": "+14988598349",
+          "idNumber": "23387017",
+          "dob": "2024-12-19",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Hermann, Sipes and Jerde",
+          "assignedStaff": {
+            "id": 7,
+            "fullName": "Darrin Green",
+            "phoneNumber": "+13603537446",
+            "email": "Breana_Miller94@hotmail.com",
+            "role": "ADMIN",
+            "branchName": "Volkman, Emard and McLaughlin",
+            "createdAt": "2024-11-16"
+          },
+          "overpayment": 3561,
+          "dueAmount": 3596,
+          "createdBy": {
+            "id": 10,
+            "fullName": "Howard Tremblay",
+            "phoneNumber": "+12472760264",
+            "email": "Giovanni_Kutch@yahoo.com",
+            "role": "ADMIN",
+            "branchName": "Kling - Hudson",
+            "createdAt": "2024-08-09"
+          },
+          "createdAt": "2024-08-16"
+        },
+        "loanOfficer": {
+          "id": 73,
+          "fullName": "Melissa Abshire",
+          "phoneNumber": "+17475638597",
+          "email": "Zander70@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hirthe, Brekke and Macejkovic",
+          "createdAt": "2024-02-17"
+        },
+        "loanPurpose": "Harum artificiose auctor sumptus quis careo.",
+        "dueDate": "2025-04-24",
+        "approvedBy": {
+          "id": 73,
+          "fullName": "Melissa Abshire",
+          "phoneNumber": "+17475638597",
+          "email": "Zander70@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hirthe, Brekke and Macejkovic",
+          "createdAt": "2024-02-17"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 73,
+          "fullName": "Melissa Abshire",
+          "phoneNumber": "+17475638597",
+          "email": "Zander70@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hirthe, Brekke and Macejkovic",
+          "createdAt": "2024-02-17"
+        },
+        "noOfInstallments": 2,
+        "installmentsPeriod": 23,
+        "status": "DEFAULTED",
+        "processingFee": 285,
+        "feePaid": false,
+        "paidAmount": 15977,
+        "updatedBy": {
+          "id": 73,
+          "fullName": "Melissa Abshire",
+          "phoneNumber": "+17475638597",
+          "email": "Zander70@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hirthe, Brekke and Macejkovic",
+          "createdAt": "2024-02-17"
+        },
+        "createdBy": {
+          "id": 73,
+          "fullName": "Melissa Abshire",
+          "phoneNumber": "+17475638597",
+          "email": "Zander70@gmail.com",
+          "role": "AGENT",
+          "branchName": "Hirthe, Brekke and Macejkovic",
+          "createdAt": "2024-02-17"
+        },
+        "createdAt": "2024-03-16"
+      },
+      {
+        "id": 95,
+        "amount": 17836,
+        "repayAmount": 15083,
+        "client": {
+          "id": 87,
+          "fullName": "Minnie Schumm",
+          "phoneNumber": "+15265492319",
+          "idNumber": "17179704",
+          "dob": "2024-10-29",
+          "gender": "MALE",
+          "active": false,
+          "branchName": "Lesch, Hintz and Torphy",
+          "assignedStaff": {
+            "id": 84,
+            "fullName": "Abel Hintz",
+            "phoneNumber": "+18676655021",
+            "email": "Aurore_Ritchie9@hotmail.com",
+            "role": "ADMIN",
+            "branchName": "Hermann - Daugherty",
+            "createdAt": "2024-08-20"
+          },
+          "overpayment": 6836,
+          "dueAmount": 505,
+          "createdBy": {
+            "id": 35,
+            "fullName": "Ana Schamberger",
+            "phoneNumber": "+13329917723",
+            "email": "Rosalind20@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Kerluke - Glover",
+            "createdAt": "2024-11-03"
+          },
+          "createdAt": "2024-10-04"
+        },
+        "loanOfficer": {
+          "id": 17,
+          "fullName": "Cedric Frami",
+          "phoneNumber": "+19452992189",
+          "email": "Macy.Jacobson88@gmail.com",
+          "role": "AGENT",
+          "branchName": "Yost Inc",
+          "createdAt": "2024-03-13"
+        },
+        "loanPurpose": "Terminatio arbitro deinde.",
+        "dueDate": "2025-11-05",
+        "approvedBy": {
+          "id": 17,
+          "fullName": "Cedric Frami",
+          "phoneNumber": "+19452992189",
+          "email": "Macy.Jacobson88@gmail.com",
+          "role": "AGENT",
+          "branchName": "Yost Inc",
+          "createdAt": "2024-03-13"
+        },
+        "disbursedOn": "2025-01-16",
+        "disbursedBy": {
+          "id": 17,
+          "fullName": "Cedric Frami",
+          "phoneNumber": "+19452992189",
+          "email": "Macy.Jacobson88@gmail.com",
+          "role": "AGENT",
+          "branchName": "Yost Inc",
+          "createdAt": "2024-03-13"
+        },
+        "noOfInstallments": 1,
+        "installmentsPeriod": 30,
+        "status": "DEFAULTED",
+        "processingFee": 440,
+        "feePaid": false,
+        "paidAmount": 16373,
+        "updatedBy": {
+          "id": 17,
+          "fullName": "Cedric Frami",
+          "phoneNumber": "+19452992189",
+          "email": "Macy.Jacobson88@gmail.com",
+          "role": "AGENT",
+          "branchName": "Yost Inc",
+          "createdAt": "2024-03-13"
+        },
+        "createdBy": {
+          "id": 17,
+          "fullName": "Cedric Frami",
+          "phoneNumber": "+19452992189",
+          "email": "Macy.Jacobson88@gmail.com",
+          "role": "AGENT",
+          "branchName": "Yost Inc",
+          "createdAt": "2024-03-13"
+        },
+        "createdAt": "2024-06-15"
+      },
+      {
+        "id": 41,
+        "amount": 11692,
+        "repayAmount": 17556,
+        "client": {
+          "id": 9,
+          "fullName": "Jesse Halvorson",
+          "phoneNumber": "+13704916011",
+          "idNumber": "77928867",
+          "dob": "2024-07-04",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Ledner - McDermott",
+          "assignedStaff": {
+            "id": 20,
+            "fullName": "Mr. Eugene Langworth",
+            "phoneNumber": "+15414122515",
+            "email": "Alanna.Kuhlman66@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Miller, Anderson and Spencer",
+            "createdAt": "2024-04-08"
+          },
+          "overpayment": 8548,
+          "dueAmount": 9852,
+          "createdBy": {
+            "id": 70,
+            "fullName": "Julius Schulist",
+            "phoneNumber": "+15366468945",
+            "email": "Christopher_Satterfield35@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Mertz - Kovacek",
+            "createdAt": "2024-06-29"
+          },
+          "createdAt": "2024-08-15"
+        },
+        "loanOfficer": {
+          "id": 81,
+          "fullName": "Sheldon Cormier",
+          "phoneNumber": "+18497349695",
+          "email": "Ashlynn.Nikolaus40@gmail.com",
+          "role": "AGENT",
+          "branchName": "DuBuque and Sons",
+          "createdAt": "2024-12-22"
+        },
+        "loanPurpose": "Velut compello claro pariatur aggredior.",
+        "dueDate": "2025-08-29",
+        "approvedBy": {
+          "id": 81,
+          "fullName": "Sheldon Cormier",
+          "phoneNumber": "+18497349695",
+          "email": "Ashlynn.Nikolaus40@gmail.com",
+          "role": "AGENT",
+          "branchName": "DuBuque and Sons",
+          "createdAt": "2024-12-22"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 81,
+          "fullName": "Sheldon Cormier",
+          "phoneNumber": "+18497349695",
+          "email": "Ashlynn.Nikolaus40@gmail.com",
+          "role": "AGENT",
+          "branchName": "DuBuque and Sons",
+          "createdAt": "2024-12-22"
+        },
+        "noOfInstallments": 2,
+        "installmentsPeriod": 4,
+        "status": "ACTIVE",
+        "processingFee": 74,
+        "feePaid": true,
+        "paidAmount": 21646,
+        "updatedBy": {
+          "id": 81,
+          "fullName": "Sheldon Cormier",
+          "phoneNumber": "+18497349695",
+          "email": "Ashlynn.Nikolaus40@gmail.com",
+          "role": "AGENT",
+          "branchName": "DuBuque and Sons",
+          "createdAt": "2024-12-22"
+        },
+        "createdBy": {
+          "id": 81,
+          "fullName": "Sheldon Cormier",
+          "phoneNumber": "+18497349695",
+          "email": "Ashlynn.Nikolaus40@gmail.com",
+          "role": "AGENT",
+          "branchName": "DuBuque and Sons",
+          "createdAt": "2024-12-22"
+        },
+        "createdAt": "2024-10-26"
+      },
+      {
+        "id": 7,
+        "amount": 15760,
+        "repayAmount": 17043,
+        "client": {
+          "id": 78,
+          "fullName": "Ms. Vanessa Bechtelar",
+          "phoneNumber": "+19815705738",
+          "idNumber": "76004268",
+          "dob": "2024-12-03",
+          "gender": "MALE",
+          "active": true,
+          "branchName": "Price, Hagenes and Prohaska",
+          "assignedStaff": {
+            "id": 47,
+            "fullName": "Duane Stroman MD",
+            "phoneNumber": "+17448087050",
+            "email": "Verlie43@hotmail.com",
+            "role": "ADMIN",
+            "branchName": "Fisher, Terry and Ferry",
+            "createdAt": "2024-12-02"
+          },
+          "overpayment": 7692,
+          "dueAmount": 884,
+          "createdBy": {
+            "id": 93,
+            "fullName": "Ivan Balistreri",
+            "phoneNumber": "+15858009518",
+            "email": "Burdette69@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Leannon Inc",
+            "createdAt": "2024-08-26"
+          },
+          "createdAt": "2024-09-14"
+        },
+        "loanOfficer": {
+          "id": 39,
+          "fullName": "Ricky Will",
+          "phoneNumber": "+19443801066",
+          "email": "Dante_Harber@gmail.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Legros",
+          "createdAt": "2024-10-22"
+        },
+        "loanPurpose": "Facere terror pariatur degero sonitus taceo.",
+        "dueDate": "2025-04-12",
+        "approvedBy": {
+          "id": 39,
+          "fullName": "Ricky Will",
+          "phoneNumber": "+19443801066",
+          "email": "Dante_Harber@gmail.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Legros",
+          "createdAt": "2024-10-22"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 39,
+          "fullName": "Ricky Will",
+          "phoneNumber": "+19443801066",
+          "email": "Dante_Harber@gmail.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Legros",
+          "createdAt": "2024-10-22"
+        },
+        "noOfInstallments": 6,
+        "installmentsPeriod": 11,
+        "status": "DEFAULTED",
+        "processingFee": 99,
+        "feePaid": false,
+        "paidAmount": 2527,
+        "updatedBy": {
+          "id": 39,
+          "fullName": "Ricky Will",
+          "phoneNumber": "+19443801066",
+          "email": "Dante_Harber@gmail.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Legros",
+          "createdAt": "2024-10-22"
+        },
+        "createdBy": {
+          "id": 39,
+          "fullName": "Ricky Will",
+          "phoneNumber": "+19443801066",
+          "email": "Dante_Harber@gmail.com",
+          "role": "AGENT",
+          "branchName": "Sipes - Legros",
+          "createdAt": "2024-10-22"
+        },
+        "createdAt": "2025-01-02"
+      },
+      {
+        "id": 16,
+        "amount": 11464,
+        "repayAmount": 24671,
+        "client": {
+          "id": 34,
+          "fullName": "Kelly Mills",
+          "phoneNumber": "+13945449289",
+          "idNumber": "10466290",
+          "dob": "2024-08-15",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Howell - Walter",
+          "assignedStaff": {
+            "id": 45,
+            "fullName": "Mr. Orlando Johnson I",
+            "phoneNumber": "+18837697771",
+            "email": "Rosalinda.Keebler@yahoo.com",
+            "role": "ADMIN",
+            "branchName": "Weber, Schmidt and Harvey",
+            "createdAt": "2024-10-03"
+          },
+          "overpayment": 4667,
+          "dueAmount": 6201,
+          "createdBy": {
+            "id": 87,
+            "fullName": "Danny Nitzsche",
+            "phoneNumber": "+15373542467",
+            "email": "Tamara.Ward25@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Hand - Murazik",
+            "createdAt": "2024-09-05"
+          },
+          "createdAt": "2024-12-20"
+        },
+        "loanOfficer": {
+          "id": 69,
+          "fullName": "Rebecca Von",
+          "phoneNumber": "+14046198111",
+          "email": "Donato.Gutmann@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Kessler - Frami",
+          "createdAt": "2025-01-01"
+        },
+        "loanPurpose": "Civis architecto videlicet quas vorago consuasor caelestis traho tamquam.",
+        "dueDate": "2025-09-17",
+        "approvedBy": {
+          "id": 69,
+          "fullName": "Rebecca Von",
+          "phoneNumber": "+14046198111",
+          "email": "Donato.Gutmann@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Kessler - Frami",
+          "createdAt": "2025-01-01"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 69,
+          "fullName": "Rebecca Von",
+          "phoneNumber": "+14046198111",
+          "email": "Donato.Gutmann@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Kessler - Frami",
+          "createdAt": "2025-01-01"
+        },
+        "noOfInstallments": 2,
+        "installmentsPeriod": 11,
+        "status": "DEFAULTED",
+        "processingFee": 123,
+        "feePaid": true,
+        "paidAmount": 6611,
+        "updatedBy": {
+          "id": 69,
+          "fullName": "Rebecca Von",
+          "phoneNumber": "+14046198111",
+          "email": "Donato.Gutmann@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Kessler - Frami",
+          "createdAt": "2025-01-01"
+        },
+        "createdBy": {
+          "id": 69,
+          "fullName": "Rebecca Von",
+          "phoneNumber": "+14046198111",
+          "email": "Donato.Gutmann@hotmail.com",
+          "role": "ADMIN",
+          "branchName": "Kessler - Frami",
+          "createdAt": "2025-01-01"
+        },
+        "createdAt": "2024-10-31"
+      },
+      {
+        "id": 20,
+        "amount": 3995,
+        "repayAmount": 10870,
+        "client": {
+          "id": 57,
+          "fullName": "Renee Abshire",
+          "phoneNumber": "+19169239417",
+          "idNumber": "03960118",
+          "dob": "2024-01-20",
+          "gender": "FEMALE",
+          "active": true,
+          "branchName": "Gerhold Inc",
+          "assignedStaff": {
+            "id": 19,
+            "fullName": "Lyle Jakubowski",
+            "phoneNumber": "+16612777869",
+            "email": "Lester39@yahoo.com",
+            "role": "AGENT",
+            "branchName": "Howell, Walter and Streich",
+            "createdAt": "2024-05-22"
+          },
+          "overpayment": 9830,
+          "dueAmount": 6529,
+          "createdBy": {
+            "id": 44,
+            "fullName": "Kirk Pouros",
+            "phoneNumber": "+19993548850",
+            "email": "Vincent_Bergnaum@gmail.com",
+            "role": "AGENT",
+            "branchName": "Purdy, Kulas and Howell",
+            "createdAt": "2024-10-08"
+          },
+          "createdAt": "2024-08-26"
+        },
+        "loanOfficer": {
+          "id": 13,
+          "fullName": "Darryl Barrows",
+          "phoneNumber": "+13437192300",
+          "email": "Brayan_Boyle32@gmail.com",
+          "role": "AGENT",
+          "branchName": "Gorczany, Senger and Gibson",
+          "createdAt": "2024-07-05"
+        },
+        "loanPurpose": "Barba cras colligo thermae consequatur spero somniculosus curso uxor repellendus.",
+        "dueDate": "2025-12-26",
+        "approvedBy": {
+          "id": 13,
+          "fullName": "Darryl Barrows",
+          "phoneNumber": "+13437192300",
+          "email": "Brayan_Boyle32@gmail.com",
+          "role": "AGENT",
+          "branchName": "Gorczany, Senger and Gibson",
+          "createdAt": "2024-07-05"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 13,
+          "fullName": "Darryl Barrows",
+          "phoneNumber": "+13437192300",
+          "email": "Brayan_Boyle32@gmail.com",
+          "role": "AGENT",
+          "branchName": "Gorczany, Senger and Gibson",
+          "createdAt": "2024-07-05"
+        },
+        "noOfInstallments": 2,
+        "installmentsPeriod": 10,
+        "status": "DEFAULTED",
+        "processingFee": 467,
+        "feePaid": true,
+        "paidAmount": 469,
+        "updatedBy": {
+          "id": 13,
+          "fullName": "Darryl Barrows",
+          "phoneNumber": "+13437192300",
+          "email": "Brayan_Boyle32@gmail.com",
+          "role": "AGENT",
+          "branchName": "Gorczany, Senger and Gibson",
+          "createdAt": "2024-07-05"
+        },
+        "createdBy": {
+          "id": 13,
+          "fullName": "Darryl Barrows",
+          "phoneNumber": "+13437192300",
+          "email": "Brayan_Boyle32@gmail.com",
+          "role": "AGENT",
+          "branchName": "Gorczany, Senger and Gibson",
+          "createdAt": "2024-07-05"
+        },
+        "createdAt": "2024-12-16"
+      },
+      {
+        "id": 17,
+        "amount": 17058,
+        "repayAmount": 12519,
+        "client": {
+          "id": 43,
+          "fullName": "Dexter Zemlak",
+          "phoneNumber": "+14018652317",
+          "idNumber": "64477156",
+          "dob": "2024-09-24",
+          "gender": "MALE",
+          "active": true,
+          "branchName": "Raynor, MacGyver and Dibbert",
+          "assignedStaff": {
+            "id": 46,
+            "fullName": "Tamara Deckow",
+            "phoneNumber": "+13036622757",
+            "email": "Easton.Bruen@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Durgan, Frami and Abbott",
+            "createdAt": "2024-06-06"
+          },
+          "overpayment": 8647,
+          "dueAmount": 3687,
+          "createdBy": {
+            "id": 19,
+            "fullName": "Dr. Enrique Sanford",
+            "phoneNumber": "+15982470433",
+            "email": "Colton.Aufderhar@hotmail.com",
+            "role": "ADMIN",
+            "branchName": "Wiegand - Flatley",
+            "createdAt": "2024-10-05"
+          },
+          "createdAt": "2024-12-09"
+        },
+        "loanOfficer": {
+          "id": 71,
+          "fullName": "Lonnie Douglas",
+          "phoneNumber": "+17822573363",
+          "email": "Vladimir.Blick@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Bradtke, Brakus and Kautzer",
+          "createdAt": "2024-11-25"
+        },
+        "loanPurpose": "Tamisium vulgo pecus terreo amplexus.",
+        "dueDate": "2025-01-31",
+        "approvedBy": {
+          "id": 71,
+          "fullName": "Lonnie Douglas",
+          "phoneNumber": "+17822573363",
+          "email": "Vladimir.Blick@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Bradtke, Brakus and Kautzer",
+          "createdAt": "2024-11-25"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 71,
+          "fullName": "Lonnie Douglas",
+          "phoneNumber": "+17822573363",
+          "email": "Vladimir.Blick@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Bradtke, Brakus and Kautzer",
+          "createdAt": "2024-11-25"
+        },
+        "noOfInstallments": 5,
+        "installmentsPeriod": 16,
+        "status": "DEFAULTED",
+        "processingFee": 5,
+        "feePaid": false,
+        "paidAmount": 16862,
+        "updatedBy": {
+          "id": 71,
+          "fullName": "Lonnie Douglas",
+          "phoneNumber": "+17822573363",
+          "email": "Vladimir.Blick@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Bradtke, Brakus and Kautzer",
+          "createdAt": "2024-11-25"
+        },
+        "createdBy": {
+          "id": 71,
+          "fullName": "Lonnie Douglas",
+          "phoneNumber": "+17822573363",
+          "email": "Vladimir.Blick@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Bradtke, Brakus and Kautzer",
+          "createdAt": "2024-11-25"
+        },
+        "createdAt": "2024-09-12"
+      },
+      {
+        "id": 45,
+        "amount": 4203,
+        "repayAmount": 24981,
+        "client": {
+          "id": 99,
+          "fullName": "Jerome McCullough",
+          "phoneNumber": "+16954176111",
+          "idNumber": "79028206",
+          "dob": "2024-11-17",
+          "gender": "MALE",
+          "active": true,
+          "branchName": "Berge, Wiegand and Feest",
+          "assignedStaff": {
+            "id": 43,
+            "fullName": "Carolyn Hayes",
+            "phoneNumber": "+15609852438",
+            "email": "Domenica.Thiel35@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Altenwerth, Labadie and Orn",
+            "createdAt": "2024-07-13"
+          },
+          "overpayment": 8518,
+          "dueAmount": 1241,
+          "createdBy": {
+            "id": 92,
+            "fullName": "Jamie Pacocha",
+            "phoneNumber": "+16312541691",
+            "email": "Frank_Prohaska@yahoo.com",
+            "role": "ADMIN",
+            "branchName": "Dooley - Hoppe",
+            "createdAt": "2024-09-19"
+          },
+          "createdAt": "2025-01-13"
+        },
+        "loanOfficer": {
+          "id": 90,
+          "fullName": "Emanuel Carter",
+          "phoneNumber": "+13143619040",
+          "email": "Mason.Keebler@gmail.com",
+          "role": "AGENT",
+          "branchName": "Kerluke, Mohr and Paucek",
+          "createdAt": "2024-09-02"
+        },
+        "loanPurpose": "Temperantia abduco tergo accusator iste brevis aduro terebro eius vito.",
+        "dueDate": "2025-02-02",
+        "approvedBy": {
+          "id": 90,
+          "fullName": "Emanuel Carter",
+          "phoneNumber": "+13143619040",
+          "email": "Mason.Keebler@gmail.com",
+          "role": "AGENT",
+          "branchName": "Kerluke, Mohr and Paucek",
+          "createdAt": "2024-09-02"
+        },
+        "disbursedOn": "2025-01-17",
+        "disbursedBy": {
+          "id": 90,
+          "fullName": "Emanuel Carter",
+          "phoneNumber": "+13143619040",
+          "email": "Mason.Keebler@gmail.com",
+          "role": "AGENT",
+          "branchName": "Kerluke, Mohr and Paucek",
+          "createdAt": "2024-09-02"
+        },
+        "noOfInstallments": 6,
+        "installmentsPeriod": 24,
+        "status": "ACTIVE",
+        "processingFee": 117,
+        "feePaid": true,
+        "paidAmount": 1671,
+        "updatedBy": {
+          "id": 90,
+          "fullName": "Emanuel Carter",
+          "phoneNumber": "+13143619040",
+          "email": "Mason.Keebler@gmail.com",
+          "role": "AGENT",
+          "branchName": "Kerluke, Mohr and Paucek",
+          "createdAt": "2024-09-02"
+        },
+        "createdBy": {
+          "id": 90,
+          "fullName": "Emanuel Carter",
+          "phoneNumber": "+13143619040",
+          "email": "Mason.Keebler@gmail.com",
+          "role": "AGENT",
+          "branchName": "Kerluke, Mohr and Paucek",
+          "createdAt": "2024-09-02"
+        },
+        "createdAt": "2024-09-28"
+      },
+      {
+        "id": 86,
+        "amount": 9306,
+        "repayAmount": 5690,
+        "client": {
+          "id": 29,
+          "fullName": "Bill Grant I",
+          "phoneNumber": "+14498909871",
+          "idNumber": "86877958",
+          "dob": "2024-12-24",
+          "gender": "FEMALE",
+          "active": false,
+          "branchName": "Cruickshank LLC",
+          "assignedStaff": {
+            "id": 13,
+            "fullName": "Candice O'Conner",
+            "phoneNumber": "+19969801520",
+            "email": "Samantha55@hotmail.com",
+            "role": "AGENT",
+            "branchName": "Rolfson, Rutherford and Brown",
+            "createdAt": "2024-04-18"
+          },
+          "overpayment": 7587,
+          "dueAmount": 4187,
+          "createdBy": {
+            "id": 3,
+            "fullName": "Mandy Bartoletti",
+            "phoneNumber": "+18724611366",
+            "email": "Breanna.Predovic86@gmail.com",
+            "role": "ADMIN",
+            "branchName": "Casper and Sons",
+            "createdAt": "2024-07-25"
+          },
+          "createdAt": "2024-08-09"
+        },
+        "loanOfficer": {
+          "id": 33,
+          "fullName": "Miss Stella Lockman",
+          "phoneNumber": "+13686719365",
+          "email": "Maximus.Konopelski@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Greenfelder - Bahringer",
+          "createdAt": "2024-11-19"
+        },
+        "loanPurpose": "Expedita trepide crapula curtus verto cupressus casso apto.",
+        "dueDate": "2025-03-24",
+        "approvedBy": {
+          "id": 33,
+          "fullName": "Miss Stella Lockman",
+          "phoneNumber": "+13686719365",
+          "email": "Maximus.Konopelski@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Greenfelder - Bahringer",
+          "createdAt": "2024-11-19"
+        },
+        "disbursedOn": "2025-01-16",
+        "disbursedBy": {
+          "id": 33,
+          "fullName": "Miss Stella Lockman",
+          "phoneNumber": "+13686719365",
+          "email": "Maximus.Konopelski@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Greenfelder - Bahringer",
+          "createdAt": "2024-11-19"
+        },
+        "noOfInstallments": 6,
+        "installmentsPeriod": 4,
+        "status": "ACTIVE",
+        "processingFee": 143,
+        "feePaid": true,
+        "paidAmount": 2510,
+        "updatedBy": {
+          "id": 33,
+          "fullName": "Miss Stella Lockman",
+          "phoneNumber": "+13686719365",
+          "email": "Maximus.Konopelski@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Greenfelder - Bahringer",
+          "createdAt": "2024-11-19"
+        },
+        "createdBy": {
+          "id": 33,
+          "fullName": "Miss Stella Lockman",
+          "phoneNumber": "+13686719365",
+          "email": "Maximus.Konopelski@hotmail.com",
+          "role": "AGENT",
+          "branchName": "Greenfelder - Bahringer",
+          "createdAt": "2024-11-19"
+        },
+        "createdAt": "2024-04-17"
+      }
+    ],
+    "products": [
+      {
+        "id": 77,
+        "branchName": "Carroll - Renner",
+        "loanAmount": 66,
+        "repayAMount": 10,
+        "interestAmount": 18
+      },
+      {
+        "id": 12,
+        "branchName": "Schmeler, Murray and Reichert",
+        "loanAmount": 18,
+        "repayAMount": 62,
+        "interestAmount": 53
+      },
+      {
+        "id": 40,
+        "branchName": "White - Denesik",
+        "loanAmount": 25,
+        "repayAMount": 47,
+        "interestAmount": 11
+      },
+      {
+        "id": 9,
+        "branchName": "Bauch, Bernhard and Wiza",
+        "loanAmount": 3,
+        "repayAMount": 53,
+        "interestAmount": 66
+      },
+      {
+        "id": 48,
+        "branchName": "Leannon, Pfannerstill and Hahn",
+        "loanAmount": 97,
+        "repayAMount": 86,
+        "interestAmount": 96
+      },
+      {
+        "id": 60,
+        "branchName": "Daugherty Inc",
+        "loanAmount": 79,
+        "repayAMount": 86,
+        "interestAmount": 44
+      },
+      {
+        "id": 30,
+        "branchName": "Casper, Moore and Batz",
+        "loanAmount": 79,
+        "repayAMount": 27,
+        "interestAmount": 21
+      },
+      {
+        "id": 99,
+        "branchName": "Reinger - Crist",
+        "loanAmount": 1,
+        "repayAMount": 56,
+        "interestAmount": 70
+      },
+      {
+        "id": 44,
+        "branchName": "Stiedemann - Wiza",
+        "loanAmount": 58,
+        "repayAMount": 10,
+        "interestAmount": 39
+      },
+      {
+        "id": 98,
+        "branchName": "Veum - Predovic",
+        "loanAmount": 84,
+        "repayAMount": 70,
+        "interestAmount": 13
+      },
+      {
+        "id": 32,
+        "branchName": "Dicki, Rice and O'Conner",
+        "loanAmount": 57,
+        "repayAMount": 5,
+        "interestAmount": 34
+      },
+      {
+        "id": 3,
+        "branchName": "Friesen, Rice and Stokes",
+        "loanAmount": 90,
+        "repayAMount": 18,
+        "interestAmount": 45
+      },
+      {
+        "id": 34,
+        "branchName": "Wisozk, Bailey and Morar",
+        "loanAmount": 29,
+        "repayAMount": 61,
+        "interestAmount": 26
+      },
+      {
+        "id": 24,
+        "branchName": "Lebsack - Gerhold",
+        "loanAmount": 59,
+        "repayAMount": 34,
+        "interestAmount": 52
+      },
+      {
+        "id": 52,
+        "branchName": "Ward - Farrell",
+        "loanAmount": 20,
+        "repayAMount": 93,
+        "interestAmount": 16
+      },
+      {
+        "id": 36,
+        "branchName": "Christiansen - Bayer",
+        "loanAmount": 8,
+        "repayAMount": 14,
+        "interestAmount": 35
+      },
+      {
+        "id": 91,
+        "branchName": "Bins and Sons",
+        "loanAmount": 27,
+        "repayAMount": 27,
+        "interestAmount": 61
+      },
+      {
+        "id": 48,
+        "branchName": "Schamberger, Dickens and Larkin",
+        "loanAmount": 85,
+        "repayAMount": 83,
+        "interestAmount": 69
+      },
+      {
+        "id": 35,
+        "branchName": "McGlynn - Sauer",
+        "loanAmount": 9,
+        "repayAMount": 100,
+        "interestAmount": 91
+      },
+      {
+        "id": 11,
+        "branchName": "Funk, Hermiston and Terry",
+        "loanAmount": 13,
+        "repayAMount": 96,
+        "interestAmount": 48
+      },
+      {
+        "id": 11,
+        "branchName": "Swaniawski - Balistreri",
+        "loanAmount": 73,
+        "repayAMount": 21,
+        "interestAmount": 30
+      },
+      {
+        "id": 88,
+        "branchName": "Graham - Cruickshank",
+        "loanAmount": 38,
+        "repayAMount": 13,
+        "interestAmount": 34
+      },
+      {
+        "id": 85,
+        "branchName": "Ratke Group",
+        "loanAmount": 3,
+        "repayAMount": 8,
+        "interestAmount": 60
+      },
+      {
+        "id": 30,
+        "branchName": "Robel - Feeney",
+        "loanAmount": 72,
+        "repayAMount": 50,
+        "interestAmount": 72
+      },
+      {
+        "id": 95,
+        "branchName": "Feil - Bechtelar",
+        "loanAmount": 39,
+        "repayAMount": 67,
+        "interestAmount": 10
+      },
+      {
+        "id": 14,
+        "branchName": "Batz, Moore and Kuhlman",
+        "loanAmount": 54,
+        "repayAMount": 69,
+        "interestAmount": 9
+      },
+      {
+        "id": 94,
+        "branchName": "Abshire, Boehm and Hettinger",
+        "loanAmount": 23,
+        "repayAMount": 18,
+        "interestAmount": 81
+      },
+      {
+        "id": 37,
+        "branchName": "Moore Inc",
+        "loanAmount": 77,
+        "repayAMount": 6,
+        "interestAmount": 21
+      },
+      {
+        "id": 19,
+        "branchName": "Larson, Farrell and Terry",
+        "loanAmount": 33,
+        "repayAMount": 28,
+        "interestAmount": 97
+      },
+      {
+        "id": 38,
+        "branchName": "Hettinger - Crooks",
+        "loanAmount": 34,
+        "repayAMount": 11,
+        "interestAmount": 94
+      }
+    ],
+    "users": [
+      {
+        "id": 38,
+        "fullName": "Fredrick Quitzon",
+        "phoneNumber": "+14327510348",
+        "email": "Marcia.Jacobs@gmail.com",
+        "role": "AGENT",
+        "branchName": "Sipes and Sons",
+        "createdAt": "2024-10-26"
+      },
+      {
+        "id": 17,
+        "fullName": "Ian Sawayn",
+        "phoneNumber": "+17973316872",
+        "email": "Maxime33@yahoo.com",
+        "role": "ADMIN",
+        "branchName": "Bogan - Zulauf",
+        "createdAt": "2024-03-23"
+      },
+      {
+        "id": 28,
+        "fullName": "Jimmie Dibbert",
+        "phoneNumber": "+19532917190",
+        "email": "Alysson11@gmail.com",
+        "role": "AGENT",
+        "branchName": "Steuber - Koch",
+        "createdAt": "2024-08-25"
+      },
+      {
+        "id": 1,
+        "fullName": "Hope Macejkovic",
+        "phoneNumber": "+12115999428",
+        "email": "Diamond42@hotmail.com",
+        "role": "ADMIN",
+        "branchName": "Runte Inc",
+        "createdAt": "2024-06-03"
+      },
+      {
+        "id": 27,
+        "fullName": "Lyle Block Jr.",
+        "phoneNumber": "+17426670656",
+        "email": "Evan31@yahoo.com",
+        "role": "AGENT",
+        "branchName": "Baumbach, Funk and King",
+        "createdAt": "2024-07-07"
+      },
+      {
+        "id": 98,
+        "fullName": "Thomas Pfannerstill Sr.",
+        "phoneNumber": "+19365041272",
+        "email": "Jamir.Schuppe30@yahoo.com",
+        "role": "AGENT",
+        "branchName": "Anderson, Tromp and Schmidt",
+        "createdAt": "2024-08-15"
+      },
+      {
+        "id": 99,
+        "fullName": "Angelina Roob",
+        "phoneNumber": "+19653895622",
+        "email": "Kay.Schoen33@hotmail.com",
+        "role": "ADMIN",
+        "branchName": "Johnson and Sons",
+        "createdAt": "2024-07-30"
+      },
+      {
+        "id": 10,
+        "fullName": "Leonard Marvin",
+        "phoneNumber": "+17139324757",
+        "email": "Lucius_Littel86@yahoo.com",
+        "role": "AGENT",
+        "branchName": "Parisian - Murray",
+        "createdAt": "2024-03-31"
+      },
+      {
+        "id": 41,
+        "fullName": "Frederick Reichert",
+        "phoneNumber": "+13324096055",
+        "email": "Savion.Stanton84@hotmail.com",
+        "role": "AGENT",
+        "branchName": "Wisozk Group",
+        "createdAt": "2024-06-20"
+      },
+      {
+        "id": 4,
+        "fullName": "Mr. Derrick O'Hara",
+        "phoneNumber": "+12226756190",
+        "email": "Eddie.Abernathy@gmail.com",
+        "role": "ADMIN",
+        "branchName": "Nienow, Lindgren and Durgan",
+        "createdAt": "2024-03-06"
+      },
+      {
+        "id": 22,
+        "fullName": "Roberta Mosciski",
+        "phoneNumber": "+16119771791",
+        "email": "Jaylen87@hotmail.com",
+        "role": "AGENT",
+        "branchName": "Smith, Erdman and Deckow",
+        "createdAt": "2024-07-21"
+      },
+      {
+        "id": 5,
+        "fullName": "Leslie Murazik",
+        "phoneNumber": "+13235789921",
+        "email": "Jeffery87@hotmail.com",
+        "role": "ADMIN",
+        "branchName": "Wolf - Osinski",
+        "createdAt": "2024-12-22"
+      },
+      {
+        "id": 36,
+        "fullName": "Gwen Lind PhD",
+        "phoneNumber": "+14286297775",
+        "email": "Missouri55@hotmail.com",
+        "role": "AGENT",
+        "branchName": "Weimann and Sons",
+        "createdAt": "2024-02-09"
+      },
+      {
+        "id": 91,
+        "fullName": "Leo Brakus",
+        "phoneNumber": "+19407974307",
+        "email": "Idella7@gmail.com",
+        "role": "AGENT",
+        "branchName": "Altenwerth Inc",
+        "createdAt": "2024-02-15"
+      },
+      {
+        "id": 49,
+        "fullName": "Malcolm Ledner Jr.",
+        "phoneNumber": "+14863256009",
+        "email": "Dominique72@yahoo.com",
+        "role": "AGENT",
+        "branchName": "Sauer LLC",
+        "createdAt": "2024-06-28"
+      },
+      {
+        "id": 21,
+        "fullName": "Francis Conroy",
+        "phoneNumber": "+12499928495",
+        "email": "Lawson10@yahoo.com",
+        "role": "AGENT",
+        "branchName": "Pfannerstill - Schaden",
+        "createdAt": "2024-02-09"
+      },
+      {
+        "id": 14,
+        "fullName": "Clifton Kuhlman I",
+        "phoneNumber": "+19585704952",
+        "email": "Ruben83@hotmail.com",
+        "role": "AGENT",
+        "branchName": "Zboncak Inc",
+        "createdAt": "2024-05-28"
+      },
+      {
+        "id": 57,
+        "fullName": "Dr. Virginia Toy",
+        "phoneNumber": "+19357483533",
+        "email": "Marcella.Kerluke-Paucek1@gmail.com",
+        "role": "AGENT",
+        "branchName": "Pouros Inc",
+        "createdAt": "2024-10-27"
+      },
+      {
+        "id": 7,
+        "fullName": "Deborah Stiedemann-Prohaska",
+        "phoneNumber": "+12028332176",
+        "email": "Angie_Mills@hotmail.com",
+        "role": "AGENT",
+        "branchName": "Langworth - Boehm",
+        "createdAt": "2024-08-03"
+      },
+      {
+        "id": 67,
+        "fullName": "Gretchen Goyette II",
+        "phoneNumber": "+14784075329",
+        "email": "Eliane13@yahoo.com",
+        "role": "ADMIN",
+        "branchName": "Feeney - Moen",
+        "createdAt": "2024-03-09"
+      },
+      {
+        "id": 75,
+        "fullName": "Belinda Hayes",
+        "phoneNumber": "+18334105700",
+        "email": "Polly.Cassin@gmail.com",
+        "role": "ADMIN",
+        "branchName": "Kovacek LLC",
+        "createdAt": "2024-12-05"
+      },
+      {
+        "id": 4,
+        "fullName": "Lucille Bode",
+        "phoneNumber": "+15844739426",
+        "email": "Citlalli29@yahoo.com",
+        "role": "AGENT",
+        "branchName": "Rutherford, Jaskolski and Runte",
+        "createdAt": "2024-11-16"
+      },
+      {
+        "id": 99,
+        "fullName": "Wilfred Kutch",
+        "phoneNumber": "+13167565799",
+        "email": "Lyla66@hotmail.com",
+        "role": "AGENT",
+        "branchName": "Walsh, Crist and White",
+        "createdAt": "2024-06-13"
+      },
+      {
+        "id": 43,
+        "fullName": "Frederick Stiedemann-Anderson",
+        "phoneNumber": "+12037184869",
+        "email": "Solon_Hickle@gmail.com",
+        "role": "AGENT",
+        "branchName": "McClure - Gerhold",
+        "createdAt": "2024-03-15"
+      },
+      {
+        "id": 16,
+        "fullName": "Felicia Sipes",
+        "phoneNumber": "+12445015738",
+        "email": "Gavin_King82@hotmail.com",
+        "role": "AGENT",
+        "branchName": "Kuhic, Price and Jakubowski",
+        "createdAt": "2024-09-15"
+      },
+      {
+        "id": 90,
+        "fullName": "Albert Brekke",
+        "phoneNumber": "+18368272324",
+        "email": "Pedro95@hotmail.com",
+        "role": "ADMIN",
+        "branchName": "Fahey and Sons",
+        "createdAt": "2024-11-19"
+      },
+      {
+        "id": 94,
+        "fullName": "Kelley Anderson",
+        "phoneNumber": "+18842922095",
+        "email": "Neha12@yahoo.com",
+        "role": "ADMIN",
+        "branchName": "Gulgowski - Hahn",
+        "createdAt": "2024-05-24"
+      },
+      {
+        "id": 79,
+        "fullName": "Ms. Kim Legros",
+        "phoneNumber": "+19614272285",
+        "email": "Blaze30@gmail.com",
+        "role": "ADMIN",
+        "branchName": "Von LLC",
+        "createdAt": "2024-03-06"
+      },
+      {
+        "id": 72,
+        "fullName": "Mr. Bradford Hickle",
+        "phoneNumber": "+19639687116",
+        "email": "Noelia.Wisoky8@gmail.com",
+        "role": "ADMIN",
+        "branchName": "Walsh - Heidenreich",
+        "createdAt": "2024-12-14"
+      },
+      {
+        "id": 53,
+        "fullName": "Orlando Dibbert",
+        "phoneNumber": "+12487923033",
+        "email": "Parker.Littel@hotmail.com",
+        "role": "AGENT",
+        "branchName": "Schuppe, Wolff and Sawayn",
+        "createdAt": "2024-04-17"
+      }
+    ]
+  }

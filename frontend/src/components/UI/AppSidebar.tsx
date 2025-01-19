@@ -24,7 +24,7 @@ import {
 	Collapsible,
 	CollapsibleTrigger,
 	CollapsibleContent,
-} from "./ui/collapsible";
+} from "../ui/collapsible";
 
 const items = [
 	{

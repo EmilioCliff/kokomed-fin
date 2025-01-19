@@ -3,15 +3,15 @@ import { generateRandomLoans } from "@/lib/generator";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import LoanForm from "@/components/forms/LoanForm";
+import LoanForm from "@/components/PAGES/loans/LoanForm";
 import { CalendarIcon } from "lucide-react";
-import { loanColumns } from "../components/table/columns/loan";
-import { DataTable } from "../components/table/data-table";
-import { loanSchema, Loan } from "../data/schema";
+import { loanColumns } from "@/components/PAGES/loans/loan";
+import { DataTable } from "@/components/table/data-table";
+import { loanSchema, Loan } from "@/data/schema";
 import { isUser, isClient } from "@/lib/validators";
-import UserCardDisplay from "@/components/UserCardDisplay";
-import ClientCardDisplay from "@/components/ClientCardDisplay";
-import TableSkeleton from "@/components/TableSkeleton";
+import UserCardDisplay from "@/components/UI/UserCardDisplay";
+import ClientCardDisplay from "@/components/UI/ClientCardDisplay";
+import TableSkeleton from "@/components/UI/TableSkeleton";
 import {
 	Sheet,
 	SheetContent,

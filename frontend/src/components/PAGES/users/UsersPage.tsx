@@ -1,8 +1,9 @@
-import { generateRandomProduct } from "@/lib/generator";
+import { generateRandomUser } from "@/lib/generator";
 import { z } from "zod";
-import { productSchema, Product } from "@/data/schema";
+import { userSchema, User } from "@/data/schema";
 import { useEffect, useState } from "react";
-import TableSkeleton from "@/components/TableSkeleton";
+import TableSkeleton from "@/components/UI/TableSkeleton";
+import { roles } from "@/data/loan";
 import {
 	Dialog,
 	DialogContent,
@@ -21,20 +22,20 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/components/ui/sheet";
-import { DataTable } from "../components/table/data-table";
-import ProductForm from "@/components/forms/ProductForm";
-import { productColumns } from "@/components/table/columns/product";
+import { DataTable } from "../../table/data-table";
+import UserForm from "@/components/PAGES/users/UserForm";
+import { userColumns } from "@/components/PAGES/users/user";
 
-const products = generateRandomProduct(30);
-const validatedProducts = z.array(productSchema).parse(products);
+const users = generateRandomUser(30);
+const validatedUsers = z.array(userSchema).parse(users);
 
-function ProductsPage() {
-	const [products, setProducts] = useState<Product[]>([]);
+function UsersPage() {
+	const [users, setUsers] = useState<User[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [selectedRow, setSelectedRow] = useState<Product | null>(null);
+	const [selectedRow, setSelectedRow] = useState<User | null>(null);
 
 	useEffect(() => {
-		setProducts(validatedProducts);
+		setUsers(validatedUsers);
 		setLoading(false);
 	}, []);
 
@@ -45,32 +46,43 @@ function ProductsPage() {
 	return (
 		<div className='px-4'>
 			<div className='flex justify-between items-center mb-4'>
-				<h1 className='text-3xl font-bold'>Products</h1>
+				<h1 className='text-3xl font-bold'>Users</h1>
 				<Dialog>
 					<DialogTrigger asChild>
 						<Button className='text-xs py-1 font-bold' size='sm'>
-							Add New Product
+							Add New User
 						</Button>
 					</DialogTrigger>
 					<DialogContent className='max-w-screen-lg '>
 						<DialogHeader>
-							<DialogTitle>Add New Product</DialogTitle>
+							<DialogTitle>Add New User</DialogTitle>
 							<DialogDescription>
 								Enter the details for the new user.
 							</DialogDescription>
 						</DialogHeader>
-						<ProductForm />
+						<UserForm />
 					</DialogContent>
 				</Dialog>
 			</div>
 			<DataTable
-				data={products}
-				columns={productColumns}
+				data={users}
+				columns={userColumns}
 				setSelectedRow={setSelectedRow}
 				searchableColumns={[
 					{
-						id: "branchName",
-						title: "branch name",
+						id: "fullName",
+						title: "username",
+					},
+					{
+						id: "email",
+						title: "email",
+					},
+				]}
+				facetedFilterColumns={[
+					{
+						id: "role",
+						title: "Role",
+						options: roles,
 					},
 				]}
 			/>
@@ -84,7 +96,7 @@ function ProductsPage() {
 			>
 				<SheetContent className='overflow-auto custom-sheet-class'>
 					<SheetHeader>
-						<SheetTitle>Product Details</SheetTitle>
+						<SheetTitle>Loan Details</SheetTitle>
 						<SheetDescription>Description goes here</SheetDescription>
 					</SheetHeader>
 					{selectedRow && (
@@ -146,4 +158,4 @@ function ProductsPage() {
 	);
 }
 
-export default ProductsPage;
+export default UsersPage;

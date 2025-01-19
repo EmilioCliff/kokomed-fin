@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Client } from "@/data/schema";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import DataTableColumnHeader from "../data-table-column-header";
+import DataTableColumnHeader from "@/components/table/data-table-column-header";
 
 export const clientColumns: ColumnDef<Client>[] = [
 	{

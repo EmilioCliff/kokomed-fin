@@ -2,7 +2,7 @@ import { generateRandomClients } from "@/lib/generator";
 import { z } from "zod";
 import { clientSchema, Client } from "@/data/schema";
 import { useEffect, useState } from "react";
-import TableSkeleton from "@/components/TableSkeleton";
+import TableSkeleton from "@/components/UI/TableSkeleton";
 import { clientStatus } from "@/data/loan";
 import {
 	Dialog,
@@ -22,9 +22,9 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/components/ui/sheet";
-import { DataTable } from "../components/table/data-table";
-import CustomerForm from "@/components/forms/CustomerForm";
-import { clientColumns } from "@/components/table/columns/client";
+import { DataTable } from "../../table/data-table";
+import CustomerForm from "@/components/PAGES/customers/CustomerForm";
+import { clientColumns } from "@/components/PAGES/customers/client";
 
 const customers = generateRandomClients(30);
 const validatedCustomers = z.array(clientSchema).parse(customers);

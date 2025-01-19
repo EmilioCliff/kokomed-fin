@@ -1,8 +1,8 @@
-import { generateRandomBranch } from "@/lib/generator";
+import { generateRandomProduct } from "@/lib/generator";
 import { z } from "zod";
-import { branchSchema, Branch } from "@/data/schema";
+import { productSchema, Product } from "@/data/schema";
 import { useEffect, useState } from "react";
-import TableSkeleton from "@/components/TableSkeleton";
+import TableSkeleton from "@/components/UI/TableSkeleton";
 import {
 	Dialog,
 	DialogContent,
@@ -21,20 +21,20 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/components/ui/sheet";
-import { DataTable } from "../components/table/data-table";
-import BranchForm from "@/components/forms/BranchForm";
-import { branchColumns } from "@/components/table/columns/branch";
+import { DataTable } from "../../table/data-table";
+import ProductForm from "@/components/PAGES/products/ProductForm";
+import { productColumns } from "@/components/PAGES/products/product";
 
-const branches = generateRandomBranch(30);
-const validatedBranches = z.array(branchSchema).parse(branches);
+const products = generateRandomProduct(30);
+const validatedProducts = z.array(productSchema).parse(products);
 
-function BranchesPage() {
-	const [branches, setBranches] = useState<Branch[]>([]);
+function ProductsPage() {
+	const [products, setProducts] = useState<Product[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [selectedRow, setSelectedRow] = useState<Branch | null>(null);
+	const [selectedRow, setSelectedRow] = useState<Product | null>(null);
 
 	useEffect(() => {
-		setBranches(validatedBranches);
+		setProducts(validatedProducts);
 		setLoading(false);
 	}, []);
 
@@ -45,32 +45,32 @@ function BranchesPage() {
 	return (
 		<div className='px-4'>
 			<div className='flex justify-between items-center mb-4'>
-				<h1 className='text-3xl font-bold'>Branches</h1>
+				<h1 className='text-3xl font-bold'>Products</h1>
 				<Dialog>
 					<DialogTrigger asChild>
 						<Button className='text-xs py-1 font-bold' size='sm'>
-							Add New Branch
+							Add New Product
 						</Button>
 					</DialogTrigger>
 					<DialogContent className='max-w-screen-lg '>
 						<DialogHeader>
-							<DialogTitle>Add New Customer</DialogTitle>
+							<DialogTitle>Add New Product</DialogTitle>
 							<DialogDescription>
 								Enter the details for the new user.
 							</DialogDescription>
 						</DialogHeader>
-						<BranchForm />
+						<ProductForm />
 					</DialogContent>
 				</Dialog>
 			</div>
 			<DataTable
-				data={branches}
-				columns={branchColumns}
+				data={products}
+				columns={productColumns}
 				setSelectedRow={setSelectedRow}
 				searchableColumns={[
 					{
 						id: "branchName",
-						title: "Branch Name",
+						title: "branch name",
 					},
 				]}
 			/>
@@ -84,7 +84,7 @@ function BranchesPage() {
 			>
 				<SheetContent className='overflow-auto custom-sheet-class'>
 					<SheetHeader>
-						<SheetTitle>Branch Details</SheetTitle>
+						<SheetTitle>Product Details</SheetTitle>
 						<SheetDescription>Description goes here</SheetDescription>
 					</SheetHeader>
 					{selectedRow && (
@@ -146,4 +146,4 @@ function BranchesPage() {
 	);
 }
 
-export default BranchesPage;
+export default ProductsPage;

@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Branch } from "@/data/schema";
-import DataTableColumnHeader from "../data-table-column-header";
+import DataTableColumnHeader from "../../table/data-table-column-header";
 
 export const branchColumns: ColumnDef<Branch>[] = [
 	{

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table } from "@/components/Table";
+import { Table } from "@/components/UI/Table";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,

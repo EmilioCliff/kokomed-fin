@@ -1,5 +1,5 @@
 import Widgets from "@/components/Widgets";
-import LoanStatusChart from "@/components/LoanStatusChart";
+import LoanStatusChart from "@/components/UI/LoanStatusChart";
 import RecentPayments from "@/components/RecentPayments";
 import { Wallet, Flag, DollarSign, Users } from "lucide-react";
 import { InactiveLoan, inactiveLoanSchema } from "@/data/schema";
@@ -9,7 +9,7 @@ import { generateRandomInactiveLoans } from "@/lib/generator";
 import { DataTable } from "@/components/table/data-table";
 import { inactiveLoanColumns } from "@/components/table/columns/inactive-loan";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardSkeleton from "@/components/DashboardSkeleton";
+import DashboardSkeleton from "@/components/UI/DashboardSkeleton";
 
 const widgets = [
 	{
@@ -77,7 +77,7 @@ function Dashboard() {
 				setError("Failed to fetch loans");
 				console.error(err);
 			} finally {
-				// setLoading(false);
+				setLoading(false);
 			}
 		}
 

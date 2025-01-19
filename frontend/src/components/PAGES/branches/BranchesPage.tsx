@@ -1,9 +1,8 @@
-import { generateRandomUser } from "@/lib/generator";
+import { generateRandomBranch } from "@/lib/generator";
 import { z } from "zod";
-import { userSchema, User } from "@/data/schema";
+import { branchSchema, Branch } from "@/data/schema";
 import { useEffect, useState } from "react";
-import TableSkeleton from "@/components/TableSkeleton";
-import { roles } from "@/data/loan";
+import TableSkeleton from "@/components/UI/TableSkeleton";
 import {
 	Dialog,
 	DialogContent,
@@ -22,20 +21,20 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/components/ui/sheet";
-import { DataTable } from "../components/table/data-table";
-import UserForm from "@/components/forms/UserForm";
-import { userColumns } from "@/components/table/columns/user";
+import { DataTable } from "../../table/data-table";
+import BranchForm from "@/components/PAGES/branches/BranchForm";
+import { branchColumns } from "@/components/PAGES/branches/branch";
 
-const users = generateRandomUser(30);
-const validatedUsers = z.array(userSchema).parse(users);
+const branches = generateRandomBranch(30);
+const validatedBranches = z.array(branchSchema).parse(branches);
 
-function UsersPage() {
-	const [users, setUsers] = useState<User[]>([]);
+function BranchesPage() {
+	const [branches, setBranches] = useState<Branch[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [selectedRow, setSelectedRow] = useState<User | null>(null);
+	const [selectedRow, setSelectedRow] = useState<Branch | null>(null);
 
 	useEffect(() => {
-		setUsers(validatedUsers);
+		setBranches(validatedBranches);
 		setLoading(false);
 	}, []);
 
@@ -46,43 +45,32 @@ function UsersPage() {
 	return (
 		<div className='px-4'>
 			<div className='flex justify-between items-center mb-4'>
-				<h1 className='text-3xl font-bold'>Users</h1>
+				<h1 className='text-3xl font-bold'>Branches</h1>
 				<Dialog>
 					<DialogTrigger asChild>
 						<Button className='text-xs py-1 font-bold' size='sm'>
-							Add New User
+							Add New Branch
 						</Button>
 					</DialogTrigger>
 					<DialogContent className='max-w-screen-lg '>
 						<DialogHeader>
-							<DialogTitle>Add New User</DialogTitle>
+							<DialogTitle>Add New Customer</DialogTitle>
 							<DialogDescription>
 								Enter the details for the new user.
 							</DialogDescription>
 						</DialogHeader>
-						<UserForm />
+						<BranchForm />
 					</DialogContent>
 				</Dialog>
 			</div>
 			<DataTable
-				data={users}
-				columns={userColumns}
+				data={branches}
+				columns={branchColumns}
 				setSelectedRow={setSelectedRow}
 				searchableColumns={[
 					{
-						id: "fullName",
-						title: "username",
-					},
-					{
-						id: "email",
-						title: "email",
-					},
-				]}
-				facetedFilterColumns={[
-					{
-						id: "role",
-						title: "Role",
-						options: roles,
+						id: "branchName",
+						title: "Branch Name",
 					},
 				]}
 			/>
@@ -96,7 +84,7 @@ function UsersPage() {
 			>
 				<SheetContent className='overflow-auto custom-sheet-class'>
 					<SheetHeader>
-						<SheetTitle>Loan Details</SheetTitle>
+						<SheetTitle>Branch Details</SheetTitle>
 						<SheetDescription>Description goes here</SheetDescription>
 					</SheetHeader>
 					{selectedRow && (
@@ -158,4 +146,4 @@ function UsersPage() {
 	);
 }
 
-export default UsersPage;
+export default BranchesPage;

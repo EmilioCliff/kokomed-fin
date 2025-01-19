@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { User } from "@/data/schema";
-import DataTableColumnHeader from "../data-table-column-header";
+import DataTableColumnHeader from "../../table/data-table-column-header";
 import { format } from "date-fns";
 
 export const userColumns: ColumnDef<User>[] = [
