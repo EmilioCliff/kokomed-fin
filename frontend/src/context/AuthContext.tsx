@@ -1,11 +1,13 @@
-import { createContext, useContext, FC } from 'react';
+import { createContext, FC } from 'react';
 import { contextWrapperProps } from '@/lib/types';
 import { authCtx } from '@/lib/types';
+import { role } from '@/lib/types';
 // import { useQuery } from "@tanstack/react-query"
 
 export const AuthContext = createContext<authCtx>({
   isLoading: false,
   isAuthenticated: false,
+  role: role.GUEST,
   error: null,
 });
 
@@ -19,7 +21,7 @@ export const AuthContextWrapper: FC<contextWrapperProps> = ({ children }) => {
   // if not authenticated, redirect to login page
   return (
     <AuthContext.Provider
-      value={{ isLoading: false, isAuthenticated: false, error: null }}
+      value={{ isLoading: false, isAuthenticated: false, role: role.GUEST, error: null }}
     >
       {children}
     </AuthContext.Provider>

@@ -46,7 +46,11 @@ import { Input } from '@/components/ui/input';
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { AuthContext } from '@/context/AuthContext';
+import { TableContext } from '@/context/TableContext';
 import { getLoans } from '@/services/getLoans';
+import { da } from '@faker-js/faker';
+
+import { useDebounce } from '@/hooks/useDebounce';
 
 const isAdmin = true;
 
@@ -54,25 +58,38 @@ const generatedLoans = generateRandomLoans(30);
 const validatedLoans = z.array(loanSchema).parse(generatedLoans);
 
 export default function LoanPage() {
-  const data2 = useContext(AuthContext);
+  const {
+    pageIndex,
+    pageSize,
+    filter,
+    search,
+    selectedRow,
+    setRowsCount,
+    resetTableState,
+    setSelectedRow,
+  } = useContext(TableContext);
 
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const debouncedInput = useDebounce({ value: search, delay: 500 });
 
   const { isLoading, error, data } = useQuery({
-    queryKey: ['loans', pageIndex, pageSize],
-    queryFn: () => getLoans(pageIndex, pageSize),
+    queryKey: ['loans', pageIndex, pageSize, filter, debouncedInput],
+    queryFn: () => getLoans(pageIndex, pageSize, filter, debouncedInput),
     staleTime: 5 * 1000,
     placeholderData: keepPreviousData,
   });
-  // select: (data) => z.array(loanSchema).parse(data),
-  const loans = data?.data || [];
-  const totalRows = data?.items || 0;
 
-  //   console.log(data);
-  //   console.log(data2);
+  // useEffect(() => {
+  //   return () => {
+  //     resetTableState();
+  //   };
+  // }, [resetTableState]);
 
-  const [selectedRow, setSelectedRow] = useState<Loan | null>(null);
+  // if (filter.options.length !== 0 || search) {
+  //   console.log('Here');
+  //   setRowsCount(data?.length || 30);
+  // }
+
+  // const [selectedRow, setSelectedRow] = useState<Loan | null>(null);
   const [loanStatus, setLoanStatus] = useState<string | null>(null);
   const [disbursedDate, setDisbursedDate] = useState<string | null>(null);
   const [feePaid, setFeePaid] = useState<boolean | null>(null);
@@ -196,13 +213,8 @@ export default function LoanPage() {
         </Dialog>
       </div>
       <DataTable
-        data={loans || []}
+        data={data || []}
         columns={loanColumns}
-        totalRows={totalRows}
-        currentPage={pageIndex}
-        onPageChange={setPageIndex}
-        onPageSizeChange={setPageSize}
-        setSelectedRow={setSelectedRow}
         searchableColumns={[
           {
             id: 'clientName',

@@ -1,5 +1,5 @@
 // import * as React from "react";
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
+import { TableContext } from '@/context/TableContext';
 
 import { DataTablePagination } from './data-table-pagination';
 import { DataTableToolbar } from './data-table-toolbar';
@@ -30,12 +31,12 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 
-  totalRows: number;
-  currentPage: number;
-  onPageChange: React.Dispatch<any>;
-  onPageSizeChange: React.Dispatch<any>;
+  // totalRows: number;
+  // currentPage: number;
+  // onPageChange: React.Dispatch<any>;
+  // onPageSizeChange: React.Dispatch<any>;
 
-  setSelectedRow: React.Dispatch<any>;
+  // setSelectedRow: React.Dispatch<any>;
   searchableColumns?: {
     id: string;
     title: string;
@@ -53,11 +54,11 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-  totalRows = 30,
-  currentPage = 0,
-  onPageChange,
-  onPageSizeChange,
-  setSelectedRow,
+  // totalRows = 30,
+  // currentPage = 0,
+  // onPageChange,
+  // onPageSizeChange,
+  // setSelectedRow,
   searchableColumns = [],
   facetedFilterColumns = [],
 }: DataTableProps<TData, TValue>) {
@@ -65,6 +66,8 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const { setSelectedRow } = useContext(TableContext);
 
   const table = useReactTable({
     data,
@@ -148,10 +151,10 @@ export function DataTable<TData, TValue>({
         </div>
         <DataTablePagination
           table={table}
-          totalRows={totalRows}
-          currentPage={currentPage}
-          onPageChange={onPageChange}
-          onPageSizeChange={onPageSizeChange}
+          // totalRows={totalRows}
+          // currentPage={currentPage}
+          // onPageChange={onPageChange}
+          // onPageSizeChange={onPageSizeChange}
         />
       </div>
     </>
