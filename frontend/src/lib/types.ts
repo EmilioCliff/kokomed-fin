@@ -1,12 +1,38 @@
 import { ReactNode } from 'react';
-import { User, Loan } from '@/data/schema';
+// import { User, Loan } from '@/data/schema';
+import { Loan } from '@/components/PAGES/loans/schema';
+import { User } from '@/components/PAGES/users/schema';
 
-enum role {}
+export enum role {
+  'USER',
+  'ADMIN',
+  'GUEST',
+}
+
+export enum loanStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  COMPLETED = 'COMPLETED',
+  DEFAULTED = 'DEFAULTED',
+}
+
+export interface tokenData {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: number; // UNIX timestamp
+  refreshTokenExpiresAt: number; // UNIX timestamp
+}
+
+export interface updateLoanType {
+  status?: loanStatus;
+  disburseDate?: string;
+  feePaid?: boolean;
+}
 
 export interface authCtx {
   isLoading: boolean;
   isAuthenticated: boolean;
-  role: string;
+  role: role;
   error: any;
   // add login, logout and checkSession methods
 }

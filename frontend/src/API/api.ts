@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { refreshToken } from '@/services/refreshToken';
+import { logout } from '@/services/logout';
 // import { AuthContext } from '@/context/AuthContext';
 
 const api = axios.create({
@@ -22,28 +23,27 @@ export const protectedApi = axios.create({
 });
 
 const prefetchInt = protectedApi.interceptors.request.use((config) => {
-  const accessToken =
-    localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
+  const token = sessionStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
 });
 
 const postfetchInt = protectedApi.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
+  async (error) => {
     const originalRequest = error.config;
-    // prevent infinite loop
-    // @ts-ignore
-    if (originalRequest && error.response?.status === 401 && !originalRequest?._retry) {
-      // @ts-ignore
+
+    if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;
+
       try {
         await refreshToken();
         return protectedApi.request(originalRequest);
       } catch (error) {
+        logout();
+        // redirect to login page
         return Promise.reject(error);
       }
     }

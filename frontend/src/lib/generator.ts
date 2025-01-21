@@ -1,18 +1,24 @@
 import { faker } from '@faker-js/faker';
-import {
-  loanSchema,
-  Loan,
-  User,
-  userSchema,
-  branchSchema,
-  Branch,
-  productSchema,
-  Product,
-  InactiveLoan,
-  Client,
-  inactiveLoanSchema,
-  clientSchema,
-} from '../data/schema';
+import { Loan, loanSchema } from '@/components/PAGES/loans/schema';
+import { User, userSchema } from '@/components/PAGES/users/schema';
+import { Branch, branchSchema } from '@/components/PAGES/branches/schema';
+import { Product, productSchema } from '@/components/PAGES/products/schema';
+import { InactiveLoan, inactiveLoanSchema } from '@/components/PAGES/dashboard/schema';
+import { Client, clientSchema } from '@/components/PAGES/customers/schema';
+// import {
+//   loanSchema,
+//   Loan,
+//   User,
+//   userSchema,
+//   branchSchema,
+//   Branch,
+//   productSchema,
+//   Product,
+//   InactiveLoan,
+//   Client,
+//   inactiveLoanSchema,
+//   clientSchema,
+// } from '../data/schema';
 
 const formatDate = (date: Date) => date.toISOString().split('T')[0];
 

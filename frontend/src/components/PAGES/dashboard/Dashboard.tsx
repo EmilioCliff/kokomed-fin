@@ -2,7 +2,7 @@ import Widgets from '@/components/UI/Widgets';
 import LoanStatusChart from '@/components/UI/LoanStatusChart';
 import RecentPayments from '@/components/UI/RecentPayments';
 import { Wallet, Flag, DollarSign, Users } from 'lucide-react';
-import { InactiveLoan, inactiveLoanSchema } from '@/data/schema';
+import { InactiveLoan, inactiveLoanSchema } from './schema';
 import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { generateRandomInactiveLoans } from '@/lib/generator';
@@ -63,7 +63,6 @@ function Dashboard() {
   const [inactiveLoans, setInactiveLoans] = useState<InactiveLoan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedRow, setSelectedRow] = useState<InactiveLoan | null>(null);
 
   useEffect(() => {
     async function fetchInactiveLoans() {
@@ -113,7 +112,7 @@ function Dashboard() {
             <DataTable
               data={inactiveLoans}
               columns={inactiveLoanColumns}
-              setSelectedRow={setSelectedRow}
+              // setSelectedRow={setSelectedRow}
             />
           </CardContent>
         </Card>

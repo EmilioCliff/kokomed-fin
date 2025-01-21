@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Loan } from '@/data/schema';
+import { Loan } from './schema';
 import { format } from 'date-fns';
 import DataTableColumnHeader from '@/components/table/data-table-column-header';
 import { Badge } from '@/components/ui/badge';

@@ -1,7 +1,7 @@
 import { protectedApi } from '@/API/api';
 import api from '@/API/api';
 import { getLoansType } from '@/lib/types';
-import { Loan } from '@/data/schema';
+import { Loan } from '@/components/PAGES/loans/schema';
 import { tableFilterType } from '@/lib/types';
 
 export const getLoans = async (
