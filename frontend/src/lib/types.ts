@@ -81,3 +81,8 @@ export interface refreshTokenRes extends Omit<commonresponse, 'data'> {
 export interface getLoansType extends Omit<commonresponse, 'data'> {
   data: Loan[];
 }
+
+export interface commonDataResponse {
+  id: number;
+  name: string;
+}

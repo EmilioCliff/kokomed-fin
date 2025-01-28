@@ -4,7 +4,7 @@ export const productSchema = z.object({
   id: z.number(),
   branchName: z.string(),
   loanAmount: z.number(),
-  repayAMount: z.number(),
+  repayAmount: z.number(),
   interestAmount: z.number(),
 });
 

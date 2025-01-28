@@ -34,6 +34,7 @@ type MySQLRepo struct {
 	Users     repository.UserRepository
 	Clients   repository.ClientRepository
 	NonPosted repository.NonPostedRepository
+	Helpers repository.HelperRepository
 }
 
 func NewMySQLRepo(db *Store) *MySQLRepo {
@@ -44,6 +45,7 @@ func NewMySQLRepo(db *Store) *MySQLRepo {
 		Users:     NewUserRepository(db),
 		Clients:   NewClientRepository(db),
 		NonPosted: NewNonPostedRepository(db),
+		Helpers: NewHelperRepository(db),
 	}
 }
 

@@ -4,7 +4,7 @@ import { logout } from '@/services/logout';
 // import { AuthContext } from '@/context/AuthContext';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: 'http://localhost:3030/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },

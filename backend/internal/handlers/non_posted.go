@@ -18,7 +18,7 @@ type nonPostedResponse struct {
 	PayingName        string            `json:"paying_name"`
 	Amount            float64           `json:"amount"`
 	PaidDate          time.Time         `json:"paid_date"`
-	AssignedTo        repository.Client `json:"assigned_to"`
+	AssignedTo        userResponse `json:"assigned_to"`
 }
 
 func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
@@ -199,12 +199,25 @@ func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (
 	}
 
 	if p.AssignedTo != nil {
-		client, err := s.repo.Clients.GetClient(ctx, *p.AssignedTo)
+		client, err := s.repo.Users.GetUserByID(ctx, *p.AssignedTo)
 		if err != nil {
 			return nonPostedResponse{}, err
 		}
 
-		v.AssignedTo = client
+		branch, err := s.repo.Branches.GetBranchByID(ctx, client.BranchID)
+		if err != nil {
+			return nonPostedResponse{}, err
+		}
+
+		v.AssignedTo = userResponse{
+			ID:          client.ID,
+			Fullname:   client.FullName,
+			Email: 	 client.Email,
+			PhoneNumber: client.PhoneNumber,
+			Role:       client.Role,
+			BranchName: branch.Name,
+			CreatedAt: client.CreatedAt,
+		}
 	}
 
 	return v, nil

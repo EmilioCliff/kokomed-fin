@@ -11,20 +11,21 @@ import (
 
 type clientResponse struct {
 	ID            uint32            `json:"id"`
-	Name          string            `json:"name"`
+	FullName          string            `json:"full_name"`
 	PhoneNumber   string            `json:"phone_number"`
 	IdNumber      string            `json:"id_number"`
 	Dob           string            `json:"dob"`
 	Gender        string            `json:"gender"`
 	Active        bool              `json:"active"`
 	BranchName    string            `json:"branch_name"`
-	AssignedStaff userShortResponse `json:"assigned_staff"` // make this to a client response
+	AssignedStaff userShortResponse `json:"assigned_staff"` 
 	Overpayment   float64           `json:"overpayment"`
-	UpdatedBy     userShortResponse `json:"updated_by"` // make this to a client response
-	UpdatedAt     time.Time         `json:"updated_at"`
-	CreatedBy     userShortResponse `json:"created_by"` // make this to a client response
+	DueAmount float64 `json:"due_amount"`
+	CreatedBy     userShortResponse `json:"created_by"` 
 	CreatedAt     time.Time         `json:"created_at"`
 }
+// UpdatedBy     userShortResponse `json:"updated_by"` 
+// UpdatedAt     time.Time         `json:"updated_at"`
 
 type userShortResponse struct {
 	ID       uint32 `json:"id"`
@@ -43,7 +44,7 @@ type createClientRequest struct {
 	Active        bool   `                                     json:"active"`
 	BranchID      uint32 `binding:"required"                   json:"branch_id"`
 	AssignedStaff uint32 `binding:"required"                   json:"assigned_staff"`
-	UpdatedBy     uint32 `binding:"required"                   json:"updated_by"`
+	// UpdatedBy     uint32 `binding:"required"                   json:"updated_by"`
 }
 
 func (s *Server) createClient(ctx *gin.Context) {
@@ -54,6 +55,15 @@ func (s *Server) createClient(ctx *gin.Context) {
 		return
 	}
 
+	payloadString, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusForbidden, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "No payload found in context")))
+
+		return
+	}
+
+	payload, _ := payloadString.(pkg.Payload)
+
 	params := &repository.Client{
 		FullName:      req.FirstName + " " + req.LastName,
 		PhoneNumber:   req.PhoneNumber,
@@ -61,8 +71,8 @@ func (s *Server) createClient(ctx *gin.Context) {
 		Active:        req.Active,
 		BranchID:      req.BranchID,
 		AssignedStaff: req.AssignedStaff,
-		UpdatedBy:     req.UpdatedBy,
-		CreatedBy:     req.UpdatedBy,
+		UpdatedBy:     payload.UserID,
+		CreatedBy:     payload.UserID,
 	}
 
 	if req.Dob != "" {
@@ -112,6 +122,15 @@ func (s *Server) updateClient(ctx *gin.Context) {
 		return
 	}
 
+	payloadString, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusForbidden, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "No payload found in context")))
+
+		return
+	}
+
+	payload, _ := payloadString.(pkg.Payload)
+
 	params := &repository.Client{
 		ID:            id,
 		FullName:      req.FirstName + " " + req.LastName,
@@ -120,8 +139,8 @@ func (s *Server) updateClient(ctx *gin.Context) {
 		Active:        req.Active,
 		BranchID:      req.BranchID,
 		AssignedStaff: req.AssignedStaff,
-		UpdatedBy:     req.UpdatedBy,
-		CreatedBy:     req.UpdatedBy,
+		UpdatedBy:     payload.UserID,
+		CreatedBy:     payload.UserID,
 	}
 
 	if req.Dob != "" {
@@ -294,10 +313,10 @@ func (s *Server) structureClient(c *repository.Client, ctx *gin.Context) (client
 		return clientResponse{}, err
 	}
 
-	updatedBy, err := s.repo.Users.GetUserByID(ctx, c.UpdatedBy)
-	if err != nil {
-		return clientResponse{}, err
-	}
+	// updatedBy, err := s.repo.Users.GetUserByID(ctx, c.UpdatedBy)
+	// if err != nil {
+	// 	return clientResponse{}, err
+	// }
 
 	createdBy, err := s.repo.Users.GetUserByID(ctx, c.CreatedBy)
 	if err != nil {
@@ -311,18 +330,18 @@ func (s *Server) structureClient(c *repository.Client, ctx *gin.Context) (client
 
 	rsp := clientResponse{
 		ID:            c.ID,
-		Name:          c.FullName,
+		FullName:          c.FullName,
 		PhoneNumber:   c.PhoneNumber,
 		Gender:        c.Gender,
 		Active:        c.Active,
 		BranchName:    branch.Name,
 		AssignedStaff: userShortResponse{ID: assignedStaff.ID, FullName: assignedStaff.FullName},
 		Overpayment:   c.Overpayment,
-		UpdatedBy:     userShortResponse{ID: updatedBy.ID, FullName: updatedBy.FullName},
-		UpdatedAt:     c.UpdatedAt,
 		CreatedBy:     userShortResponse{ID: createdBy.ID, FullName: createdBy.FullName},
 		CreatedAt:     c.CreatedAt,
 	}
+	// UpdatedAt:     c.UpdatedAt,
+	// UpdatedBy:     userShortResponse{ID: updatedBy.ID, FullName: updatedBy.FullName},
 
 	if c.Dob != nil {
 		rsp.Dob = c.Dob.Format("2006-01-02")

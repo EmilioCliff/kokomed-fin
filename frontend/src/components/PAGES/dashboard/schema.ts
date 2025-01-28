@@ -18,3 +18,34 @@ export const inactiveLoanSchema = z.object({
 });
 
 export type InactiveLoan = z.infer<typeof inactiveLoanSchema>;
+
+// recent payments
+export const recentPaymentSchema = z.object({
+  id: z.number(),
+  borrower: z.string(),
+  amount: z.number(),
+  date: z.string(),
+});
+
+export type RecentPayment = z.infer<typeof recentPaymentSchema>;
+
+// dashboard widgets
+export const widgetSchema = z.object({
+  title: z.string(),
+  mainAmount: z.number().optional(),
+  active: z.number().optional(),
+  activeTitle: z.string(),
+  closed: z.number().optional(),
+  closedTitle: z.string(),
+  currency: z.string().optional(),
+});
+
+export type Widget = z.infer<typeof widgetSchema>;
+
+export const dashboardSchema = z.object({
+  widgets: z.array(widgetSchema),
+  recentPayments: z.array(recentPaymentSchema),
+  inactiveLoans: z.array(inactiveLoanSchema),
+});
+
+export type DashboardData = z.infer<typeof dashboardSchema>;

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/handlers"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
@@ -46,6 +47,10 @@ func main() {
 	if err := server.Start(); err != nil {
 		panic(err)
 	}
+
+	token, _ := maker.CreateToken("emiliocliff@gmail.com", 1, 1, "ADMIN", 10*time.Minute)
+
+	log.Println(token)
 
 	<-quit
 

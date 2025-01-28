@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { InactiveLoan } from '@/data/schema';
+import { InactiveLoan } from './schema';
 import DataTableColumnHeader from '@/components/table/data-table-column-header';
 import { formatDate } from '@/lib/utils';
 

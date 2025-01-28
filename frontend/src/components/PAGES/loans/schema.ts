@@ -1,11 +1,15 @@
 import { z } from 'zod';
 import { clientSchema } from '../customers/schema';
 import { userSchema } from '../users/schema';
+import { productSchema } from '../products/schema';
 
 export const loanSchema = z.object({
   id: z.number(),
-  amount: z.number(),
-  repayAmount: z.number(),
+
+  product: productSchema,
+
+  // amount: z.number(),
+  // repayAmount: z.number(),
   client: clientSchema,
   loanOfficer: userSchema,
   loanPurpose: z.string().optional(),
@@ -32,7 +36,7 @@ export const loanFormSchema = z.object({
   productId: z.number().gte(0, { message: 'Select valid product' }),
   clientId: z.number().gte(0, { message: 'Select valid client' }),
   loanOfficerId: z.number().gte(0, { message: 'Select valid loan officer' }),
-  loanPurpose: z.string(),
+  loanPurpose: z.string().optional(),
   disburse: z.boolean(),
   disburseOn: z
     .string()
@@ -40,7 +44,7 @@ export const loanFormSchema = z.object({
     .refine((dateString) => !dateString || !isNaN(Date.parse(dateString)), {
       message: 'Invalid date string!',
     }),
-  noOfInstallments: z.coerce.number().gt(0),
+  installments: z.coerce.number().gt(0),
   installmentsPeriod: z.coerce.number().gt(0),
   processingFee: z.coerce.number().gt(0),
   processingFeePaid: z.boolean(),

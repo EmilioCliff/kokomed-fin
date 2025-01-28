@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addLoan } from '@/services/addLoan';
 import Spinner from '@/components/UI/Spinner';
-
 import {
   Form,
   FormControl,
@@ -25,27 +24,36 @@ import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LoanFormType, loanFormSchema } from './schema';
+import { useQuery } from '@tanstack/react-query';
+import { getLoanFormData } from '@/services/helpers';
 
-const products = Array.from({ length: 200 }, (_, i) => ({
-  id: i,
-  name: `Product ${i + 1}`,
-}));
+// const products = Array.from({ length: 200 }, (_, i) => ({
+//   id: i,
+//   name: `Product ${i + 1}`,
+// }));
 
-const clients = Array.from({ length: 200 }, (_, i) => ({
-  id: i,
-  name: `Client ${i + 1}`,
-}));
+// const clients = Array.from({ length: 200 }, (_, i) => ({
+//   id: i,
+//   name: `Client ${i + 1}`,
+// }));
 
-const loanOfficers = Array.from({ length: 200 }, (_, i) => ({
-  id: i,
-  name: `Loan Officer ${i + 1}`,
-}));
+// const loanOfficers = Array.from({ length: 200 }, (_, i) => ({
+//   id: i,
+//   name: `Loan Officer ${i + 1}`,
+// }));
 
 export default function LoanForm({
   onFormOpen,
 }: {
   onFormOpen: (isOpen: boolean) => void;
 }) {
+  // get useQuery for products, clients and loanOfficers
+  const { isLoading, data, error } = useQuery({
+    queryKey: ['loanFormData'],
+    queryFn: getLoanFormData,
+    staleTime: 30 * 1000,
+  });
+
   const form = useForm<LoanFormType>({
     resolver: zodResolver(loanFormSchema),
     defaultValues: {
@@ -53,15 +61,15 @@ export default function LoanForm({
       clientId: 0,
       loanOfficerId: 0,
       loanPurpose: '',
-      // approvedBy: 0,
       disburse: false,
-      // disburseBy: 0,
       disburseOn: '',
-      noOfInstallments: 4,
+      installments: 4,
       installmentsPeriod: 30,
       processingFee: 0,
       processingFeePaid: false,
-      dob: '',
+      // approvedBy: 0,
+      // disburseBy: 0,
+      // dob: '',
     },
   });
   const queryClient = useQueryClient();
@@ -84,7 +92,8 @@ export default function LoanForm({
 
   return (
     <>
-      {mutation.isPending && <Spinner />}
+      {(mutation.isPending || isLoading) && <Spinner />}
+      {error && <p>{error.message}</p>}
 
       {mutation.error && <h5 onClick={() => mutation.reset()}>{`${mutation.error}`}</h5>}
       <Form {...form}>
@@ -97,12 +106,14 @@ export default function LoanForm({
                 <FormItem>
                   <FormLabel>Product</FormLabel>
                   <FormControl>
-                    <VirtualizeddSelect
-                      options={products}
-                      placeholder="Select a product"
-                      value={field.value}
-                      onChange={(id) => field.onChange(id)}
-                    />
+                    {data?.products && (
+                      <VirtualizeddSelect
+                        options={data.products}
+                        placeholder="Select a product"
+                        value={field.value}
+                        onChange={(id) => field.onChange(id)}
+                      />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -115,12 +126,14 @@ export default function LoanForm({
                 <FormItem>
                   <FormLabel>Client</FormLabel>
                   <FormControl>
-                    <VirtualizeddSelect
-                      options={clients}
-                      placeholder="Select a client"
-                      value={field.value}
-                      onChange={(id) => field.onChange(id)}
-                    />
+                    {data?.clients && (
+                      <VirtualizeddSelect
+                        options={data.clients}
+                        placeholder="Select a client"
+                        value={field.value}
+                        onChange={(id) => field.onChange(id)}
+                      />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,12 +146,14 @@ export default function LoanForm({
                 <FormItem>
                   <FormLabel>Loan Officer</FormLabel>
                   <FormControl>
-                    <VirtualizeddSelect
-                      options={loanOfficers}
-                      placeholder="Select a loan officer"
-                      value={field.value}
-                      onChange={(id) => field.onChange(id)}
-                    />
+                    {data?.loanOfficers && (
+                      <VirtualizeddSelect
+                        options={data.loanOfficers}
+                        placeholder="Select a loan officer"
+                        value={field.value}
+                        onChange={(id) => field.onChange(id)}
+                      />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -159,7 +174,7 @@ export default function LoanForm({
             />
             <FormField
               control={form.control}
-              name="noOfInstallments"
+              name="installments"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>No of Installments</FormLabel>
@@ -230,7 +245,7 @@ export default function LoanForm({
           </div>
           <FormField
             control={form.control}
-            name="dob"
+            name="disburseOn"
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Date of birth</FormLabel>

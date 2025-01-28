@@ -44,55 +44,66 @@ func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, pay
 }
 
 func (s *Server) setUpRoutes() {
+	v1 := s.router.Group("/api/v1")
+
+	// protected routes
+	authRoute := v1.Use(authMiddleware(s.maker))
+
+	// health check
 	s.router.GET("/health-check", s.healthCheckHandler)
 
 	// users routes
-	s.router.POST("/login", s.loginUser)
-	s.router.POST("/refresh-token/:email", s.refreshToken)
-	s.router.POST("/user", s.createUser)
-	s.router.GET("/user", s.listUsers)
-	s.router.GET("/user/:id", s.getUser)
-	s.router.PATCH("/user/reset-password", s.updateUserCredentials)
-	s.router.PATCH("/user/:id", s.updateUser)
+	v1.POST("/login", s.loginUser)
+	v1.POST("/refresh-token/:email", s.refreshToken)
+	authRoute.POST("/user", s.createUser)
+	authRoute.GET("/user", s.listUsers)
+	authRoute.GET("/user/:id", s.getUser)
+	v1.PATCH("/user/reset-password", s.updateUserCredentials)
+	authRoute.PATCH("/user/:id", s.updateUser)
 
 	// clients routes
-	s.router.POST("/client", s.createClient)
-	s.router.GET("/client", s.listClients)
-	s.router.GET("/client/branch/:id", s.listClientsByBranch)
-	s.router.GET("/client/status", s.listClientsByActive) // use query params
-	s.router.GET("/client/:id", s.getClient)
-	s.router.PATCH("/client/:id", s.updateClient)
+	authRoute.POST("/client", s.createClient)
+	authRoute.GET("/client", s.listClients)
+	authRoute.GET("/client/branch/:id", s.listClientsByBranch)
+	authRoute.GET("/client/status", s.listClientsByActive) // use query params
+	authRoute.GET("/client/:id", s.getClient)
+	authRoute.PATCH("/client/:id", s.updateClient)
 
 	// product routes
-	s.router.POST("/product", s.createProduct)
-	s.router.GET("/product", s.listProducts)
-	s.router.GET("/product/branch/:id", s.listProductsByBranch)
-	s.router.GET("/product/:id", s.getProduct)
+	authRoute.POST("/product", s.createProduct)
+	authRoute.GET("/product", s.listProducts)
+	authRoute.GET("/product/branch/:id", s.listProductsByBranch)
+	authRoute.GET("/product/:id", s.getProduct)
 
 	// non-posted routes
-	s.router.GET("/non-posted/all", s.listAllNonPostedPayments)
-	s.router.GET("/non-posted/unassigned", s.listUnassignedNonPostedPayments)
-	s.router.GET("/non-posted/by-id/:id", s.getNonPostedPayment)
-	s.router.GET("/non-posted/by-type/:type", s.listNonPostedByTransactionSource)
+	authRoute.GET("/non-posted/all", s.listAllNonPostedPayments)
+	authRoute.GET("/non-posted/unassigned", s.listUnassignedNonPostedPayments)
+	authRoute.GET("/non-posted/by-id/:id", s.getNonPostedPayment)
+	authRoute.GET("/non-posted/by-type/:type", s.listNonPostedByTransactionSource)
 
 	// branches routes
-	s.router.GET("/branch", s.listBranches)
-	s.router.GET("/branch/:id", s.getBranch)
-	s.router.POST("/branch", s.createBranch)
-	s.router.PATCH("/branch/:id", s.updateBranch)
+	authRoute.GET("/branch", s.listBranches)
+	authRoute.GET("/branch/:id", s.getBranch)
+	authRoute.POST("/branch", s.createBranch)
+	authRoute.PATCH("/branch/:id", s.updateBranch)
 
 	// loans routes
-	s.router.POST("/loan", s.createLoan)
-	s.router.PATCH("/loan/:id/disburse", s.disburseLoan)
-	s.router.PATCH("/loan/:id/assign", s.transferLoanOfficer)
-	s.router.GET("/loan/:id", s.getLoan)
-	s.router.GET("/loan", s.listLoansByCategory)
+	authRoute.POST("/loan", s.createLoan)
+	authRoute.PATCH("/loan/:id/disburse", s.disburseLoan)
+	authRoute.PATCH("/loan/:id/assign", s.transferLoanOfficer)
+	authRoute.GET("/loan/:id", s.getLoan)
+	authRoute.GET("/loan", s.listLoansByCategory)
 
 	// payments routes
-	s.router.POST("/payment/callback", s.paymentCallback)
-	s.router.PATCH("/payment/:id/assign", s.paymentByAdmin)
+	v1.POST("/payment/callback", s.paymentCallback)
+	authRoute.PATCH("/payment/:id/assign", s.paymentByAdmin)
 
 	// payment of from credit to repay some loan(overpayment to pay loan)
+
+
+	// helper routes
+	authRoute.GET("/helper/dashboard", s.getDashboardData)
+	authRoute.GET("/helper/loanForm", s.getLoanFormData)
 
 	s.srv = &http.Server{
 		Addr:         s.config.HTTP_PORT,

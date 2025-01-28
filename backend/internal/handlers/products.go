@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
@@ -15,10 +14,10 @@ type productResponse struct {
 	LoanAmount     float64   `json:"loan_amount"`
 	RepayAmount    float64   `json:"repay_amount"`
 	InterestAmount float64   `json:"interest_amount"`
-	UpdatedBy      uint32    `json:"updated_by"`
-	UpdatedAt      time.Time `json:"updated_at"`
-	CreatedAt      time.Time `json:"created_at"`
 }
+// UpdatedBy      uint32    `json:"updated_by"`
+// UpdatedAt      time.Time `json:"updated_at"`
+// CreatedAt      time.Time `json:"created_at"`
 
 type createProductRequest struct {
 	BranchID    uint32  `binding:"required" json:"branch_id"`
@@ -165,8 +164,8 @@ func (s *Server) structureProduct(p *repository.Product, ctx *gin.Context) (prod
 		BranchName:     branch.Name,
 		RepayAmount:    p.RepayAmount,
 		InterestAmount: p.InterestAmount,
-		UpdatedBy:      p.UpdatedBy,
-		UpdatedAt:      p.UpdatedAt,
-		CreatedAt:      p.CreatedAt,
-	}, nil
+		}, nil
+		// UpdatedBy:      p.UpdatedBy,
+		// UpdatedAt:      p.UpdatedAt,
+		// CreatedAt:      p.CreatedAt,
 }

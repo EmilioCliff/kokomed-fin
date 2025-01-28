@@ -12,50 +12,58 @@ import (
 
 type loanResponse struct {
 	ID                 uint32
-	Product            loanProductResponse
-	Client             loanClientResponse
-	LoanOfficer        loanUserResponse
+	Product            productResponse
+	Client             clientResponse
+	LoanOfficer        userResponse
 	LoanPurpose        string
 	DueDate            time.Time
-	ApprovedBy         loanUserResponse
+	ApprovedBy         userResponse
 	DisbursedOn        time.Time
-	DisbursedBy        loanUserResponse
+	DisbursedBy        userResponse
 	TotalInstallments  uint32
 	InstallmentsPeriod uint32
 	Status             string
 	ProcessingFee      float64
 	FeePaid            bool
 	PaidAmount         float64
-	UpdatedBy          loanUserResponse
-	CreatedBy          loanUserResponse
+	UpdatedBy          userResponse
+	CreatedBy          userResponse
 	CreatedAt          time.Time
 }
 
-type loanProductResponse struct {
-	ID             uint32  `json:"id"`
-	BranchName     string  `json:"branch_name"`
-	LoanAmount     float64 `json:"loan_amount"`
-	RepayAmount    float64 `json:"repay_amount"`
-	InterestAmount float64 `json:"interest_amount"`
-}
+// type loanProductResponse struct {
+// 	ID             uint32  `json:"id"`
+// 	BranchName     string  `json:"branch_name"`
+// 	LoanAmount     float64 `json:"loan_amount"`
+// 	RepayAmount    float64 `json:"repay_amount"`
+// 	InterestAmount float64 `json:"interest_amount"`
+// }
 
-type loanClientResponse struct {
-	ID          uint32    `json:"id"`
-	Name        string    `json:"name"`
-	PhoneNumber string    `json:"phone_number"`
-	IdNumber    string    `json:"id_number"`
-	Dob         time.Time `json:"dob"`
-	Gender      string    `json:"gender"`
-	Active      bool      `json:"active"`
-	BranchName  string    `json:"branch_name"`
-	Overpayment float64   `json:"overpayment"`
-}
+// type loanClientResponse struct {
+// 	ID          uint32    `json:"id"`
+// 	Name        string    `json:"name"`
+// 	PhoneNumber string    `json:"phone_number"`
+// 	IdNumber    string    `json:"id_number"`
+// 	Dob         time.Time `json:"dob"`
+// 	Gender      string    `json:"gender"`
+// 	Active      bool      `json:"active"`
+// 	BranchName  string    `json:"branch_name"`
+// 	Overpayment float64   `json:"overpayment"`
+// 	AssignedStaff userResponse `json:"assigned_staff"`
+// 	DueAmount float64 `json:"due_amount"`
+// 	CreatedBy userResponse `json:"created_by"`
+// 	CreatedAt time.Time `json:"created_at"`
+// }
 
-type loanUserResponse struct {
-	ID       uint32 `json:"id"`
-	Fullname string `json:"fullname"`
-	Role     string `json:"role"`
-}
+// type loanUserResponse struct {
+// 	ID       uint32 `json:"id"`
+// 	Fullname string `json:"fullname"`
+// 	PhoneNumber string `json:"phone_number"`
+// 	Email string `json:"email"`
+// 	Role     string `json:"role"`
+// 	BranchName string `json:"branch_name"`
+// 	CreatedAt time.Time `json:"created_at"`
+// }
 
 type createLoanRequest struct {
 	ProductID          uint32  `binding:"required" json:"product_id"`
@@ -63,6 +71,7 @@ type createLoanRequest struct {
 	LoanOfficerID      uint32  `binding:"required" json:"loan_officer_id"`
 	LoanPurpose        string  `                   json:"loan_purpose"`
 	ApprovedBy         uint32  `binding:"required" json:"approved_by"`
+	Disbursed	bool `binding:"required" json:"disbursed"`
 	DisburseBy         uint32  `                   json:"disburse_by"`
 	DisburseOn         string  `                   json:"disburse_on"`
 	Installments       uint32  `binding:"required" json:"installments"`
@@ -78,6 +87,10 @@ func (s *Server) createLoan(ctx *gin.Context) {
 
 		return
 	}
+
+	// approved by get from token
+
+	// if disburse is true then disbursed by and disbursed on are required
 
 	params := repository.Loan{
 		ProductID:          req.ProductID,
@@ -341,7 +354,7 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 		return loanResponse{}, err
 	}
 
-	disbursedBy := loanUserResponse{}
+	disbursedBy := userResponse{}
 
 	if loan.DisbursedBy != nil {
 		disbursedByUser, err := s.repo.Users.GetUserByID(ctx, *loan.DisbursedBy)
@@ -349,14 +362,14 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 			return loanResponse{}, err
 		}
 
-		disbursedBy = loanUserResponse{
+		disbursedBy = userResponse{
 			ID:       disbursedByUser.ID,
 			Fullname: disbursedByUser.FullName,
 			Role:     disbursedByUser.Role,
 		}
 	}
 
-	updatedBy := loanUserResponse{}
+	updatedBy := userResponse{}
 
 	if loan.UpdatedBy != nil {
 		updatedByUser, err := s.repo.Users.GetUserByID(ctx, *loan.UpdatedBy)
@@ -364,7 +377,7 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 			return loanResponse{}, err
 		}
 
-		updatedBy = loanUserResponse{
+		updatedBy = userResponse{
 			ID:       updatedByUser.ID,
 			Fullname: updatedByUser.FullName,
 			Role:     updatedByUser.Role,
@@ -376,7 +389,7 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 		return loanResponse{}, err
 	}
 
-	createdBy := loanUserResponse{
+	createdBy := userResponse{
 		ID:       createdByUser.ID,
 		Fullname: createdByUser.FullName,
 		Role:     createdByUser.Role,
@@ -394,30 +407,35 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 		loan.LoanPurpose = pkg.StringPtr("")
 	}
 
+	dob := ""
+	if client.Dob != nil {
+		dob = client.Dob.Format("2006-01-02")
+	}
+
 	return loanResponse{
 		ID: loan.ID,
-		Product: loanProductResponse{
+		Product: productResponse{
 			ID:             product.ID,
 			BranchName:     productBranch.Name,
 			LoanAmount:     product.LoanAmount,
 			RepayAmount:    product.RepayAmount,
 			InterestAmount: product.InterestAmount,
 		},
-		Client: loanClientResponse{
+		Client: clientResponse{
 			ID:          client.ID,
-			Name:        client.FullName,
+			FullName:        client.FullName,
 			PhoneNumber: client.PhoneNumber,
 			IdNumber:    *client.IdNumber,
-			Dob:         *client.Dob,
+			Dob:         dob,
 			Gender:      client.Gender,
 			Active:      client.Active,
 			BranchName:  clientBranch.Name,
 			Overpayment: client.Overpayment,
 		},
-		LoanOfficer:        loanUserResponse{ID: loanOfficer.ID, Fullname: loanOfficer.FullName, Role: loanOfficer.Role},
+		LoanOfficer:        userResponse{ID: loanOfficer.ID, Fullname: loanOfficer.FullName, Role: loanOfficer.Role},
 		LoanPurpose:        *loan.LoanPurpose,
 		DueDate:            *loan.DueDate,
-		ApprovedBy:         loanUserResponse{ID: approvedBy.ID, Fullname: approvedBy.FullName, Role: approvedBy.Role},
+		ApprovedBy:         userResponse{ID: approvedBy.ID, Fullname: approvedBy.FullName, Role: approvedBy.Role},
 		DisbursedOn:        *loan.DisbursedOn,
 		DisbursedBy:        disbursedBy,
 		TotalInstallments:  loan.TotalInstallments,
@@ -427,7 +445,7 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 		FeePaid:            loan.FeePaid,
 		PaidAmount:         loan.PaidAmount,
 		UpdatedBy:          updatedBy,
-		CreatedBy:          loanUserResponse{ID: createdBy.ID, Fullname: createdBy.Fullname, Role: createdBy.Role},
+		CreatedBy:          userResponse{ID: createdBy.ID, Fullname: createdBy.Fullname, Role: createdBy.Role},
 		CreatedAt:          loan.CreatedAt,
 	}, nil
 }
