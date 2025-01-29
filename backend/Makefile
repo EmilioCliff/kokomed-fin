@@ -10,7 +10,7 @@ coverage:
 	go tool cover -html=coverage.out -o coverage.html
 
 sqlc:
-	cd .envs/configs && sqlc generate
+	cd ./.envs/configs/ && sqlc generate
 
 run:
 	cd cmd/server && go run main.go

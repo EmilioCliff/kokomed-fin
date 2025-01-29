@@ -4,9 +4,9 @@ import { Loan } from '@/components/PAGES/loans/schema';
 import { User } from '@/components/PAGES/users/schema';
 
 export enum role {
-  'USER',
-  'ADMIN',
-  'GUEST',
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+  GUEST = 'GUEST',
 }
 
 export enum loanStatus {
@@ -16,14 +16,8 @@ export enum loanStatus {
   DEFAULTED = 'DEFAULTED',
 }
 
-export interface tokenData {
-  accessToken: string;
-  refreshToken: string;
-  accessTokenExpiresAt: number; // UNIX timestamp
-  refreshTokenExpiresAt: number; // UNIX timestamp
-}
-
 export interface updateLoanType {
+  id: number;
   status?: loanStatus;
   disburseDate?: string;
   feePaid?: boolean;
@@ -32,8 +26,9 @@ export interface updateLoanType {
 export interface authCtx {
   isLoading: boolean;
   isAuthenticated: boolean;
-  role: role;
+  userRole: role;
   error: any;
+  updateAuthContext: (tokenData: tokenData) => void;
   // add login, logout and checkSession methods
 }
 
@@ -66,8 +61,33 @@ export interface contextWrapperProps {
 
 export interface commonresponse {
   status: 'Success' | 'Failure';
-  error?: string;
+  message?: string;
   data: any;
+}
+
+export interface tokenDataRes {
+  accessToken: string;
+  accessTokenExpiresAt: number; // UNIX timestamp
+  refreshToken?: string;
+  refreshTokenExpiresAt?: number; // UNIX timestamp
+}
+
+export interface userResponse {
+  id: number;
+  fullname: string;
+  email: string;
+  phoneNumber: string;
+  role: role;
+  branchName: string;
+  createdAt: string;
+}
+
+export interface tokenData extends Omit<commonresponse, 'data'> {
+  accessToken: string;
+  accessTokenExpiresAt: number; // UNIX timestamp
+  refreshToken?: string;
+  refreshTokenExpiresAt?: number; // UNIX timestamp
+  userData: userResponse;
 }
 
 export interface getUserType extends Omit<commonresponse, 'data'> {

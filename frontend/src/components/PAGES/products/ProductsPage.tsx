@@ -26,8 +26,8 @@ import { DataTable } from '../../table/data-table';
 import ProductForm from '@/components/PAGES/products/ProductForm';
 import { productColumns } from '@/components/PAGES/products/product';
 
-const products = generateRandomProduct(30);
-const validatedProducts = z.array(productSchema).parse(products);
+// const products = generateRandomProduct(30);
+// const validatedProducts = z.array(productSchema).parse(products);
 
 function ProductsPage() {
   const { selectedRow, setSelectedRow } = useContext(TableContext);
@@ -36,7 +36,7 @@ function ProductsPage() {
   // const [selectedRow, setSelectedRow] = useState<Product | null>(null);
 
   useEffect(() => {
-    setProducts(validatedProducts);
+    // setProducts(validatedProducts);
     setLoading(false);
   }, []);
 

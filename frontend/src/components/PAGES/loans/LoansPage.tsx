@@ -1,10 +1,7 @@
-import { z } from 'zod';
-import { generateRandomLoans } from '@/lib/generator';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext } from 'react';
 import LoanForm from '@/components/PAGES/loans/LoanForm';
 import { loanColumns } from '@/components/PAGES/loans/loan';
 import { DataTable } from '@/components/table/data-table';
-import { loanSchema, Loan } from './schema';
 import TableSkeleton from '@/components/UI/TableSkeleton';
 
 import { statuses } from '@/data/loan';
@@ -13,7 +10,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -22,17 +18,12 @@ import { Button } from '@/components/ui/button';
 import LoanSheet from './LoanSheet';
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { AuthContext } from '@/context/AuthContext';
 import { TableContext } from '@/context/TableContext';
 import { getLoans } from '@/services/getLoans';
 import { useDebounce } from '@/hooks/useDebounce';
 
-const generatedLoans = generateRandomLoans(30);
-const validatedLoans = z.array(loanSchema).parse(generatedLoans);
-
 export default function LoanPage() {
-  const { pageIndex, pageSize, filter, search, resetTableState } =
-    useContext(TableContext);
+  const { pageIndex, pageSize, filter, search } = useContext(TableContext);
 
   const debouncedInput = useDebounce({ value: search, delay: 500 });
 
@@ -43,18 +34,10 @@ export default function LoanPage() {
     placeholderData: keepPreviousData,
   });
 
-  // useEffect(() => {
-  //   return () => {
-  //     resetTableState();
-  //   };
-  // }, [resetTableState]);
-
   // if (filter.options.length !== 0 || search) {
   //   console.log('Here');
   //   setRowsCount(data?.length || 30);
   // }
-
-  // const [selectedRow, setSelectedRow] = useState<Loan | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
 

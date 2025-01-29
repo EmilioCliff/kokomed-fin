@@ -13,6 +13,7 @@ import BranchesPage from './components/PAGES/branches/BranchesPage';
 import ProductsPage from './components/PAGES/products/ProductsPage';
 import { AuthContextWrapper } from './context/AuthContext';
 import { TableContextWrapper } from './context/TableContext';
+import { ToastContainer } from 'react-toastify';
 // import GetDataTest from "./pages/GetDataTest";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ function App() {
               </Route>
             </Routes>
           </Router>
+          <ToastContainer />
           <ReactQueryDevtools />
         </QueryClientProvider>
       </TableContextWrapper>

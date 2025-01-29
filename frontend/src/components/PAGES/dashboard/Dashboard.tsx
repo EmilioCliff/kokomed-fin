@@ -1,10 +1,6 @@
 import Widgets from '@/components/UI/Widgets';
 import LoanStatusChart from '@/components/UI/LoanStatusChart';
 import RecentPayments from '@/components/UI/RecentPayments';
-import { Wallet, Flag, DollarSign, Users } from 'lucide-react';
-import { InactiveLoan, inactiveLoanSchema } from './schema';
-import { useState, useEffect } from 'react';
-import { z } from 'zod';
 import { generateRandomInactiveLoans } from '@/lib/generator';
 import { DataTable } from '@/components/table/data-table';
 import { inactiveLoanColumns } from './inactive-loan';
@@ -69,29 +65,6 @@ function Dashboard() {
     staleTime: 5 * 1000,
     placeholderData: keepPreviousData,
   });
-
-  // const [inactiveLoans, setInactiveLoans] = useState<InactiveLoan[]>([]);
-  // const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null);
-
-  // useEffect(() => {
-  //   async function fetchInactiveLoans() {
-  //     try {
-  //       const generatedInactiveLoans = generateRandomInactiveLoans(13);
-  //       const validatedInactiveLoans = z
-  //         .array(inactiveLoanSchema)
-  //         .parse(generatedInactiveLoans);
-  //       setInactiveLoans(validatedInactiveLoans);
-  //     } catch (err: unknown) {
-  //       setError('Failed to fetch loans');
-  //       console.error(err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-
-  //   fetchInactiveLoans();
-  // }, []);
 
   if (isLoading) {
     return <DashboardSkeleton />;

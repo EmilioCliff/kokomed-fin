@@ -23,3 +23,6 @@ UPDATE users
     updated_at = coalesce(sqlc.narg("updated_at"), updated_at), 
     updated_by = coalesce(sqlc.narg("updated_by"), updated_by) 
 WHERE id = sqlc.arg("id");
+
+-- name: HelperClient :many
+SELECT id, full_name FROM users;

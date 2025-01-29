@@ -59,3 +59,6 @@ SELECT * FROM clients WHERE branch_id = ? LIMIT ? OFFSET ?;
 
 -- name: ListClientsByActiveStatus :many
 SELECT * FROM clients WHERE active = ? LIMIT ? OFFSET ?;
+
+-- name: HelperClient :many
+SELECT id, full_name FROM clients;

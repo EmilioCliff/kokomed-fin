@@ -18,3 +18,9 @@ DELETE FROM products WHERE id = ?;
 
 -- name: ListProductsByBranch :many
 SELECT * FROM products WHERE branch_id = ? LIMIT ? OFFSET ?;
+
+-- name: HelperProduct :many
+SELECT p.id AS productId,
+    p.loan_amount AS loanAmount,
+    b.name AS branchNAme
+FROM products p JOIN branches b ON p.branch_id = b.id;

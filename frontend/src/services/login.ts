@@ -1,20 +1,31 @@
 import api, { protectedApi } from '@/API/api';
 import { tokenData } from '@/lib/types';
+import { LoginForm } from '@/components/PAGES/login/schema';
 
-export const login = async ({ name, password }: { name: string; password: string }) => {
-  const response = await api
-    .post<tokenData>('/login', {
-      name: name,
-      password: password,
-    })
-    .then((resp) => resp.data);
+export const login = async (details: LoginForm) => {
+  try {
+    const response = await api
+      .post<tokenData>('/login', {
+        email: details.email,
+        password: details.password,
+      })
+      .then((resp) => resp.data);
 
-  // save the accessToken
-  sessionStorage.setItem('accessToken', response.accessToken);
+    if (response.message) {
+      throw new Error(response.message || 'An unknown error occurred.');
+    }
 
-  // save the refreshToken
-  document.cookie = `refreshToken=${response.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/`;
+    sessionStorage.setItem('accessToken', response.accessToken);
 
-  console.log('successful login');
-  return;
+    // save the refreshToken
+    // document.cookie = `refreshToken=${response.data.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/`;
+
+    return response;
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error('Unauthorized access. Please check your credentials.');
+    }
+
+    throw new Error(error.message);
+  }
 };

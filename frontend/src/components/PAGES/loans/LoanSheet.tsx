@@ -45,18 +45,26 @@ function LoanSheet() {
 
   const onSave = () => {
     const values: updateLoanType = {
+      id: Number(selectedRow.id),
       status: status ? status : undefined,
       disburseDate: disbursedDate ? disbursedDate : undefined,
       feePaid: feePaid ? feePaid : undefined,
     };
+
     console.log(values);
+
     mutation.mutate(values, {
       onSuccess: (data) => {
         console.log(data);
-        // we will invalidate but generally we need to add the new loan into the state
+        // we will invalidate but generally we need to add the updated loan into the state
         queryClient.invalidateQueries({ queryKey: 'loans' });
       },
+      onError: (error) => {
+        console.log(error);
+        // show to toastify
+      },
     });
+
     setStatus(null);
     setDisbursedDate(null);
     setFeePaid(null);

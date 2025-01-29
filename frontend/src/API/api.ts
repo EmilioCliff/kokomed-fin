@@ -15,7 +15,7 @@ const api = axios.create({
 export default api;
 
 export const protectedApi = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'http://localhost:3030/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },

@@ -2,12 +2,12 @@ version: "2"
 sql:
   - engine: "mysql"
     name: "kokomed-fin"
-    queries: "/Projects/kokomed-fin/backend/internal/mysql/queries/*"
-    schema: "/Projects/kokomed-fin/backend/internal/mysql/migrations/*"
+    queries: "./internal/mysql/queries/*.sql"
+    schema: "./internal/mysql/migrations/*.sql"
     gen:
       go:
         package: "generated"
-        out: "/Projects/kokomed-fin/backend/internal/mysql/generated"
+        out: "./internal/mysql/generated"
         emit_json_tags: true
         emit_interface: true
         emit_empty_slices: true

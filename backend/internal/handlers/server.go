@@ -44,21 +44,24 @@ func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, pay
 }
 
 func (s *Server) setUpRoutes() {
+	s.router.Use(CORSmiddleware())
+	
 	v1 := s.router.Group("/api/v1")
+	v1Auth := s.router.Group("/api/v1")
 
 	// protected routes
-	authRoute := v1.Use(authMiddleware(s.maker))
+	authRoute := v1Auth.Use(authMiddleware(s.maker))
 
 	// health check
 	s.router.GET("/health-check", s.healthCheckHandler)
 
 	// users routes
 	v1.POST("/login", s.loginUser)
-	v1.POST("/refresh-token/:email", s.refreshToken)
+	v1.POST("/refreshToken", s.refreshToken)
 	authRoute.POST("/user", s.createUser)
 	authRoute.GET("/user", s.listUsers)
 	authRoute.GET("/user/:id", s.getUser)
-	v1.PATCH("/user/reset-password", s.updateUserCredentials)
+	v1.PATCH("/user/reset-password/:token", s.updateUserCredentials)
 	authRoute.PATCH("/user/:id", s.updateUser)
 
 	// clients routes

@@ -3,9 +3,9 @@ import { DashboardData } from '@/components/PAGES/dashboard/schema';
 import { commonDataResponse } from '@/lib/types';
 
 interface loanFormData {
-  products: commonDataResponse[];
-  loanOfficers: commonDataResponse[];
-  clients: commonDataResponse[];
+  products?: commonDataResponse[];
+  loanOfficers?: commonDataResponse[];
+  clients?: commonDataResponse[];
 }
 
 export const getDashboardData = async () => {
@@ -24,6 +24,7 @@ export const getLoanFormData = async () => {
     const response = await protectedApi
       .get<loanFormData>('/helper/loanForm')
       .then((res) => res.data);
+
     return response;
   } catch (error) {
     console.error(error);

@@ -41,7 +41,8 @@ func (s *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	password := fmt.Sprintf("%s.%s.%v", req.Firstname, req.Email, req.PhoneNumber[len(req.PhoneNumber)-3:])
+	password := fmt.Sprintf("%s.%s.%v", req.Firstname, req.Role, req.PhoneNumber[len(req.PhoneNumber)-3:])
+	log.Print(password)
 
 	hashPassword, err := pkg.GenerateHashPassword(password, s.config.PASSWORD_COST)
 	if err != nil {
@@ -86,11 +87,11 @@ type loginUserRequest struct {
 }
 
 type loginUserResponse struct {
-	UserData              userResponse `json:"user_data"`
-	AccessToken           string       `json:"access_token"`
-	RefreshToken          string       `json:"refresh_token"`
-	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
-	RefreshTokenExpiresAt time.Time    `json:"refresh_token_expires_at"`
+	UserData              userResponse `json:"userData"`
+	AccessToken           string       `json:"accessToken"`
+	RefreshToken          string       `json:"refreshToken"`
+	AccessTokenExpiresAt  time.Time    `json:"accessTokenExpiresAt"`
+	RefreshTokenExpiresAt time.Time    `json:"refreshTokenExpiresAt"`
 }
 
 func (s *Server) loginUser(ctx *gin.Context) {
@@ -137,6 +138,8 @@ func (s *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
+	ctx.SetCookie("refreshToken", refreshToken, int(s.config.REFRESH_TOKEN_DURATION), "/", "", true, true)
+
 	_, err = s.repo.Users.UpdateUser(ctx, &repository.UpdateUser{ID: user.ID, RefreshToken: pkg.StringPtr(refreshToken)})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
@@ -173,12 +176,19 @@ func (s *Server) updateUserCredentials(ctx *gin.Context) {
 		return
 	}
 
-	if payload, ok := ctx.Get("Payload"); ok {
-		if payload.(*pkg.Payload).Email != req.Email {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+	token := ctx.Param("token")
+	payload, err := s.maker.VerifyToken(token)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-			return
-		}
+		return
+	}
+
+	// check if the token is indeed the person confirm by email
+	if payload.Email != req.Email {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "cannot update another user password")))
+
+		return
 	}
 
 	hashpassword, err := pkg.GenerateHashPassword(req.NewPassword, s.config.PASSWORD_COST)
@@ -199,21 +209,26 @@ func (s *Server) updateUserCredentials(ctx *gin.Context) {
 }
 
 func (s *Server) refreshToken(ctx *gin.Context) {
-	email := ctx.Param("email")
-	if email == "" {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "email is required")))
+	// email := ctx.Param("email")
+	// if email == "" {
+	// 	ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "email is required")))
 
-		return
-	}
+	// 	return
+	// }
 
-	user, err := s.repo.Users.GetUserByEmail(ctx, email)
+	// user, err := s.repo.Users.GetUserByEmail(ctx, email)
+	// if err != nil {
+	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+	// 	return
+	// }
+	refreshToken, err := ctx.Cookie("refreshToken")
 	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token not found"})
 		return
 	}
 
-	payload, err := s.maker.GetPayload(user.RefreshToken)
+	payload, err := s.maker.GetPayload(refreshToken)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -226,7 +241,14 @@ func (s *Server) refreshToken(ctx *gin.Context) {
 		return
 	}
 
-	accesstoken, err := s.maker.CreateToken(email, user.ID, user.BranchID, user.Role, s.config.TOKEN_DURATION)
+	user, err := s.repo.Users.GetUserByEmail(ctx, payload.Email)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	accesstoken, err := s.maker.CreateToken(payload.Email, user.ID, user.BranchID, user.Role, s.config.TOKEN_DURATION)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 

@@ -1,11 +1,9 @@
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import VirtualizeddSelect from '../../UI/VisualizedSelect';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addLoan } from '@/services/addLoan';
 import Spinner from '@/components/UI/Spinner';
@@ -26,28 +24,16 @@ import { Button } from '@/components/ui/button';
 import { LoanFormType, loanFormSchema } from './schema';
 import { useQuery } from '@tanstack/react-query';
 import { getLoanFormData } from '@/services/helpers';
-
-// const products = Array.from({ length: 200 }, (_, i) => ({
-//   id: i,
-//   name: `Product ${i + 1}`,
-// }));
-
-// const clients = Array.from({ length: 200 }, (_, i) => ({
-//   id: i,
-//   name: `Client ${i + 1}`,
-// }));
-
-// const loanOfficers = Array.from({ length: 200 }, (_, i) => ({
-//   id: i,
-//   name: `Loan Officer ${i + 1}`,
-// }));
+import { useContext } from 'react';
+import { AuthContext } from '@/context/AuthContext';
 
 export default function LoanForm({
   onFormOpen,
 }: {
   onFormOpen: (isOpen: boolean) => void;
 }) {
-  // get useQuery for products, clients and loanOfficers
+  const { role } = useContext(AuthContext);
+
   const { isLoading, data, error } = useQuery({
     queryKey: ['loanFormData'],
     queryFn: getLoanFormData,
@@ -242,51 +228,84 @@ export default function LoanForm({
                 )}
               />
             </div>
-          </div>
-          <FormField
-            control={form.control}
-            name="disburseOn"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Date of birth</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={'outline'}
-                        className={cn(
-                          'w-[240px] pl-3 text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, 'PPP')
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value ? new Date(field.value) : undefined}
-                      onSelect={(date) => field.onChange(format(date!, 'yyyy-MM-dd'))}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date('1900-01-01')
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormDescription>
-                  Your date of birth is used to calculate your age.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
+            <div>
+              <p className="mb-4">Disburse Loan</p>
+              <Controller
+                control={form.control}
+                name="disburse"
+                render={({ field }) => (
+                  <div className="flex gap-x-8">
+                    <label>
+                      <input
+                        type="radio"
+                        onBlur={field.onBlur}
+                        onChange={() => field.onChange(true)}
+                        checked={field.value === true}
+                        className="mr-2"
+                      />
+                      Yes
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        onBlur={field.onBlur}
+                        onChange={() => field.onChange(false)}
+                        checked={field.value === false}
+                        className="mr-2"
+                      />
+                      No
+                    </label>
+                  </div>
+                )}
+              />
+            </div>
+            {role === 'ADMIN' && (
+              <FormField
+                control={form.control}
+                name="disburseOn"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date of birth</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={'outline'}
+                            className={cn(
+                              'w-[240px] pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, 'PPP')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? new Date(field.value) : undefined}
+                          onSelect={(date) => field.onChange(format(date!, 'yyyy-MM-dd'))}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date('1900-01-01')
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormDescription>
+                      Your date of birth is used to calculate your age.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          />
+          </div>
           <Button className="ml-auto block" type="submit">
             Add Loan
           </Button>

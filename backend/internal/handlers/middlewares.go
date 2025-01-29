@@ -112,15 +112,15 @@ func authMiddleware(maker pkg.JWTMaker) gin.HandlerFunc {
 
 func CORSmiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "GET")
-		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "*")
-		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "false")
-		ctx.Writer.Header().Set("Access-Control-Max-Age", "86400")
+		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*") // Use "*" or a specific domain
+		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true") // Allow credentials if needed
+		ctx.Writer.Header().Set("Access-Control-Max-Age", "86400")          // Cache preflight response for 1 day
 
+		// Handle preflight (OPTIONS) requests
 		if ctx.Request.Method == http.MethodOptions {
-			ctx.AbortWithStatus(204)
-
+			ctx.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 
