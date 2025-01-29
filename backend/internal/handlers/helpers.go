@@ -9,29 +9,33 @@ import (
 
 func (s *Server) getDashboardData(ctx *gin.Context) {
 	// get inactiveLoans
+	data, err := s.repo.Helpers.GetDashboardData(ctx)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-	// get recentPayments
+		return 
+	}
 
-	// get widgetData
+	ctx.JSON(http.StatusOK, data)
 }
 
 func (s *Server) getLoanFormData(ctx *gin.Context) {
 	// get allLoans
-	products, err := s.repo.Helpers.GetProductData()
+	products, err := s.repo.Helpers.GetProductData(ctx)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	clients, err := s.repo.Helpers.GetClientData()
+	clients, err := s.repo.Helpers.GetClientData(ctx)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 	
-	loanOfficers, err := s.repo.Helpers.GetLoanOfficerData()
+	loanOfficers, err := s.repo.Helpers.GetLoanOfficerData(ctx)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 

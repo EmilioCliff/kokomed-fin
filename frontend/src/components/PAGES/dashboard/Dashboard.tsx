@@ -29,6 +29,13 @@ import { getDashboardData } from '@/services/helpers';
 //     closed: 40,
 //     closedTitle: 'Inactive',
 //   },
+
+// totalLoanAmount, _ := data.TotalLoanAmount.(float64)
+// totalLoanDisbursed, _ := data.TotalLoanDisbursed.(float64)
+// totalLoanPaid, _ := data.TotalLoanPaid.(float64)
+// totalPaymentsReceived, _ := data.TotalPaymentsReceived.(float64)
+// totalNonPosted, _ := data.TotalNonPosted.(float64)
+
 //   {
 //     title: 'Transactions',
 //     icon: Flag,
@@ -59,49 +66,55 @@ import { getDashboardData } from '@/services/helpers';
 // ];
 
 function Dashboard() {
-  const { isLoading, error, data } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: getDashboardData,
-    staleTime: 5 * 1000,
-    placeholderData: keepPreviousData,
-  });
+	const { isLoading, error, data } = useQuery({
+		queryKey: ['dashboard'],
+		queryFn: getDashboardData,
+		staleTime: 5 * 1000,
+	});
 
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
+	console.log(data);
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
+	if (isLoading) {
+		return <DashboardSkeleton />;
+	}
 
-  return (
-    <div className="px-4">
-      <h1 className="text-3xl font-bold mb-6 text-start">Dashboard</h1>
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {data?.widgets.map((widget, index) => (
-            <Widgets key={index} {...widget} />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <LoanStatusChart />
-          {data?.recentPayments && (
-            <RecentPayments recentPayments={data.recentPayments} />
-          )}
-        </div>
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle className="text-start">Recent Undisbursed Loans</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data?.inactiveLoans && (
-              <DataTable data={data.inactiveLoans} columns={inactiveLoanColumns} />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+	if (error) {
+		return <div>Error: {error.message}</div>;
+	}
+
+	return (
+		<div className="px-4">
+			<h1 className="text-3xl font-bold mb-6 text-start">Dashboard</h1>
+			<div className="space-y-6">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+					{data?.widget_data.map((widget, index) => (
+						<Widgets key={index} {...widget} />
+					))}
+				</div>
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+					<LoanStatusChart />
+					{data?.recent_payments && (
+						<RecentPayments recentPayments={data.recent_payments} />
+					)}
+				</div>
+				<Card className="col-span-1">
+					<CardHeader>
+						<CardTitle className="text-start">
+							Recent Undisbursed Loans
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						{data?.inactive_loans && (
+							<DataTable
+								data={data.inactive_loans}
+								columns={inactiveLoanColumns}
+							/>
+						)}
+					</CardContent>
+				</Card>
+			</div>
+		</div>
+	);
 }
 
 export default Dashboard;
