@@ -48,7 +48,7 @@ func main() {
 		panic(err)
 	}
 
-	token, _ := maker.CreateToken("emiliocliff@gmail.com", 1, 1, "ADMIN", 10*time.Minute)
+	token, _ := maker.CreateToken("alice@example.com", 1, 1, "ADMIN", 10*time.Hour)
 
 	log.Println(token)
 

@@ -1,5 +1,5 @@
 /*===== GOOGLE FONTS =====*/
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400..900&family=Nunito:wght@400..700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400..900&family=Nunito:wght@400..700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -13,9 +13,9 @@
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
 
-  --primary-style: 'Poppins', sans-serif;
-  --secondary-style: 'Nunito', Nunito;
-  --secondary-style-alt: 'Roboto Mono', monospace;
+  --primary-style: "Poppins", sans-serif;
+  --secondary-style: "Nunito", Nunito;
+  --secondary-style-alt: "Roboto Mono", monospace;
 
   --font-light: 400;
   --font-medium: 500;
@@ -262,6 +262,12 @@ body {
 
 .custom-sheet-class {
   width: 100% !important;
+}
+
+@media (max-width: 766px) {
+  .somen {
+    display: none;
+  }
 }
 
 @media (min-width: 640px) {

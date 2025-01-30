@@ -5,18 +5,13 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useMutation } from "@tanstack/react-query";
-// import { login } from "@/services/login";
-// import { AuthContext } from "@/context/AuthContext";
-import Spinner from "@/components/UI/Spinner";
 import { toast } from "react-toastify";
-import { tokenData } from "@/lib/types";
 import { useNavigate } from "react-router";
 import { loginFormSchema, LoginForm } from "./schema";
 import {
@@ -60,8 +55,8 @@ export default function LoginPage() {
   return (
     <>
       {/* {mutation.isPending && <Spinner />} */}
-      <div className="grid grid-cols-2 min-h-full sm:grid-cols-1 md:grid-cols-1">
-        <div className="bg-slate-500 bg-custom-bg bg-cover bg-center"></div>
+      <div className="grid grid-cols-1 min-h-full sm:grid-cols-1 md:grid-cols-2">
+        <div className="bg-slate-500 bg-custom-bg bg-cover bg-center somen"></div>
         <div className="w-full min-h-full flex justify-center items-center">
           <Card className="mx-auto max-w-4xl border-none shadow-none flex-col text-center">
             <CardHeader className="space-y-1 gap-4">

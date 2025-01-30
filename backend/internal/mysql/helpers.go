@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -111,12 +112,16 @@ func (r *HelperRepository) GetDashboardData(ctx context.Context) (repository.Das
 				Currency: "Ksh",
 			},
 		}
-		
-	return repository.DashboardData{
-		WidgetData: widgets,
-		InactiveLoans: inactiveLoans,
-		RecentPayments: recentPayments,
-	}, nil
+		rsp := repository.DashboardData{
+			WidgetData: widgets,
+			InactiveLoans: inactiveLoans,
+			RecentPayments: recentPayments,
+		}
+
+		log.Printf("Widget: %v", widgetsData)
+		log.Printf("InactiveLoans: %v", rsp.InactiveLoans)
+		log.Printf("RecentPayments: %v", rsp.RecentPayments)
+	return rsp, nil
 }
 
 func (r *HelperRepository) GetProductData(ctx context.Context) ([]repository.ProductData, error) {
