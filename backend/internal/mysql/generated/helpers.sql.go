@@ -11,6 +11,13 @@ import (
 )
 
 const dashBoardDataHelper = `-- name: DashBoardDataHelper :one
+
+
+
+
+
+
+
 SELECT
     -- Clients
     (SELECT COUNT(*) FROM clients) AS total_clients,
@@ -21,24 +28,24 @@ SELECT
     (SELECT COUNT(*) FROM loans WHERE status = 'ACTIVE') AS active_loans,
     (SELECT COUNT(*) FROM loans WHERE status = 'INACTIVE') AS inactive_loans,
 
-    -- Financials
-    (SELECT SUM(p.loan_amount) 
+     -- Financials
+    (SELECT COALESCE(SUM(p.loan_amount), 0) 
      FROM loans l 
      JOIN products p ON l.product_id = p.id) AS total_loan_amount,
 
-    (SELECT SUM(p.loan_amount) 
+    (SELECT COALESCE(SUM(p.loan_amount), 0) 
      FROM loans l 
      JOIN products p ON l.product_id = p.id 
      WHERE l.status != 'INACTIVE') AS total_loan_disbursed,
 
-    (SELECT SUM(p.loan_amount) 
+    (SELECT COALESCE(SUM(p.loan_amount), 0) 
      FROM loans l 
      JOIN products p ON l.product_id = p.id 
      WHERE l.status = 'COMPLETED') AS total_loan_paid,
 
-    -- Non-posted
-    (SELECT SUM(amount) FROM non_posted) AS total_payments_received,
-    (SELECT SUM(amount) FROM non_posted WHERE assign_to IS NULL) AS total_non_posted
+    -- Non-posted Payments
+    (SELECT COALESCE(SUM(amount), 0) FROM non_posted) AS total_payments_received,
+    (SELECT COALESCE(SUM(amount), 0) FROM non_posted WHERE assign_to IS NULL) AS total_non_posted
 `
 
 type DashBoardDataHelperRow struct {
@@ -54,6 +61,31 @@ type DashBoardDataHelperRow struct {
 	TotalNonPosted        interface{} `json:"total_non_posted"`
 }
 
+// -- name: DashBoardDataHelper :one
+// SELECT
+//
+//	-- Clients
+//	(SELECT COUNT(*) FROM clients) AS total_clients,
+//	(SELECT COUNT(*) FROM clients WHERE active = TRUE) AS active_clients,
+//	-- Loans
+//	(SELECT COUNT(*) FROM loans) AS total_loans,
+//	(SELECT COUNT(*) FROM loans WHERE status = 'ACTIVE') AS active_loans,
+//	(SELECT COUNT(*) FROM loans WHERE status = 'INACTIVE') AS inactive_loans,
+//	-- Financials
+//	COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(p.loan_amount)
+//	          FROM loans l
+//	          JOIN products p ON l.product_id = p.id)) AS total_loan_amount,
+//	COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(p.loan_amount)
+//	          FROM loans l
+//	          JOIN products p ON l.product_id = p.id
+//	          WHERE l.status != 'INACTIVE')) AS total_loan_disbursed,
+//	COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(p.loan_amount)
+//	          FROM loans l
+//	          JOIN products p ON l.product_id = p.id
+//	          WHERE l.status = 'COMPLETED')) AS total_loan_paid,
+//	-- Non-posted
+//	COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(amount) FROM non_posted)) AS total_payments_received,
+//	COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(amount) FROM non_posted WHERE assign_to IS NULL)) AS total_non_posted;
 func (q *Queries) DashBoardDataHelper(ctx context.Context) (DashBoardDataHelperRow, error) {
 	row := q.db.QueryRowContext(ctx, dashBoardDataHelper)
 	var i DashBoardDataHelperRow
@@ -119,6 +151,12 @@ func (q *Queries) DashBoardInactiveLoans(ctx context.Context) ([]DashBoardInacti
 }
 
 const dashBoardRecentsPayments = `-- name: DashBoardRecentsPayments :many
+
+
+
+
+
+
 SELECT id, paying_name, amount, paid_date 
 FROM non_posted 
 WHERE paid_date >= NOW() - INTERVAL 15 DAY
@@ -131,6 +169,31 @@ type DashBoardRecentsPaymentsRow struct {
 	PaidDate   time.Time `json:"paid_date"`
 }
 
+// -- name: DashBoardDataHelper :one
+// SELECT
+//
+//	-- Clients
+//	(SELECT COUNT(*) FROM clients) AS total_clients,
+//	(SELECT COUNT(*) FROM clients WHERE active = TRUE) AS active_clients,
+//	-- Loans
+//	(SELECT COUNT(*) FROM loans) AS total_loans,
+//	(SELECT COUNT(*) FROM loans WHERE status = 'ACTIVE') AS active_loans,
+//	(SELECT COUNT(*) FROM loans WHERE status = 'INACTIVE') AS inactive_loans,
+//	-- Financials
+//	(SELECT SUM(p.loan_amount)
+//	 FROM loans l
+//	 JOIN products p ON l.product_id = p.id) AS total_loan_amount,
+//	(SELECT SUM(p.loan_amount)
+//	 FROM loans l
+//	 JOIN products p ON l.product_id = p.id
+//	 WHERE l.status != 'INACTIVE') AS total_loan_disbursed,
+//	(SELECT SUM(p.loan_amount)
+//	 FROM loans l
+//	 JOIN products p ON l.product_id = p.id
+//	 WHERE l.status = 'COMPLETED') AS total_loan_paid,
+//	-- Non-posted
+//	(SELECT SUM(amount) FROM non_posted) AS total_payments_received,
+//	(SELECT SUM(amount) FROM non_posted WHERE assign_to IS NULL) AS total_non_posted;
 func (q *Queries) DashBoardRecentsPayments(ctx context.Context) ([]DashBoardRecentsPaymentsRow, error) {
 	rows, err := q.db.QueryContext(ctx, dashBoardRecentsPayments)
 	if err != nil {

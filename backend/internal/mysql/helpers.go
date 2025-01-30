@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
+	"strconv"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -43,38 +43,35 @@ func (r *HelperRepository) GetDashboardData(ctx context.Context) (repository.Das
 	}
 
 	inactiveLoans := make([]repository.InactiveLoan, len(loansData))
-	for _, loans := range loansData {
-		inactiveLoans = append(inactiveLoans, repository.InactiveLoan{
-			ID: loans.ID,
-			Amount: loans.LoanAmount,
+	for idx, loans := range loansData {
+		inactiveLoans[idx] = repository.InactiveLoan{
+			ID:          loans.ID,
+			Amount:      loans.LoanAmount,
 			RepayAmount: loans.RepayAmount,
-			Client: r.userToClientDashboard(ctx, loans.ClientID),
-			LoanOfficer: r.clientToUserDashboard(ctx, loans.LoanOfficer),
-			ApprovedBy: r.clientToUserDashboard(ctx, loans.ApprovedBy),
-			ApprovedOn: loans.CreatedAt,
-		})
+			ApprovedOn:  loans.CreatedAt,
+		}
 	}
 
 	recentPayments := make([]repository.Payment, len(paymentsData))
-	for _, payment := range paymentsData {
-		// p, ok := payment
-		// if !ok {
-		// 	return repository.DashboardData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error 2 getting dashboard recent paymnets")
-		// }
-
-		recentPayments = append(recentPayments, repository.Payment{
+	for idx, payment := range paymentsData {
+		recentPayments[idx] = repository.Payment{
 			ID: payment.ID,
 			PayingName: payment.PayingName,
 			Amount: payment.Amount,
 			PaidDate: payment.PaidDate,
-		})
+		}
 	}
 
-		totalLoanAmount, _ := widgetsData.TotalLoanAmount.(float64)
-		totalLoanDisbursed, _ := widgetsData.TotalLoanDisbursed.(float64)
-		totalLoanPaid, _ := widgetsData.TotalLoanPaid.(float64)
-		totalPaymentsReceived, _ := widgetsData.TotalPaymentsReceived.(float64)
-		totalNonPosted, _ := widgetsData.TotalNonPosted.(float64)
+		totalLoanAmountBtye, _ := widgetsData.TotalLoanAmount.([]byte)
+		totalLoanAmount, _ := strconv.ParseFloat(string(totalLoanAmountBtye), 64)
+		totalLoanDisbursedBtye, _ := widgetsData.TotalLoanDisbursed.([]byte)
+		totalLoanDisbursed, _ := strconv.ParseFloat(string(totalLoanDisbursedBtye), 64)
+		totalLoanPaidBtye, _ := widgetsData.TotalLoanPaid.([]byte)
+		totalLoanPaid, _ := strconv.ParseFloat(string(totalLoanPaidBtye), 64)
+		totalPaymentsReceivedBtye, _ := widgetsData.TotalPaymentsReceived.([]byte)
+		totalPaymentsReceived, _ := strconv.ParseFloat(string(totalPaymentsReceivedBtye), 64)
+		totalNonPostedBtye, _ := widgetsData.TotalNonPosted.([]byte)
+		totalNonPosted, _ := strconv.ParseFloat(string(totalNonPostedBtye), 64)
 
 		widgets := []repository.Widget{
 			{
@@ -117,10 +114,6 @@ func (r *HelperRepository) GetDashboardData(ctx context.Context) (repository.Das
 			InactiveLoans: inactiveLoans,
 			RecentPayments: recentPayments,
 		}
-
-		log.Printf("Widget: %v", widgetsData)
-		log.Printf("InactiveLoans: %v", rsp.InactiveLoans)
-		log.Printf("RecentPayments: %v", rsp.RecentPayments)
 	return rsp, nil
 }
 

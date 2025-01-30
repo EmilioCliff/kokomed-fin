@@ -1,6 +1,6 @@
 import Widgets from '@/components/UI/Widgets';
 import LoanStatusChart from '@/components/UI/LoanStatusChart';
-import RecentPayments from '@/components/UI/RecentPayments';
+import RecentPayments from '@/components/PAGES/dashboard/RecentPayments';
 import { generateRandomInactiveLoans } from '@/lib/generator';
 import { DataTable } from '@/components/table/data-table';
 import { inactiveLoanColumns } from './inactive-loan';
