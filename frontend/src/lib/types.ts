@@ -1,19 +1,19 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 // import { User, Loan } from '@/data/schema';
-import { Loan } from '@/components/PAGES/loans/schema';
-import { User } from '@/components/PAGES/users/schema';
+import { Loan } from "@/components/PAGES/loans/schema";
+import { User } from "@/components/PAGES/users/schema";
 
 export enum role {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-  GUEST = 'GUEST',
+  USER = "USER",
+  ADMIN = "ADMIN",
+  GUEST = "GUEST",
 }
 
 export enum loanStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  COMPLETED = 'COMPLETED',
-  DEFAULTED = 'DEFAULTED',
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  COMPLETED = "COMPLETED",
+  DEFAULTED = "DEFAULTED",
 }
 
 export interface updateLoanType {
@@ -60,16 +60,9 @@ export interface contextWrapperProps {
 }
 
 export interface commonresponse {
-  status: 'Success' | 'Failure';
+  statusCode?: string;
   message?: string;
   data: any;
-}
-
-export interface tokenDataRes {
-  accessToken: string;
-  accessTokenExpiresAt: number; // UNIX timestamp
-  refreshToken?: string;
-  refreshTokenExpiresAt?: number; // UNIX timestamp
 }
 
 export interface userResponse {
@@ -82,23 +75,19 @@ export interface userResponse {
   createdAt: string;
 }
 
-export interface tokenData extends Omit<commonresponse, 'data'> {
+export interface tokenData extends Omit<commonresponse, "data"> {
   accessToken: string;
-  accessTokenExpiresAt: number; // UNIX timestamp
-  refreshToken?: string;
-  refreshTokenExpiresAt?: number; // UNIX timestamp
-  userData: userResponse;
 }
 
-export interface getUserType extends Omit<commonresponse, 'data'> {
+export interface getUserType extends Omit<commonresponse, "data"> {
   data: User;
 }
 
-export interface refreshTokenRes extends Omit<commonresponse, 'data'> {
+export interface refreshTokenRes extends Omit<commonresponse, "data"> {
   accessToken: string;
 }
 
-export interface getLoansType extends Omit<commonresponse, 'data'> {
+export interface getLoansType extends Omit<commonresponse, "data"> {
   data: Loan[];
 }
 

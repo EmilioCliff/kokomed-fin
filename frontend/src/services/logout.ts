@@ -1,5 +1,8 @@
-export const logout = () => {
-  sessionStorage.removeItem('accessToken');
-  document.cookie = 'refreshToken=; Max-Age=0; Path=/';
-  console.log('Logged out');
+import api from "@/API/api";
+
+const logoutService = async () => {
+  console.log("Logging out");
+  await api.get("/logout");
 };
+
+export default logoutService;

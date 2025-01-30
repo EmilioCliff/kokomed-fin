@@ -163,6 +163,11 @@ func (s *Server) loginUser(ctx *gin.Context) {
 	})
 }
 
+func (s *Server) logoutUser(ctx *gin.Context) {
+	ctx.SetCookie("refreshToken", "", -1, "/", "", true, true)
+	ctx.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
 type updateUserCredentialsRequest struct {
 	Email       string `binding:"required" json:"email"`
 	NewPassword string `binding:"required" json:"new_password"`
@@ -209,22 +214,9 @@ func (s *Server) updateUserCredentials(ctx *gin.Context) {
 }
 
 func (s *Server) refreshToken(ctx *gin.Context) {
-	// email := ctx.Param("email")
-	// if email == "" {
-	// 	ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "email is required")))
-
-	// 	return
-	// }
-
-	// user, err := s.repo.Users.GetUserByEmail(ctx, email)
-	// if err != nil {
-	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-	// 	return
-	// }
 	refreshToken, err := ctx.Cookie("refreshToken")
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token not found"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Refresh token not found"})
 		return
 	}
 
@@ -241,21 +233,7 @@ func (s *Server) refreshToken(ctx *gin.Context) {
 		return
 	}
 
-	user, err := s.repo.Users.GetUserByEmail(ctx, payload.Email)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	accesstoken, err := s.maker.CreateToken(payload.Email, user.ID, user.BranchID, user.Role, s.config.TOKEN_DURATION)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	v, err := s.convertGeneratedUser(ctx, &user)
+	accesstoken, err := s.maker.CreateToken(payload.Email, payload.UserID, payload.BranchID, payload.Role, s.config.TOKEN_DURATION)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -263,11 +241,8 @@ func (s *Server) refreshToken(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, loginUserResponse{
-		UserData:              v,
 		AccessToken:           accesstoken,
-		RefreshToken:          user.RefreshToken,
 		AccessTokenExpiresAt:  time.Now().Add(s.config.TOKEN_DURATION),
-		RefreshTokenExpiresAt: time.Now().Add(s.config.REFRESH_TOKEN_DURATION),
 	})
 }
 

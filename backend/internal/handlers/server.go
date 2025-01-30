@@ -57,7 +57,8 @@ func (s *Server) setUpRoutes() {
 
 	// users routes
 	v1.POST("/login", s.loginUser)
-	v1.POST("/refreshToken", s.refreshToken)
+	v1.GET("/refreshToken", s.refreshToken)
+	authRoute.GET("/logout", s.logoutUser)
 	authRoute.POST("/user", s.createUser)
 	authRoute.GET("/user", s.listUsers)
 	authRoute.GET("/user/:id", s.getUser)

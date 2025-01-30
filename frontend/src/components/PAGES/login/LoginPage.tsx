@@ -4,70 +4,62 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from '@/components/ui/card';
-import { useState, useContext } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useMutation } from '@tanstack/react-query';
-import { login } from '@/services/login';
-import { AuthContext } from '@/context/AuthContext';
-import Spinner from '@/components/UI/Spinner';
-import { toast } from 'react-toastify';
-import { tokenData } from '@/lib/types';
-import { useNavigate } from 'react-router';
-import { loginFormSchema, LoginForm } from './schema';
+} from "@/components/ui/card";
+import { useState, useContext } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
+// import { login } from "@/services/login";
+// import { AuthContext } from "@/context/AuthContext";
+import Spinner from "@/components/UI/Spinner";
+import { toast } from "react-toastify";
+import { tokenData } from "@/lib/types";
+import { useNavigate } from "react-router";
+import { loginFormSchema, LoginForm } from "./schema";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
-  const { updateAuthContext } = useContext(AuthContext);
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   function onError(errors: any) {
-    console.log('Errors: ', errors);
+    console.log("Errors: ", errors);
   }
 
-  const mutation = useMutation({
-    mutationFn: login,
-  });
-
-  const onSubmit = (values: LoginForm) => {
-    mutation.mutate(values, {
-      onSuccess: (data: tokenData | undefined) => {
-        if (data) {
-          updateAuthContext(data);
-          navigate('/');
-        }
-      },
-
-      onError: (error: any) => {
-        console.log(error);
-        toast.error(error.message);
-      },
-    });
+  const onSubmit = async (values: LoginForm) => {
+    try {
+      const data = await login(values.email, values.password);
+      if (data) {
+        navigate("/");
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
   return (
     <>
-      {mutation.isPending && <Spinner />}
+      {/* {mutation.isPending && <Spinner />} */}
       <div className="grid grid-cols-2 min-h-full sm:grid-cols-1 md:grid-cols-1">
         <div className="bg-slate-500 bg-custom-bg bg-cover bg-center"></div>
         <div className="w-full min-h-full flex justify-center items-center">
@@ -105,7 +97,7 @@ export default function LoginPage() {
                           <div className="space-y-2 relative">
                             <Input
                               placeholder="Password"
-                              type={showPassword ? 'text' : 'password'}
+                              type={showPassword ? "text" : "password"}
                               {...field}
                             />
                             <button
@@ -113,7 +105,7 @@ export default function LoginPage() {
                               className="absolute right-3 top-1/3 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
                               onClick={() => setShowPassword((prevState) => !prevState)}
                               aria-label={
-                                showPassword ? 'Hide password' : 'Show password'
+                                showPassword ? "Hide password" : "Show password"
                               }
                             >
                               {showPassword ? (

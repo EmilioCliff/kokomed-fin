@@ -1,59 +1,53 @@
-import axios, { AxiosError } from 'axios';
-import { refreshToken } from '@/services/refreshToken';
-import { logout } from '@/services/logout';
-// import { AuthContext } from '@/context/AuthContext';
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: 'http://localhost:3030/api/v1',
+  baseURL: "http://localhost:3030/api/v1",
+  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
-
-// const data = useAuthContext();
 
 export default api;
 
-export const protectedApi = axios.create({
-  baseURL: 'http://localhost:3030/api/v1',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  // withCredentials: true,
-});
+// Function to attach access token
+export const setupAxiosInterceptors = (
+  getAccessToken: () => string | null,
+  refreshSession: () => Promise<void>
+) => {
+  api.interceptors.request.use(
+    (config) => {
+      const token = getAccessToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
 
-const prefetchInt = protectedApi.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
 
-const postfetchInt = protectedApi.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest?._retry) {
-      originalRequest._retry = true;
-
-      try {
-        await refreshToken();
-        return protectedApi.request(originalRequest);
-      } catch (error) {
-        logout();
-        // redirect to login page
+      if (originalRequest.url === "/login") {
         return Promise.reject(error);
       }
-    }
-    return Promise.reject(error);
-  }
-);
 
-// during developmnet ONLY
-// remove interceptors
-export const removeInterceptors = () => {
-  protectedApi.interceptors.request.eject(prefetchInt);
-  protectedApi.interceptors.response.eject(postfetchInt);
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        try {
+          await refreshSession();
+          return api(originalRequest);
+        } catch (refreshError) {
+          // window.location.href = "/login";
+          return Promise.reject(refreshError);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
 };

@@ -1,10 +1,10 @@
-import api, { protectedApi } from '@/API/api';
-import { updateLoanType } from '@/lib/types';
-import { format } from 'date-fns';
+import api from "@/API/api";
+import { updateLoanType } from "@/lib/types";
+import { format } from "date-fns";
 
 export const updateLoan = async (data: updateLoanType) => {
   if (!data.disburseDate) {
-    data.disburseDate = format(new Date(), 'PPP');
+    data.disburseDate = format(new Date(), "PPP");
   }
 
   const response = await api

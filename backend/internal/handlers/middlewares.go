@@ -112,7 +112,7 @@ func authMiddleware(maker pkg.JWTMaker) gin.HandlerFunc {
 
 func CORSmiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*") // Use "*" or a specific domain
+		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // Use "*" or a specific domain
 		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true") // Allow credentials if needed

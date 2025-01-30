@@ -1,26 +1,15 @@
-import { Outlet, Navigate } from 'react-router-dom';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import AppSidebar from '@/components/UI/AppSidebar';
-import Navbar from '@/components/UI/Navbar';
-import { AuthContext } from '@/context/AuthContext';
-import { useContext } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { refreshToken } from '@/services/refreshToken';
+import { Outlet, Navigate } from "react-router-dom";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import AppSidebar from "@/components/UI/AppSidebar";
+import Navbar from "@/components/UI/Navbar";
+import { useAuth } from "@/hooks/useAuth";
+import Spinner from "@/components/UI/Spinner";
 
 export default function AppLayout() {
-  const { isAuthenticated, updateAuthContext } = useContext(AuthContext);
+  const { isAuthenticated, isChecking } = useAuth();
 
-  const { isLoading, data, error } = useQuery({
-    queryKey: ['refreshToken'],
-    queryFn: refreshToken,
-    staleTime: 0,
-    enabled: !isAuthenticated,
-    retry: 2,
-  });
-
-  // check if there is a refresh token stored if yes try to refresh the token then udate it
-  if (data) {
-    updateAuthContext(data);
+  if (isChecking) {
+    return <Spinner />;
   }
 
   return (
