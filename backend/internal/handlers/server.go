@@ -107,7 +107,7 @@ func (s *Server) setUpRoutes() {
 
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)
-	authRoute.GET("/helper/loanForm", s.getLoanFormData)
+	authRoute.GET("/helper/formData", s.getLoanFormData)
 
 	s.srv = &http.Server{
 		Addr:         s.config.HTTP_PORT,

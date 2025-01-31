@@ -1,40 +1,39 @@
-import { User } from '../PAGES/users/schema';
+import { Product } from '../PAGES/products/schema';
 import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
 
-interface UserCardDisplayProps {
-	user: User;
+interface ProductCardDisplayProps {
+	product: Product;
 }
 
-function UserCardDisplay({ user }: UserCardDisplayProps) {
+function ProductCardDisplay({ product }: ProductCardDisplayProps) {
 	return (
-		<Card className="p-2" data-user-id={user.id}>
+		<Card className="p-2" data-user-id={product.id}>
 			<CardHeader className="p-0 mb-2">
 				<CardTitle className="text-lg font-semibold">
-					{user.fullName}
+					{`${product.loanAmount} - ${product.branchName}`}
 				</CardTitle>
 			</CardHeader>
 			<div className="flex gap-x-2 justify-between">
 				<div>
 					<CardDescription className="text-sm text-muted-foreground">
-						Phone Number
+						Repay Amount
 					</CardDescription>
 					<CardContent className="p-0 text-start">
-						<p className="text-sm">{user.phoneNumber}</p>
+						<p className="text-sm">{product.repayAmount}</p>
 					</CardContent>
 				</div>
 				<div>
 					<CardDescription className="text-sm text-muted-foreground">
-						Email
+						Interest
 					</CardDescription>
 					<CardContent className="p-0 text-start">
-						<p className="text-sm">{user.email}</p>
+						<p className="text-sm">{product.interestAmount}</p>
 					</CardContent>
 				</div>
 			</div>
@@ -42,4 +41,4 @@ function UserCardDisplay({ user }: UserCardDisplayProps) {
 	);
 }
 
-export default UserCardDisplay;
+export default ProductCardDisplay;

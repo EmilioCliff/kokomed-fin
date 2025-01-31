@@ -12,6 +12,7 @@ import (
 type Querier interface {
 	AssignNonPosted(ctx context.Context, arg AssignNonPostedParams) (sql.Result, error)
 	CheckActiveLoanForClient(ctx context.Context, clientID uint32) (bool, error)
+	CountLoans(ctx context.Context, arg CountLoansParams) (int64, error)
 	CreateBranch(ctx context.Context, name string) (sql.Result, error)
 	CreateClient(ctx context.Context, arg CreateClientParams) (sql.Result, error)
 	CreateInstallment(ctx context.Context, arg CreateInstallmentParams) (sql.Result, error)
@@ -19,56 +20,8 @@ type Querier interface {
 	CreateNonPosted(ctx context.Context, arg CreateNonPostedParams) (sql.Result, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (sql.Result, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
-	// -- name: DashBoardDataHelper :one
-	// SELECT
-	//     -- Clients
-	//     (SELECT COUNT(*) FROM clients) AS total_clients,
-	//     (SELECT COUNT(*) FROM clients WHERE active = TRUE) AS active_clients,
-	//     -- Loans
-	//     (SELECT COUNT(*) FROM loans) AS total_loans,
-	//     (SELECT COUNT(*) FROM loans WHERE status = 'ACTIVE') AS active_loans,
-	//     (SELECT COUNT(*) FROM loans WHERE status = 'INACTIVE') AS inactive_loans,
-	//     -- Financials
-	//     COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(p.loan_amount)
-	//               FROM loans l
-	//               JOIN products p ON l.product_id = p.id)) AS total_loan_amount,
-	//     COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(p.loan_amount)
-	//               FROM loans l
-	//               JOIN products p ON l.product_id = p.id
-	//               WHERE l.status != 'INACTIVE')) AS total_loan_disbursed,
-	//     COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(p.loan_amount)
-	//               FROM loans l
-	//               JOIN products p ON l.product_id = p.id
-	//               WHERE l.status = 'COMPLETED')) AS total_loan_paid,
-	//     -- Non-posted
-	//     COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(amount) FROM non_posted)) AS total_payments_received,
-	//     COALESCE(sqlc.narg('loan_amount'), (SELECT SUM(amount) FROM non_posted WHERE assign_to IS NULL)) AS total_non_posted;
 	DashBoardDataHelper(ctx context.Context) (DashBoardDataHelperRow, error)
 	DashBoardInactiveLoans(ctx context.Context) ([]DashBoardInactiveLoansRow, error)
-	// -- name: DashBoardDataHelper :one
-	// SELECT
-	//     -- Clients
-	//     (SELECT COUNT(*) FROM clients) AS total_clients,
-	//     (SELECT COUNT(*) FROM clients WHERE active = TRUE) AS active_clients,
-	//     -- Loans
-	//     (SELECT COUNT(*) FROM loans) AS total_loans,
-	//     (SELECT COUNT(*) FROM loans WHERE status = 'ACTIVE') AS active_loans,
-	//     (SELECT COUNT(*) FROM loans WHERE status = 'INACTIVE') AS inactive_loans,
-	//     -- Financials
-	//     (SELECT SUM(p.loan_amount)
-	//      FROM loans l
-	//      JOIN products p ON l.product_id = p.id) AS total_loan_amount,
-	//     (SELECT SUM(p.loan_amount)
-	//      FROM loans l
-	//      JOIN products p ON l.product_id = p.id
-	//      WHERE l.status != 'INACTIVE') AS total_loan_disbursed,
-	//     (SELECT SUM(p.loan_amount)
-	//      FROM loans l
-	//      JOIN products p ON l.product_id = p.id
-	//      WHERE l.status = 'COMPLETED') AS total_loan_paid,
-	//     -- Non-posted
-	//     (SELECT SUM(amount) FROM non_posted) AS total_payments_received,
-	//     (SELECT SUM(amount) FROM non_posted WHERE assign_to IS NULL) AS total_non_posted;
 	DashBoardRecentsPayments(ctx context.Context) ([]DashBoardRecentsPaymentsRow, error)
 	DeleteBranch(ctx context.Context, id uint32) error
 	DeleteClient(ctx context.Context, id uint32) (sql.Result, error)

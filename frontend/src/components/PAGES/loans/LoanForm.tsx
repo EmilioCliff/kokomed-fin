@@ -5,7 +5,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addLoan } from '@/services/addLoan';
+import addLoan from '@/services/addLoan';
 import Spinner from '@/components/UI/Spinner';
 import {
 	Form,
@@ -26,20 +26,21 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LoanFormType, loanFormSchema } from './schema';
 import { useQuery } from '@tanstack/react-query';
-import { getLoanFormData } from '@/services/helpers';
 import { useAuth } from '@/hooks/useAuth';
+import getFormData from '@/services/getFormData';
+import { toast } from 'react-toastify';
 
-export default function LoanForm({
-	onFormOpen,
-}: {
+interface LoanFormProps {
 	onFormOpen: (isOpen: boolean) => void;
-}) {
+}
+
+export default function LoanForm({ onFormOpen }: LoanFormProps) {
 	const { decoded } = useAuth();
 
 	const { isLoading, data, error } = useQuery({
-		queryKey: ['loanFormData'],
-		queryFn: getLoanFormData,
-		staleTime: 30 * 1000,
+		queryKey: ['loans/form'],
+		queryFn: () => getFormData(true, true, true, false),
+		staleTime: 5 * 1000,
 	});
 
 	const form = useForm<LoanFormType>({
@@ -55,22 +56,27 @@ export default function LoanForm({
 			installmentsPeriod: 30,
 			processingFee: 0,
 			processingFeePaid: false,
-			// approvedBy: 0,
-			// disburseBy: 0,
-			// dob: '',
 		},
 	});
 	const queryClient = useQueryClient();
 
 	const mutation = useMutation({
-		mutationFn: addLoan,
+		mutationFn: (data: LoanFormType) => addLoan(data),
+		onError: (error: any) => {
+			toast.error(error);
+		},
 	});
 
 	function onSubmit(values: LoanFormType) {
 		mutation.mutate(values, {
-			// we will invalidate but generally we need to add the new loan into the state
-			onSuccess: () =>
-				queryClient.invalidateQueries({ queryKey: ['loans'] }),
+			onSuccess: (data) => {
+				queryClient.invalidateQueries({ queryKey: ['loans'] });
+				toast.success('Loan Added Successful');
+			},
+			onError: (error: any) => {
+				toast.error(error.message);
+			},
+			onSettled: () => mutation.reset(),
 		});
 		onFormOpen(false);
 	}
@@ -100,9 +106,9 @@ export default function LoanForm({
 								<FormItem>
 									<FormLabel>Product</FormLabel>
 									<FormControl>
-										{data?.products && (
+										{data?.product && (
 											<VirtualizeddSelect
-												options={data.products}
+												options={data.product}
 												placeholder="Select a product"
 												value={field.value}
 												onChange={(id) =>
@@ -122,9 +128,9 @@ export default function LoanForm({
 								<FormItem>
 									<FormLabel>Client</FormLabel>
 									<FormControl>
-										{data?.clients && (
+										{data?.client && (
 											<VirtualizeddSelect
-												options={data.clients}
+												options={data.client}
 												placeholder="Select a client"
 												value={field.value}
 												onChange={(id) =>
@@ -144,9 +150,9 @@ export default function LoanForm({
 								<FormItem>
 									<FormLabel>Loan Officer</FormLabel>
 									<FormControl>
-										{data?.loanOfficers && (
+										{data?.user && (
 											<VirtualizeddSelect
-												options={data.loanOfficers}
+												options={data.user}
 												placeholder="Select a loan officer"
 												value={field.value}
 												onChange={(id) =>
@@ -292,7 +298,7 @@ export default function LoanForm({
 								name="disburseOn"
 								render={({ field }) => (
 									<FormItem className="flex flex-col">
-										<FormLabel>Date of birth</FormLabel>
+										<FormLabel>Disburse On</FormLabel>
 										<Popover>
 											<PopoverTrigger asChild>
 												<FormControl>
@@ -351,8 +357,7 @@ export default function LoanForm({
 											</PopoverContent>
 										</Popover>
 										<FormDescription>
-											Your date of birth is used to
-											calculate your age.
+											Defaults to today
 										</FormDescription>
 										<FormMessage />
 									</FormItem>

@@ -14,13 +14,12 @@ import (
 
 type userResponse struct {
 	ID          uint32    `json:"id"`
-	Fullname    string    `json:"fullname"`
+	Fullname    string    `json:"fullName"`
 	Email       string    `json:"email"`
-	PhoneNumber string    `json:"phone_number"`
+	PhoneNumber string    `json:"phoneNumber"`
 	Role        string    `json:"role"`
-	BranchName  string    `json:"branch_name"`
-	CreatedAt   time.Time `json:"created_at"`
-	// RefreshToken string    `json:"refresh_token"`
+	BranchName  string    `json:"branchName"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type createUserRequest struct {

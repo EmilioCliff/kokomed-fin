@@ -1,12 +1,25 @@
-import api from "@/API/api";
-import { Loan } from "@/components/PAGES/loans/schema";
-import { LoanFormType } from "@/components/PAGES/loans/schema";
+import api from '@/API/api';
+import { LoanFormType } from '@/components/PAGES/loans/schema';
+import { commonresponse } from '@/lib/types';
 
-// should return loan
-export const addLoan = async (data: LoanFormType) => {
-  const response = await api
-    .post<LoanFormType>("/loanForm", data)
-    .then((resp) => resp.data);
-  console.log(response);
-  return response;
+const addLoan = async (data: LoanFormType) => {
+	try {
+		const response = await api
+			.post<commonresponse>('/loan', data)
+			.then((resp) => resp.data);
+
+		if (response.message) {
+			throw new Error(response.message);
+		}
+
+		return response;
+	} catch (error: any) {
+		if (error.response) {
+			throw new Error(error.response.data.message);
+		}
+
+		throw new Error(error.message);
+	}
 };
+
+export default addLoan;

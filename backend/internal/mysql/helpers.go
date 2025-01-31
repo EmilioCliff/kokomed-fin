@@ -128,11 +128,11 @@ func (r *HelperRepository) GetProductData(ctx context.Context) ([]repository.Pro
 	}
 
 	rsp := make([]repository.ProductData, len(products))
-	for _, product := range products {
-		rsp = append(rsp, repository.ProductData{
+	for idx, product := range products {
+		rsp[idx] = repository.ProductData{
 			ID: product.Productid,
-			Name: fmt.Sprintf("%f %s", product.Loanamount, product.Branchname),
-		})
+			Name: fmt.Sprintf("%.2f %s", product.Loanamount, product.Branchname),
+		}
 	}
 
 	return rsp, nil
@@ -148,11 +148,11 @@ func (r *HelperRepository) GetClientData(ctx context.Context) ([]repository.Clie
 	}
 
 	rsp := make([]repository.ClientData, len(clients))
-	for _, client := range clients {
-		rsp = append(rsp, repository.ClientData{
+	for idx, client := range clients {
+		rsp[idx] = repository.ClientData{
 			ID: client.ID,
 			Name: client.FullName,
-		})
+		}
 	}
 
 	return rsp, nil
@@ -168,11 +168,11 @@ func (r *HelperRepository) GetLoanOfficerData(ctx context.Context) ([]repository
 	}
 
 	rsp := make([]repository.LoanOfficerData, len(users))
-	for _, user := range users {
-		rsp = append(rsp, repository.LoanOfficerData{
+	for idx, user := range users {
+		rsp[idx] = repository.LoanOfficerData{
 			ID: user.ID,
 			Name: user.FullName,
-		})
+		}
 	}
 
 	return rsp, nil

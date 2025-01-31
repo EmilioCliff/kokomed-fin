@@ -94,8 +94,8 @@ func (r *UserRepository) UpdateUserPassword(ctx context.Context, email string, p
 
 func (r *UserRepository) ListUsers(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.User, error) {
 	users, err := r.queries.ListUsers(ctx, generated.ListUsersParams{
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
+		Limit:  int32(pgData.PageSize),
+		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {

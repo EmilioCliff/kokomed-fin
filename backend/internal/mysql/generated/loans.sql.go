@@ -26,6 +26,45 @@ func (q *Queries) CheckActiveLoanForClient(ctx context.Context, clientID uint32)
 	return has_active_loan, err
 }
 
+const countLoans = `-- name: CountLoans :one
+SELECT COUNT(*) AS total_loans 
+FROM loans l
+JOIN products p ON l.product_id = p.id
+JOIN clients c ON l.client_id = c.id
+JOIN users u ON l.loan_officer = u.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(u.full_name) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(l.status, ?) > 0
+    )
+`
+
+type CountLoansParams struct {
+	Column1    interface{} `json:"column_1"`
+	FullName   string      `json:"full_name"`
+	FullName_2 string      `json:"full_name_2"`
+	Column4    interface{} `json:"column_4"`
+	FINDINSET  string      `json:"FIND_IN_SET"`
+}
+
+func (q *Queries) CountLoans(ctx context.Context, arg CountLoansParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countLoans,
+		arg.Column1,
+		arg.FullName,
+		arg.FullName_2,
+		arg.Column4,
+		arg.FINDINSET,
+	)
+	var total_loans int64
+	err := row.Scan(&total_loans)
+	return total_loans, err
+}
+
 const createLoan = `-- name: CreateLoan :execresult
 INSERT INTO loans (product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, fee_paid, created_by) 
 VALUES (
@@ -208,28 +247,34 @@ func (q *Queries) GetLoanPaymentData(ctx context.Context, id uint32) (GetLoanPay
 const listLoans = `-- name: ListLoans :many
 SELECT 
     l.id, l.product_id, l.client_id, l.loan_officer, l.loan_purpose, l.due_date, l.approved_by, l.disbursed_on, l.disbursed_by, l.total_installments, l.installments_period, l.status, l.processing_fee, l.paid_amount, l.updated_by, l.created_by, l.created_at, l.fee_paid, 
-    p.branch_id 
+    p.branch_id,
+    c.full_name AS client_name,
+    u.full_name AS loan_officer_name
 FROM loans l
 JOIN products p ON l.product_id = p.id
+JOIN clients c ON l.client_id = c.id
+JOIN users u ON l.loan_officer = u.id
 WHERE 
-    (? IS NULL OR p.branch_id = ?)
-    AND (? IS NULL OR l.client_id = ?)
-    AND (? IS NULL OR l.loan_officer = ?)
-    AND (? IS NULL OR l.status = ?)
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(u.full_name) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(l.status, ?) > 0
+    )
 LIMIT ? OFFSET ?
 `
 
 type ListLoansParams struct {
-	Column1     interface{} `json:"column_1"`
-	BranchID    uint32      `json:"branch_id"`
-	Column3     interface{} `json:"column_3"`
-	ClientID    uint32      `json:"client_id"`
-	Column5     interface{} `json:"column_5"`
-	LoanOfficer uint32      `json:"loan_officer"`
-	Column7     interface{} `json:"column_7"`
-	Status      LoansStatus `json:"status"`
-	Limit       int32       `json:"limit"`
-	Offset      int32       `json:"offset"`
+	Column1    interface{} `json:"column_1"`
+	FullName   string      `json:"full_name"`
+	FullName_2 string      `json:"full_name_2"`
+	Column4    interface{} `json:"column_4"`
+	FINDINSET  string      `json:"FIND_IN_SET"`
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
 }
 
 type ListLoansRow struct {
@@ -252,18 +297,17 @@ type ListLoansRow struct {
 	CreatedAt          time.Time      `json:"created_at"`
 	FeePaid            bool           `json:"fee_paid"`
 	BranchID           uint32         `json:"branch_id"`
+	ClientName         string         `json:"client_name"`
+	LoanOfficerName    string         `json:"loan_officer_name"`
 }
 
 func (q *Queries) ListLoans(ctx context.Context, arg ListLoansParams) ([]ListLoansRow, error) {
 	rows, err := q.db.QueryContext(ctx, listLoans,
 		arg.Column1,
-		arg.BranchID,
-		arg.Column3,
-		arg.ClientID,
-		arg.Column5,
-		arg.LoanOfficer,
-		arg.Column7,
-		arg.Status,
+		arg.FullName,
+		arg.FullName_2,
+		arg.Column4,
+		arg.FINDINSET,
 		arg.Limit,
 		arg.Offset,
 	)
@@ -294,6 +338,8 @@ func (q *Queries) ListLoans(ctx context.Context, arg ListLoansParams) ([]ListLoa
 			&i.CreatedAt,
 			&i.FeePaid,
 			&i.BranchID,
+			&i.ClientName,
+			&i.LoanOfficerName,
 		); err != nil {
 			return nil, err
 		}

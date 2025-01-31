@@ -70,51 +70,96 @@ func (t *LoanRepository) GetClientActiceLoan(ctx context.Context, clientID uint3
 	return loanID, nil
 }
 
-func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.Loan, error) {
+func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.Loan, pkg.PaginationMetadata, error) {
+	// params := generated.ListLoansParams{
+	// 	Column1:     nil, // Placeholder for branch_id
+	// 	BranchID:    0,   // Default value
+	// 	Column3:     nil, // Placeholder for client_id
+	// 	ClientID:    0,   // Default value
+	// 	Column5:     nil, // Placeholder for loan_officer
+	// 	LoanOfficer: 0,   // Default value
+	// 	Column7:     nil, // Placeholder for status
+	// 	Status:      "",  // Default value
+	// 	Limit: 		 int32(pgData.PageSize),
+	// 	Offset:      int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+	// }
+	// // Limit:       int32(pkg.GetPageSize()),
+
+	// // Set dynamic parameters based on the input category
+	// if category.BranchID != nil {
+	// 	params.Column1 = true // Any non-nil value to trigger this filter
+	// 	params.BranchID = *category.BranchID
+	// }
+
+	// if category.ClientID != nil {
+	// 	params.Column3 = true
+	// 	params.ClientID = *category.ClientID
+	// }
+
+	// if category.LoanOfficer != nil {
+	// 	params.Column5 = true
+	// 	params.LoanOfficer = *category.LoanOfficer
+	// }
+
+	// if category.Status != nil {
+	// 	params.Column7 = true
+	// 	params.Status = generated.LoansStatus(pkg.PtrToStr(category.Status))
+	// }
+
 	params := generated.ListLoansParams{
-		Column1:     nil, // Placeholder for branch_id
-		BranchID:    0,   // Default value
-		Column3:     nil, // Placeholder for client_id
-		ClientID:    0,   // Default value
-		Column5:     nil, // Placeholder for loan_officer
-		LoanOfficer: 0,   // Default value
-		Column7:     nil, // Placeholder for status
-		Status:      "",  // Default value
-		Limit:       int32(pkg.GetPageSize()),
-		Offset:      int32(pkg.CalculateOffset(pgData.CurrentPage)),
+		Column1: "",
+		FullName:   "", // Placeholder for client_name or loan_officer_name
+		FullName_2: "", // Another placeholder for name search
+		Column4: "",
+		FINDINSET: "", // Placeholder for multiple statuses
+		Limit:    int32(pgData.PageSize),
+		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	}
 
-	// Set dynamic parameters based on the input category
-	if category.BranchID != nil {
-		params.Column1 = true // Any non-nil value to trigger this filter
-		params.BranchID = *category.BranchID
+	params2 := generated.CountLoansParams{
+		Column1: "",
+		FullName:   "", // Placeholder for client_name or loan_officer_name
+		FullName_2: "", // Another placeholder for name search
+		Column4: "",
+		FINDINSET: "", // Placeholder for multiple statuses
 	}
 
-	if category.ClientID != nil {
-		params.Column3 = true
-		params.ClientID = *category.ClientID
+	if category.Search != nil {
+		searchValue := "%" + *category.Search + "%"
+		params.Column1 = "has_search"
+		params.FullName = searchValue
+		params.FullName_2 = searchValue
+
+		params2.Column1 = "has_search"
+		params2.FullName = searchValue
+		params2.FullName_2 = searchValue
 	}
 
-	if category.LoanOfficer != nil {
-		params.Column5 = true
-		params.LoanOfficer = *category.LoanOfficer
+	if category.Statuses != nil {
+		params.Column4 = "has_status"
+		params2.Column4 = "has_status"		
+		params.FINDINSET = *category.Statuses
+		params2.FINDINSET = *category.Statuses
 	}
 
-	if category.Status != nil {
-		params.Column7 = true
-		params.Status = generated.LoansStatus(*category.Status)
-	}
+	log.Println(params)
 
-	// Execute the query
 	loans, err := r.queries.ListLoans(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
 		}
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans: %s", err.Error())
 	}
 
-	log.Println(len(loans))
+	// log.Println(loans)
+
+	totalLoans, err := r.queries.CountLoans(ctx, params2)
+	if err != nil {
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
+	}
+
+	log.Println(totalLoans)
 
 	result := make([]repository.Loan, len(loans))
 
@@ -141,7 +186,7 @@ func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Cat
 		})
 	}
 
-	return result, nil
+	return result, pkg.CreatePaginationMetadata(uint32(totalLoans), pgData.PageSize, pgData.CurrentPage), nil
 }
 
 func (r *LoanRepository) DeleteLoan(ctx context.Context, id uint32) error {
@@ -160,8 +205,8 @@ func (r *LoanRepository) DeleteLoan(ctx context.Context, id uint32) error {
 func (r *LoanRepository) GetLoanInstallments(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]repository.Installment, error) {
 	installments, err := r.queries.ListInstallmentsByLoan(ctx, generated.ListInstallmentsByLoanParams{
 		LoanID: id,
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
+		Limit: int32(pgData.PageSize),
+		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {

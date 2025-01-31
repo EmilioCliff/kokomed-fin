@@ -1,53 +1,42 @@
-import api from "@/API/api";
-import { getLoansType } from "@/lib/types";
-import { Loan } from "@/components/PAGES/loans/schema";
-import { tableFilterType } from "@/lib/types";
+import api from '@/API/api';
+import { Loan } from '@/components/PAGES/loans/schema';
+import { tableFilterType } from '@/lib/types';
+import { getLoansType } from '@/lib/types';
 
 export const getLoans = async (
-  pageNumber: number,
-  pageSize: number,
-  filter: tableFilterType,
-  search: string
+	pageNumber: number,
+	pageSize: number,
+	filter: tableFilterType,
+	search: string,
 ) => {
-  try {
-    // if filter has options then add them to the url
-    if (filter.options.length > 0 || search) {
-      let baseUrl = `/loans?`;
+	try {
+		let baseUrl = `/loan?limit=${pageSize}&page=${pageNumber + 1}`;
 
-      if (search) {
-        baseUrl = baseUrl + `client.fullName_like=${encodeURIComponent(search)}`;
-      }
-      // &loanOfficer.fullName_like=${encodeURIComponent(search)}
+		if (search) {
+			baseUrl = baseUrl + `&search=${encodeURIComponent(search)}`;
+		}
 
-      if (filter.options.length > 0) {
-        filter.options.forEach(({ value }) => {
-          baseUrl += `&_limit=${pageSize}&_page=${
-            pageNumber + 1
-          }&status=${encodeURIComponent(value.toUpperCase())}`;
-        });
-      }
+		if (filter.options.length > 0) {
+			const statuses = filter.options
+				.map(({ value }) => value.toUpperCase())
+				.join(',');
+			baseUrl += `&status=${encodeURIComponent(statuses)}`;
+		}
 
-      console.log(baseUrl);
+		const response = await api
+			.get<getLoansType>(baseUrl)
+			.then((res) => res.data);
 
-      const response = await api.get<Loan[]>(baseUrl).then((res) => res.data);
-      return response;
-    }
+		if (response.message) {
+			throw new Error(response.message);
+		}
 
-    const response = await api
-      .get<Loan[]>(`/loans?_limit=${pageSize}&_page=${pageNumber + 1}`)
-      .then((res) => res.data);
+		return response;
+	} catch (error: any) {
+		if (error.response) {
+			throw new Error(error.response.data.message);
+		}
 
-    // console.log(response);
-
-    // if i get a metadata use the z to parse it then return parsed data
-
-    // if (response.status === 'Failure') {
-    //   // show error using toast
-    //   throw new Error(response.error);
-    // }
-
-    return response;
-  } catch (error) {
-    console.error(error);
-  }
+		throw new Error(error.message);
+	}
 };

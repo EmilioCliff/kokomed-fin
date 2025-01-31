@@ -10,10 +10,10 @@ import (
 
 type productResponse struct {
 	ID             uint32    `json:"id"`
-	BranchName     string    `json:"branch_name"`
-	LoanAmount     float64   `json:"loan_amount"`
-	RepayAmount    float64   `json:"repay_amount"`
-	InterestAmount float64   `json:"interest_amount"`
+	BranchName     string    `json:"branchName"`
+	LoanAmount     float64   `json:"loanAmount"`
+	RepayAmount    float64   `json:"repayAmount"`
+	InterestAmount float64   `json:"interestAmount"`
 }
 // UpdatedBy      uint32    `json:"updated_by"`
 // UpdatedAt      time.Time `json:"updated_at"`

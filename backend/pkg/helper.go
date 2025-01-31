@@ -17,6 +17,8 @@ func StringToUint32(s string) (uint32, error) {
 	return uint32(id), nil
 }
 
+func PtrToStr(s *string) string {return *s}
+
 // StringPtr returns a pointer to the given string.
 func StringPtr(s string) *string { return &s }
 

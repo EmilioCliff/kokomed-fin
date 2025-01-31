@@ -61,9 +61,8 @@ type UpdateInstallment struct {
 
 type Category struct {
 	BranchID    *uint32 `json:"branch_id"`
-	ClientID    *uint32 `json:"client_id"`
-	LoanOfficer *uint32 `json:"loan_officer"`
-	Status      *string `json:"status"`
+	Search *string `json:"string"`
+	Statuses *string 	`json:"statuses"`
 }
 
 type LoansRepository interface {
@@ -72,7 +71,7 @@ type LoansRepository interface {
 	TransferLoan(ctx context.Context, officerId uint32, loanId uint32, adminId uint32) error
 	GetLoanByID(ctx context.Context, id uint32) (Loan, error)
 	GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error)
-	ListLoans(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]Loan, error)
+	ListLoans(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]Loan, pkg.PaginationMetadata, error)
 	DeleteLoan(ctx context.Context, id uint32) error
 
 	// use client overpayment to pay loan

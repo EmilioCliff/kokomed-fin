@@ -25,8 +25,8 @@ func NewProductRepository(db *Store) *ProductRepository {
 
 func (r *ProductRepository) GetAllProducts(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.Product, error) {
 	products, err := r.queries.ListProducts(ctx, generated.ListProductsParams{
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
+		Limit:  int32(pgData.PageSize),
+		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -61,8 +61,8 @@ func (r *ProductRepository) GetProductByID(ctx context.Context, id uint32) (repo
 func (r *ProductRepository) ListProductByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]repository.Product, error) {
 	products, err := r.queries.ListProductsByBranch(ctx, generated.ListProductsByBranchParams{
 		BranchID: branchID,
-		Limit:    pkg.GetPageSize(),
-		Offset:   pkg.CalculateOffset(pgData.CurrentPage),
+		Limit:    int32(pgData.PageSize),
+		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {

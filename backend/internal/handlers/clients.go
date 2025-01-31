@@ -11,18 +11,18 @@ import (
 
 type clientResponse struct {
 	ID            uint32            `json:"id"`
-	FullName          string            `json:"full_name"`
-	PhoneNumber   string            `json:"phone_number"`
-	IdNumber      string            `json:"id_number"`
+	FullName          string            `json:"fullName"`
+	PhoneNumber   string            `json:"phoneNumber"`
+	IdNumber      string            `json:"idNumber"`
 	Dob           string            `json:"dob"`
 	Gender        string            `json:"gender"`
 	Active        bool              `json:"active"`
-	BranchName    string            `json:"branch_name"`
-	AssignedStaff userShortResponse `json:"assigned_staff"` 
+	BranchName    string            `json:"branchName"`
+	AssignedStaff userShortResponse `json:"assignedStaff"` 
 	Overpayment   float64           `json:"overpayment"`
-	DueAmount float64 `json:"due_amount"`
-	CreatedBy     userShortResponse `json:"created_by"` 
-	CreatedAt     time.Time         `json:"created_at"`
+	DueAmount float64 `json:"dueAmount"`
+	CreatedBy     userShortResponse `json:"createdBy"` 
+	CreatedAt     time.Time         `json:"createdAt"`
 }
 // UpdatedBy     userShortResponse `json:"updated_by"` 
 // UpdatedAt     time.Time         `json:"updated_at"`

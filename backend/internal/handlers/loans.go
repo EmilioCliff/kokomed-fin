@@ -11,24 +11,24 @@ import (
 )
 
 type loanResponse struct {
-	ID                 uint32
-	Product            productResponse
-	Client             clientResponse
-	LoanOfficer        userResponse
-	LoanPurpose        string
-	DueDate            time.Time
-	ApprovedBy         userResponse
-	DisbursedOn        time.Time
-	DisbursedBy        userResponse
-	TotalInstallments  uint32
-	InstallmentsPeriod uint32
-	Status             string
-	ProcessingFee      float64
-	FeePaid            bool
-	PaidAmount         float64
-	UpdatedBy          userResponse
-	CreatedBy          userResponse
-	CreatedAt          time.Time
+	ID                 uint32	`json:"id"`
+	Product            productResponse	`json:"product"`
+	Client             clientResponse	`json:"client"`
+	LoanOfficer        userResponse	`json:"loanOfficer"`
+	LoanPurpose        string	`json:"loanPurpose"`
+	DueDate            time.Time	`json:"dueDate"`
+	ApprovedBy         userResponse	`json:"approvedBy"`
+	DisbursedOn        time.Time	`json:"disbursedOn"`
+	DisbursedBy        userResponse	`json:"disbursedBy"`
+	TotalInstallments  uint32	`json:"totalInstallments"`
+	InstallmentsPeriod uint32	`json:"installmentsPeriod"`
+	Status             string	`json:"status"`
+	ProcessingFee      float64	`json:"processingFee"`
+	FeePaid            bool	`json:"feePaid"`
+	PaidAmount         float64	`json:"paidAmount"`
+	UpdatedBy          userResponse	`json:"updatedBy"`
+	CreatedBy          userResponse	`json:"createdBy"`
+	CreatedAt          time.Time	`json:"createdAt"`
 }
 
 // type loanProductResponse struct {
@@ -66,18 +66,16 @@ type loanResponse struct {
 // }
 
 type createLoanRequest struct {
-	ProductID          uint32  `binding:"required" json:"product_id"`
-	ClientID           uint32  `binding:"required" json:"client_id"`
-	LoanOfficerID      uint32  `binding:"required" json:"loan_officer_id"`
-	LoanPurpose        string  `                   json:"loan_purpose"`
-	ApprovedBy         uint32  `binding:"required" json:"approved_by"`
-	Disbursed	bool `binding:"required" json:"disbursed"`
-	DisburseBy         uint32  `                   json:"disburse_by"`
-	DisburseOn         string  `                   json:"disburse_on"`
+	ProductID          uint32  `binding:"required" json:"productId"`
+	ClientID           uint32  `binding:"required" json:"clientId"`
+	LoanOfficerID      uint32  `binding:"required" json:"loanOfficerId"`
+	LoanPurpose        string  `                   json:"loanPurpose"`
+	Disburse		   bool    `				   json:"disburse"`
+	DisburseOn         string  `                   json:"disburseOn"`
 	Installments       uint32  `binding:"required" json:"installments"`
-	InstallmentsPeriod uint32  `binding:"required" json:"installments_period"`
-	ProcessingFee      float64 `binding:"required" json:"processing_fee"`
-	ProcessingFeePaid  bool    `                   json:"processing_fee_paid"`
+	InstallmentsPeriod uint32  `binding:"required" json:"installmentsPeriod"`
+	ProcessingFee      float64 `binding:"required" json:"processingFee"`
+	ProcessingFeePaid  bool    `				   json:"processingFeePaid"`
 }
 
 func (s *Server) createLoan(ctx *gin.Context) {
@@ -88,42 +86,51 @@ func (s *Server) createLoan(ctx *gin.Context) {
 		return
 	}
 
-	// approved by get from token
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
 
-	// if disburse is true then disbursed by and disbursed on are required
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
 
 	params := repository.Loan{
 		ProductID:          req.ProductID,
 		ClientID:           req.ClientID,
 		LoanOfficerID:      req.LoanOfficerID,
-		ApprovedBy:         req.ApprovedBy,
+		ApprovedBy:         payloadData.UserID,
 		TotalInstallments:  req.Installments,
 		InstallmentsPeriod: req.InstallmentsPeriod,
 		ProcessingFee:      req.ProcessingFee,
 		FeePaid:            false,
-		CreatedBy:          req.ApprovedBy,
+		CreatedBy:          payloadData.UserID,
 	}
 
 	if req.ProcessingFeePaid {
 		params.FeePaid = true
 	}
 
-	if req.DisburseOn != "" && req.DisburseBy != 0 {
-		disburseDate, err := time.Parse("2006-01-02", req.DisburseOn)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid disburse_on date format")))
-
-			return
-		}
-
+	if req.Disburse {
+		var err error
+		disburseDate := time.Now()
+		if req.DisburseOn != "" {
+			disburseDate, err = time.Parse("2006-01-02", req.DisburseOn)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid disburse_on date format")))
+	
+				return
+			}
+		} 
 		params.DisbursedOn = pkg.TimePtr(disburseDate)
-		params.DisbursedBy = pkg.Uint32Ptr(req.DisburseBy)
+		params.DisbursedBy = pkg.Uint32Ptr(payloadData.UserID)
 
 		params.DueDate = pkg.TimePtr(disburseDate.AddDate(0, 0, int(req.Installments)*int(req.InstallmentsPeriod)))
-	} else if req.DisburseOn != "" || req.DisburseBy != 0 {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "both disburse_on and disburse_by are required if one is provided")))
-
-		return
 	}
 
 	if req.LoanPurpose != "" {
@@ -251,6 +258,13 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 		return
 	}
 
+	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
 	params := repository.Category{}
 
 	b := ctx.Query("branch")
@@ -265,36 +279,23 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 		params.BranchID = pkg.Uint32Ptr(branchID)
 	}
 
-	c := ctx.Query("client")
-	if c != "" {
-		clientID, err := pkg.StringToUint32(c)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
-
-			return
-		}
-
-		params.ClientID = pkg.Uint32Ptr(clientID)
-	}
-
-	l := ctx.Query("loan_officer")
-	if l != "" {
-		loanOfficer, err := pkg.StringToUint32(l)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
-
-			return
-		}
-
-		params.LoanOfficer = pkg.Uint32Ptr(loanOfficer)
+	search := ctx.Query("search")
+	if search != "" {
+		params.Search = pkg.StringPtr(strings.ToLower(search))
 	}
 
 	status := ctx.Query("status")
 	if status != "" {
-		params.Status = pkg.StringPtr(strings.ToUpper(ctx.Param("status")))
+		statuses := strings.Split(status, ",")
+		
+		for i := range statuses {
+			statuses[i] = strings.TrimSpace(statuses[i])
+		}
+		
+		params.Statuses = pkg.StringPtr(strings.Join(statuses, ","))
 	}
 
-	loans, err := s.repo.Loans.ListLoans(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo})
+	loans, pgData, err := s.repo.Loans.ListLoans(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -312,7 +313,10 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 		}
 	}
 
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": pgData,
+		"data": rsp, 
+	})
 }
 
 func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanResponse, error) {
@@ -355,7 +359,7 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 	}
 
 	disbursedBy := userResponse{}
-
+	
 	if loan.DisbursedBy != nil {
 		disbursedByUser, err := s.repo.Users.GetUserByID(ctx, *loan.DisbursedBy)
 		if err != nil {
@@ -365,7 +369,8 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 		disbursedBy = userResponse{
 			ID:       disbursedByUser.ID,
 			Fullname: disbursedByUser.FullName,
-			Role:     disbursedByUser.Role,
+			Email: disbursedByUser.Email,
+			PhoneNumber: disbursedByUser.PhoneNumber,
 		}
 	}
 
@@ -380,7 +385,8 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 		updatedBy = userResponse{
 			ID:       updatedByUser.ID,
 			Fullname: updatedByUser.FullName,
-			Role:     updatedByUser.Role,
+			Email: updatedByUser.Email,
+			PhoneNumber: updatedBy.PhoneNumber,
 		}
 	}
 
@@ -392,7 +398,8 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 	createdBy := userResponse{
 		ID:       createdByUser.ID,
 		Fullname: createdByUser.FullName,
-		Role:     createdByUser.Role,
+		Email: createdByUser.Email,
+		PhoneNumber: createdByUser.PhoneNumber,
 	}
 
 	if loan.DueDate == nil {
@@ -405,11 +412,6 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 
 	if loan.LoanPurpose == nil {
 		loan.LoanPurpose = pkg.StringPtr("")
-	}
-
-	dob := ""
-	if client.Dob != nil {
-		dob = client.Dob.Format("2006-01-02")
 	}
 
 	return loanResponse{
@@ -425,17 +427,23 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 			ID:          client.ID,
 			FullName:        client.FullName,
 			PhoneNumber: client.PhoneNumber,
-			IdNumber:    *client.IdNumber,
-			Dob:         dob,
-			Gender:      client.Gender,
 			Active:      client.Active,
 			BranchName:  clientBranch.Name,
-			Overpayment: client.Overpayment,
 		},
-		LoanOfficer:        userResponse{ID: loanOfficer.ID, Fullname: loanOfficer.FullName, Role: loanOfficer.Role},
+		LoanOfficer:        userResponse{
+			ID:       loanOfficer.ID,
+			Fullname: loanOfficer.FullName,
+			Email: loanOfficer.Email,
+			PhoneNumber: loanOfficer.PhoneNumber,
+		},
 		LoanPurpose:        *loan.LoanPurpose,
 		DueDate:            *loan.DueDate,
-		ApprovedBy:         userResponse{ID: approvedBy.ID, Fullname: approvedBy.FullName, Role: approvedBy.Role},
+		ApprovedBy:         userResponse{
+			ID:       approvedBy.ID,
+			Fullname: approvedBy.FullName,
+			Email: approvedBy.Email,
+			PhoneNumber: approvedBy.PhoneNumber,
+		},
 		DisbursedOn:        *loan.DisbursedOn,
 		DisbursedBy:        disbursedBy,
 		TotalInstallments:  loan.TotalInstallments,
@@ -445,7 +453,7 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 		FeePaid:            loan.FeePaid,
 		PaidAmount:         loan.PaidAmount,
 		UpdatedBy:          updatedBy,
-		CreatedBy:          userResponse{ID: createdBy.ID, Fullname: createdBy.Fullname, Role: createdBy.Role},
+		CreatedBy:          createdBy,
 		CreatedAt:          loan.CreatedAt,
 	}, nil
 }

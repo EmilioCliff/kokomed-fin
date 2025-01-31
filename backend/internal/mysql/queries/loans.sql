@@ -43,15 +43,42 @@ SELECT id FROM loans WHERE client_id = ? AND status = ? LIMIT 1;
 -- name: ListLoans :many
 SELECT 
     l.*, 
-    p.branch_id 
+    p.branch_id,
+    c.full_name AS client_name,
+    u.full_name AS loan_officer_name
 FROM loans l
 JOIN products p ON l.product_id = p.id
+JOIN clients c ON l.client_id = c.id
+JOIN users u ON l.loan_officer = u.id
 WHERE 
-    (? IS NULL OR p.branch_id = ?)
-    AND (? IS NULL OR l.client_id = ?)
-    AND (? IS NULL OR l.loan_officer = ?)
-    AND (? IS NULL OR l.status = ?)
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(u.full_name) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(l.status, ?) > 0
+    )
 LIMIT ? OFFSET ?;
+
+
+-- name: CountLoans :one
+SELECT COUNT(*) AS total_loans 
+FROM loans l
+JOIN products p ON l.product_id = p.id
+JOIN clients c ON l.client_id = c.id
+JOIN users u ON l.loan_officer = u.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(u.full_name) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(l.status, ?) > 0
+    );
 
 -- name: DeleteLoan :exec
 DELETE FROM loans WHERE id = ?;

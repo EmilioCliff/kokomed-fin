@@ -1,1 +1,38 @@
 $ curl -L https://github.com/golang-migrate/migrate/releases/download/$version/migrate.$os-$arch.tar.gz | tar xvz
+
+
+-- -- name: ListLoans :many
+-- SELECT 
+--     l.*, 
+--     p.branch_id 
+-- FROM loans l
+-- JOIN products p ON l.product_id = p.id
+-- WHERE 
+--     (? IS NULL OR p.branch_id = ?)
+--     AND (? IS NULL OR l.client_id = ?)
+--     AND (? IS NULL OR l.loan_officer = ?)
+--     AND (? IS NULL OR l.status = ?)
+-- LIMIT ? OFFSET ?;
+
+-- -- name: ListLoans :many
+-- SELECT 
+--     l.*, 
+--     p.branch_id,
+--     c.full_name AS client_name,
+--     u.full_name AS loan_officer_name
+-- FROM loans l
+-- JOIN products p ON l.product_id = p.id
+-- JOIN clients c ON l.client_id = c.id
+-- JOIN users u ON l.loan_officer = u.id
+-- WHERE 
+--     (? IS NULL OR p.branch_id = ?)
+--     AND (
+--         ? IS NULL 
+--         OR c.full_name ILIKE '%' || ? || '%'
+--         OR u.full_name ILIKE '%' || ? || '%'
+--     )
+--     AND (
+--         ? IS NULL 
+--         OR l.status = ANY (?)
+--     )
+-- LIMIT ? OFFSET ?;

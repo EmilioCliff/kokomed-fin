@@ -72,8 +72,8 @@ func (r *NonPostedRepository) GetNonPosted(ctx context.Context, id uint32) (repo
 
 func (r *NonPostedRepository) ListNonPosted(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.NonPosted, error) {
 	nonPosteds, err := r.queries.ListAllNonPosted(ctx, generated.ListAllNonPostedParams{
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
+		Limit:  int32(pgData.PageSize),
+		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -94,8 +94,8 @@ func (r *NonPostedRepository) ListNonPosted(ctx context.Context, pgData *pkg.Pag
 
 func (r *NonPostedRepository) ListUnassignedNonPosted(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.NonPosted, error) {
 	nonPosteds, err := r.queries.ListUnassignedNonPosted(ctx, generated.ListUnassignedNonPostedParams{
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
+		Limit:  int32(pgData.PageSize),
+		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -121,8 +121,8 @@ func (r *NonPostedRepository) ListNonPostedByTransactionSource(
 ) ([]repository.NonPosted, error) {
 	nonPosteds, err := r.queries.ListNonPostedByTransactionSource(ctx, generated.ListNonPostedByTransactionSourceParams{
 		TransactionSource: generated.NonPostedTransactionSource(strings.ToUpper(transactionSource)),
-		Limit:             pkg.GetPageSize(),
-		Offset:            pkg.CalculateOffset(pgData.CurrentPage),
+		Limit:             int32(pgData.PageSize),
+		Offset:            int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {

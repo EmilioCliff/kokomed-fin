@@ -113,8 +113,8 @@ func (r *ClientRepository) UpdateClientOverpayment(ctx context.Context, phoneNum
 
 func (r *ClientRepository) ListClients(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {
 	clients, err := r.queries.ListClients(ctx, generated.ListClientsParams{
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
+		Limit:  int32(pgData.PageSize),
+		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -160,8 +160,8 @@ func (r *ClientRepository) GetClientIDByPhoneNumber(ctx context.Context, phoneNu
 
 func (r *ClientRepository) ListClientsByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {
 	clients, err := r.queries.ListClientsByBranch(ctx, generated.ListClientsByBranchParams{
-		Limit:    pkg.GetPageSize(),
-		Offset:   pkg.CalculateOffset(pgData.CurrentPage),
+		Limit:    int32(pgData.PageSize),
+		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 		BranchID: branchID,
 	})
 	if err != nil {
@@ -182,8 +182,8 @@ func (r *ClientRepository) ListClientsByBranch(ctx context.Context, branchID uin
 
 func (r *ClientRepository) ListClientsByActiveStatus(ctx context.Context, active bool, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {
 	clients, err := r.queries.ListClientsByActiveStatus(ctx, generated.ListClientsByActiveStatusParams{
-		Limit:  pkg.GetPageSize(),
-		Offset: pkg.CalculateOffset(pgData.CurrentPage),
+		Limit:  int32(pgData.PageSize),
+		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 		Active: active,
 	})
 	if err != nil {
