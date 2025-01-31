@@ -4,7 +4,7 @@ import VirtualizeddSelect from '../../UI/VisualizedSelect';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import addLoan from '@/services/addLoan';
 import Spinner from '@/components/UI/Spinner';
 import {
@@ -25,7 +25,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LoanFormType, loanFormSchema } from './schema';
-import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import getFormData from '@/services/getFormData';
 import { toast } from 'react-toastify';
@@ -54,17 +53,14 @@ export default function LoanForm({ onFormOpen }: LoanFormProps) {
 			disburseOn: '',
 			installments: 4,
 			installmentsPeriod: 30,
-			processingFee: 0,
+			processingFee: 400,
 			processingFeePaid: false,
 		},
 	});
 	const queryClient = useQueryClient();
 
 	const mutation = useMutation({
-		mutationFn: (data: LoanFormType) => addLoan(data),
-		onError: (error: any) => {
-			toast.error(error);
-		},
+		mutationFn: addLoan,
 	});
 
 	function onSubmit(values: LoanFormType) {
@@ -257,41 +253,47 @@ export default function LoanForm({ onFormOpen }: LoanFormProps) {
 								)}
 							/>
 						</div>
-						<div>
-							<p className="mb-4">Disburse Loan</p>
-							<Controller
-								control={form.control}
-								name="disburse"
-								render={({ field }) => (
-									<div className="flex gap-x-8">
-										<label>
-											<input
-												type="radio"
-												onBlur={field.onBlur}
-												onChange={() =>
-													field.onChange(true)
-												}
-												checked={field.value === true}
-												className="mr-2"
-											/>
-											Yes
-										</label>
-										<label>
-											<input
-												type="radio"
-												onBlur={field.onBlur}
-												onChange={() =>
-													field.onChange(false)
-												}
-												checked={field.value === false}
-												className="mr-2"
-											/>
-											No
-										</label>
-									</div>
-								)}
-							/>
-						</div>
+						{decoded?.role === 'ADMIN' && (
+							<div>
+								<p className="mb-4">Disburse Loan</p>
+								<Controller
+									control={form.control}
+									name="disburse"
+									render={({ field }) => (
+										<div className="flex gap-x-8">
+											<label>
+												<input
+													type="radio"
+													onBlur={field.onBlur}
+													onChange={() =>
+														field.onChange(true)
+													}
+													checked={
+														field.value === true
+													}
+													className="mr-2"
+												/>
+												Yes
+											</label>
+											<label>
+												<input
+													type="radio"
+													onBlur={field.onBlur}
+													onChange={() =>
+														field.onChange(false)
+													}
+													checked={
+														field.value === false
+													}
+													className="mr-2"
+												/>
+												No
+											</label>
+										</div>
+									)}
+								/>
+							</div>
+						)}
 						{decoded?.role === 'ADMIN' && (
 							<FormField
 								control={form.control}

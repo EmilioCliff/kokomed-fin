@@ -39,14 +39,40 @@ func (r *BranchRepository) CreateBranch(ctx context.Context, branch *repository.
 	return *branch, nil
 }
 
-func (r *BranchRepository) ListBranches(ctx context.Context) ([]repository.Branch, error) {
-	branches, err := r.queries.ListBranches(ctx)
+func (r *BranchRepository) ListBranches(ctx context.Context, search *string, pgData *pkg.PaginationMetadata) ([]repository.Branch, pkg.PaginationMetadata, error) {
+	params := generated.ListBrachesByCategoryParams{
+		Column1: "",
+		Name: "",
+		Limit:  int32(pgData.PageSize),
+		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+	}
+
+	params2 := generated.CountLoansByCategoryParams{
+		Column1: "",
+		Name: "",
+	}
+
+	if search != nil {
+		searchValue := "%" + *search + "%"
+		params.Column1 = "has_search"
+		params.Name = searchValue
+
+		params2.Column1 = "has_search"
+		params2.Name = searchValue
+	}
+
+	branches, err := r.queries.ListBrachesByCategory(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no branches found")
+			return nil,pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no branches found")
 		}
 
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get branches: %s", err.Error())
+		return nil,pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get branches: %s", err.Error())
+	}
+
+	totalBranches, err := r.queries.CountBranchesByCategory(ctx, generated.CountBranchesByCategoryParams(params2))
+	if err != nil {
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total branches: %s", err.Error())
 	}
 
 	result := make([]repository.Branch, len(branches))
@@ -58,7 +84,7 @@ func (r *BranchRepository) ListBranches(ctx context.Context) ([]repository.Branc
 		}
 	}
 
-	return result, nil
+	return result, pkg.CreatePaginationMetadata(uint32(totalBranches), pgData.PageSize, pgData.CurrentPage),nil
 }
 
 func (r *BranchRepository) GetBranchByID(ctx context.Context, id uint32) (repository.Branch, error) {

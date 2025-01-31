@@ -8,7 +8,31 @@ package generated
 import (
 	"context"
 	"database/sql"
+	"time"
 )
+
+const countLoansByCategory = `-- name: CountLoansByCategory :one
+SELECT COUNT(*) AS total_products
+FROM products p
+JOIN branches b ON p.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(b.name) LIKE ?
+    )
+`
+
+type CountLoansByCategoryParams struct {
+	Column1 interface{} `json:"column_1"`
+	Name    string      `json:"name"`
+}
+
+func (q *Queries) CountLoansByCategory(ctx context.Context, arg CountLoansByCategoryParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countLoansByCategory, arg.Column1, arg.Name)
+	var total_products int64
+	err := row.Scan(&total_products)
+	return total_products, err
+}
 
 const createProduct = `-- name: CreateProduct :execresult
 INSERT INTO products (branch_id, loan_amount, repay_amount, interest_amount, updated_by) 
@@ -180,6 +204,78 @@ func (q *Queries) ListProductsByBranch(ctx context.Context, arg ListProductsByBr
 			&i.UpdatedBy,
 			&i.UpdatedAt,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProductsByCategory = `-- name: ListProductsByCategory :many
+SELECT 
+    p.id, p.branch_id, p.loan_amount, p.repay_amount, p.interest_amount, p.updated_by, p.updated_at, p.created_at, 
+    b.name AS branch_name
+FROM products p
+JOIN branches b ON p.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(b.name) LIKE ?
+    )
+ORDER BY p.created_at DESC
+LIMIT ? OFFSET ?
+`
+
+type ListProductsByCategoryParams struct {
+	Column1 interface{} `json:"column_1"`
+	Name    string      `json:"name"`
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
+}
+
+type ListProductsByCategoryRow struct {
+	ID             uint32    `json:"id"`
+	BranchID       uint32    `json:"branch_id"`
+	LoanAmount     float64   `json:"loan_amount"`
+	RepayAmount    float64   `json:"repay_amount"`
+	InterestAmount float64   `json:"interest_amount"`
+	UpdatedBy      uint32    `json:"updated_by"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedAt      time.Time `json:"created_at"`
+	BranchName     string    `json:"branch_name"`
+}
+
+func (q *Queries) ListProductsByCategory(ctx context.Context, arg ListProductsByCategoryParams) ([]ListProductsByCategoryRow, error) {
+	rows, err := q.db.QueryContext(ctx, listProductsByCategory,
+		arg.Column1,
+		arg.Name,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProductsByCategoryRow{}
+	for rows.Next() {
+		var i ListProductsByCategoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.BranchID,
+			&i.LoanAmount,
+			&i.RepayAmount,
+			&i.InterestAmount,
+			&i.UpdatedBy,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+			&i.BranchName,
 		); err != nil {
 			return nil, err
 		}

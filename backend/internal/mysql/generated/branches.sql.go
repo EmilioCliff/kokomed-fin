@@ -10,6 +10,28 @@ import (
 	"database/sql"
 )
 
+const countBranchesByCategory = `-- name: CountBranchesByCategory :one
+SELECT COUNT(*) AS total_branches
+FROM branches b
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(b.name) LIKE ?
+    )
+`
+
+type CountBranchesByCategoryParams struct {
+	Column1 interface{} `json:"column_1"`
+	Name    string      `json:"name"`
+}
+
+func (q *Queries) CountBranchesByCategory(ctx context.Context, arg CountBranchesByCategoryParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countBranchesByCategory, arg.Column1, arg.Name)
+	var total_branches int64
+	err := row.Scan(&total_branches)
+	return total_branches, err
+}
+
 const createBranch = `-- name: CreateBranch :execresult
 INSERT INTO branches (name) VALUES (?)
 `
@@ -36,6 +58,51 @@ func (q *Queries) GetBranch(ctx context.Context, id uint32) (Branch, error) {
 	var i Branch
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
+}
+
+const listBrachesByCategory = `-- name: ListBrachesByCategory :many
+SELECT id, name FROM branches b
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(b.name) LIKE ?
+    )
+LIMIT ? OFFSET ?
+`
+
+type ListBrachesByCategoryParams struct {
+	Column1 interface{} `json:"column_1"`
+	Name    string      `json:"name"`
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
+}
+
+func (q *Queries) ListBrachesByCategory(ctx context.Context, arg ListBrachesByCategoryParams) ([]Branch, error) {
+	rows, err := q.db.QueryContext(ctx, listBrachesByCategory,
+		arg.Column1,
+		arg.Name,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Branch{}
+	for rows.Next() {
+		var i Branch
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listBranches = `-- name: ListBranches :many

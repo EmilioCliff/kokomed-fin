@@ -23,26 +23,58 @@ func NewProductRepository(db *Store) *ProductRepository {
 	}
 }
 
-func (r *ProductRepository) GetAllProducts(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.Product, error) {
-	products, err := r.queries.ListProducts(ctx, generated.ListProductsParams{
+func (r *ProductRepository) GetAllProducts(ctx context.Context, search *string, pgData *pkg.PaginationMetadata) ([]repository.Product, pkg.PaginationMetadata, error) {
+	params := generated.ListProductsByCategoryParams {
+		Column1: "",
+		Name: "",
 		Limit:  int32(pgData.PageSize),
 		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
-	})
+	}
+
+	params2 := generated.CountLoansByCategoryParams{
+		Column1: "",
+		Name: "",
+	}
+
+	if search != nil {
+		searchValue := "%" + *search + "%"
+		params.Column1 = "has_search"
+		params.Name = searchValue
+
+		params2.Column1 = "has_search"
+		params2.Name = searchValue
+	}
+
+	products, err := r.queries.ListProductsByCategory(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no products found")
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no products found")
 		}
 
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get products: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get products: %s", err.Error())
+	}
+
+	totalProducts, err := r.queries.CountLoansByCategory(ctx, params2)
+	if err != nil {
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total products: %s", err.Error())
 	}
 
 	result := make([]repository.Product, len(products))
-
 	for i, product := range products {
-		result[i] = convertGeneratedProducts(product)
+		result[i] = repository.Product{
+			ID:             product.ID,
+			BranchID:       product.BranchID,
+			BranchName: 	&product.BranchName,
+			LoanAmount:     product.LoanAmount,
+			RepayAmount:    product.RepayAmount,
+			InterestAmount: product.InterestAmount,
+			UpdatedBy:      product.UpdatedBy,
+			UpdatedAt:      product.UpdatedAt,
+			CreatedAt:      product.CreatedAt,
+		}
 	}
 
-	return result, nil
+	return result, pkg.CreatePaginationMetadata(uint32(totalProducts), pgData.PageSize, pgData.CurrentPage), nil
 }
 
 func (r *ProductRepository) GetProductByID(ctx context.Context, id uint32) (repository.Product, error) {

@@ -178,6 +178,27 @@ func (r *HelperRepository) GetLoanOfficerData(ctx context.Context) ([]repository
 	return rsp, nil
 }
 
+func (r *HelperRepository) GetBranchData(ctx context.Context) ([]repository.BranchData,  error) {
+	branches, err := r.queries.ListBranches(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting branch list data")		
+	}
+
+	rsp := make([]repository.BranchData, len(branches))
+	for idx, branch := range branches {
+		rsp[idx] = repository.BranchData{
+			ID: branch.ID,
+			Name: branch.Name,
+		}
+	}
+
+	return rsp, nil
+}
+
 func (r *HelperRepository)userToClientDashboard(ctx context.Context, id uint32) repository.ClientDashboardResponse {
 	client, _ := r.queries.GetClient(ctx, id)
 

@@ -55,9 +55,21 @@ func (s *Server) getLoanFormData(ctx *gin.Context) {
 		}
 	}
 
+	var branches []repository.BranchData
+	branch := ctx.Query("branch")
+	if branch != "" {
+		branches, err = s.repo.Helpers.GetBranchData(ctx)
+		if err != nil {
+			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	
+			return
+		}
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"product":     products,
 		"client":      clients,
 		"user": users,
+		"branch": branches,
 })
 }

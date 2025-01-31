@@ -132,19 +132,21 @@ func (q *Queries) DeleteLoan(ctx context.Context, id uint32) error {
 
 const disburseLoan = `-- name: DisburseLoan :execresult
 UPDATE loans 
-    SET disbursed_on = ?,
+    SET disbursed_on = coalesce(?, disbursed_on),
     disbursed_by = ?,
-    status = ?,
-    due_date = ?
+    status = coalesce(?, status),
+    due_date = coalesce(?, due_date),
+    fee_paid =coalesce(?, fee_paid)
 WHERE id = ?
 `
 
 type DisburseLoanParams struct {
-	DisbursedOn sql.NullTime  `json:"disbursed_on"`
-	DisbursedBy sql.NullInt32 `json:"disbursed_by"`
-	Status      LoansStatus   `json:"status"`
-	DueDate     sql.NullTime  `json:"due_date"`
-	ID          uint32        `json:"id"`
+	DisbursedOn sql.NullTime    `json:"disbursed_on"`
+	DisbursedBy sql.NullInt32   `json:"disbursed_by"`
+	Status      NullLoansStatus `json:"status"`
+	DueDate     sql.NullTime    `json:"due_date"`
+	FeePaid     sql.NullBool    `json:"fee_paid"`
+	ID          uint32          `json:"id"`
 }
 
 func (q *Queries) DisburseLoan(ctx context.Context, arg DisburseLoanParams) (sql.Result, error) {
@@ -153,6 +155,7 @@ func (q *Queries) DisburseLoan(ctx context.Context, arg DisburseLoanParams) (sql
 		arg.DisbursedBy,
 		arg.Status,
 		arg.DueDate,
+		arg.FeePaid,
 		arg.ID,
 	)
 }
@@ -264,6 +267,7 @@ WHERE
         COALESCE(?, '') = '' 
         OR FIND_IN_SET(l.status, ?) > 0
     )
+ ORDER BY l.created_at DESC
 LIMIT ? OFFSET ?
 `
 

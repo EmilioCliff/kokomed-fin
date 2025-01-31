@@ -30,9 +30,10 @@ type Loan struct {
 
 type DisburseLoan struct {
 	ID          uint32    `json:"id"`
-	DisbursedOn time.Time `json:"disbursed_on"`
-	DisbursedBy uint32    `json:"disbursed_by"`
-	DueDate     time.Time `json:"due_date"`
+	DisbursedBy uint32    `json:"disbursedBy"`
+	Status *string `json:"status"`
+	FeePaid *bool 	`json:"feePaid"`
+	DisbursedOn *time.Time `json:"disbursedOn"`
 }
 
 type UpdateLoan struct {

@@ -37,14 +37,6 @@ export default function LoanPage() {
 		placeholderData: keepPreviousData,
 	});
 
-	// const { data: formData } = useQuery({
-	//   queryKey: ['loans/form'],
-	//   queryFn: () => getFormData(true, true, true, false),
-	//   staleTime: 5 * 1000,
-	//   placeholderData: keepPreviousData,
-	//   enabled: !!formOpen,
-	// })
-
 	if (data?.metadata) {
 		updateTableContext(data.metadata);
 	}

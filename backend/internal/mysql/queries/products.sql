@@ -24,3 +24,27 @@ SELECT p.id AS productId,
     p.loan_amount AS loanAmount,
     b.name AS branchNAme
 FROM products p JOIN branches b ON p.branch_id = b.id;
+
+-- name: ListProductsByCategory :many
+SELECT 
+    p.*, 
+    b.name AS branch_name
+FROM products p
+JOIN branches b ON p.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(b.name) LIKE ?
+    )
+ORDER BY p.created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountLoansByCategory :one
+SELECT COUNT(*) AS total_products
+FROM products p
+JOIN branches b ON p.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(b.name) LIKE ?
+    )

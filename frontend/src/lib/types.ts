@@ -2,6 +2,8 @@ import { ReactNode } from 'react';
 // import { User, Loan } from '@/data/schema';
 import { Loan } from '@/components/PAGES/loans/schema';
 import { User } from '@/components/PAGES/users/schema';
+import { Product } from '@/components/PAGES/products/schema';
+import { Branch } from '@/components/PAGES/branches/schema';
 
 export enum role {
 	USER = 'USER',
@@ -14,39 +16,6 @@ export enum loanStatus {
 	INACTIVE = 'INACTIVE',
 	COMPLETED = 'COMPLETED',
 	DEFAULTED = 'DEFAULTED',
-}
-
-export interface updateLoanType {
-	id: number;
-	status?: loanStatus;
-	disburseDate?: string;
-	feePaid?: boolean;
-}
-
-export interface authCtx {
-	isLoading: boolean;
-	isAuthenticated: boolean;
-	userRole: role;
-	error: any;
-	updateAuthContext: (tokenData: tokenData) => void;
-	// add login, logout and checkSession methods
-}
-
-export interface tableCtx {
-	search: string;
-	filter: tableFilterType;
-	pageIndex: number;
-	pageSize: number;
-	selectedRow: any;
-	rowsCount: number;
-	setSearch: (value: string) => void;
-	setFilter: React.Dispatch<React.SetStateAction<tableFilterType>>;
-	setPageIndex: (value: number) => void;
-	setPageSize: (value: number) => void;
-	setRowsCount: (value: number) => void;
-	setSelectedRow: (value: any) => void;
-	resetTableState: () => void;
-	updateTableContext: (value: pagination | undefined) => void;
 }
 
 export interface tableFilterType {
@@ -100,6 +69,14 @@ export interface getLoansType extends Omit<commonresponse, 'data'> {
 	data: Loan[];
 }
 
+export interface getProductsType extends Omit<commonresponse, 'data'> {
+	data: Product[];
+}
+
+export interface getBranchesType extends Omit<commonresponse, 'data'> {
+	data: Branch[];
+}
+
 export interface getFormDataType extends Omit<commonresponse, 'data'> {
 	product?: commonDataResponse[];
 	client?: commonDataResponse[];
@@ -110,4 +87,11 @@ export interface getFormDataType extends Omit<commonresponse, 'data'> {
 export interface commonDataResponse {
 	id: number;
 	name: string;
+}
+
+export interface updateLoanType extends Omit<commonresponse, 'data'> {
+	id: number;
+	status?: loanStatus;
+	disburseDate?: string;
+	feePaid?: boolean;
 }

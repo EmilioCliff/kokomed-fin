@@ -1,8 +1,8 @@
 import { createContext, FC, useState } from 'react';
 import { contextWrapperProps } from '@/lib/types';
-import { tableCtx, tableFilterType, pagination } from '@/lib/types';
+import { tableFilterType, pagination } from '@/lib/types';
 
-const defaultContext: tableCtx = {
+const defaultContext: TableContextType = {
 	search: '',
 	filter: { options: [] },
 	pageIndex: 0,
@@ -19,7 +19,24 @@ const defaultContext: tableCtx = {
 	updateTableContext: () => {},
 };
 
-export const TableContext = createContext<tableCtx>(defaultContext);
+export interface TableContextType {
+	search: string;
+	filter: tableFilterType;
+	pageIndex: number;
+	pageSize: number;
+	selectedRow: any;
+	rowsCount: number;
+	setSearch: (value: string) => void;
+	setFilter: React.Dispatch<React.SetStateAction<tableFilterType>>;
+	setPageIndex: (value: number) => void;
+	setPageSize: (value: number) => void;
+	setRowsCount: (value: number) => void;
+	setSelectedRow: (value: any) => void;
+	resetTableState: () => void;
+	updateTableContext: (value: pagination | undefined) => void;
+}
+
+export const TableContext = createContext<TableContextType>(defaultContext);
 
 export const TableContextWrapper: FC<contextWrapperProps> = ({ children }) => {
 	// store table state being used for calls

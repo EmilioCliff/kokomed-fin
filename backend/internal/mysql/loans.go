@@ -3,7 +3,6 @@ package mysql
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
@@ -71,57 +70,22 @@ func (t *LoanRepository) GetClientActiceLoan(ctx context.Context, clientID uint3
 }
 
 func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.Loan, pkg.PaginationMetadata, error) {
-	// params := generated.ListLoansParams{
-	// 	Column1:     nil, // Placeholder for branch_id
-	// 	BranchID:    0,   // Default value
-	// 	Column3:     nil, // Placeholder for client_id
-	// 	ClientID:    0,   // Default value
-	// 	Column5:     nil, // Placeholder for loan_officer
-	// 	LoanOfficer: 0,   // Default value
-	// 	Column7:     nil, // Placeholder for status
-	// 	Status:      "",  // Default value
-	// 	Limit: 		 int32(pgData.PageSize),
-	// 	Offset:      int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
-	// }
-	// // Limit:       int32(pkg.GetPageSize()),
-
-	// // Set dynamic parameters based on the input category
-	// if category.BranchID != nil {
-	// 	params.Column1 = true // Any non-nil value to trigger this filter
-	// 	params.BranchID = *category.BranchID
-	// }
-
-	// if category.ClientID != nil {
-	// 	params.Column3 = true
-	// 	params.ClientID = *category.ClientID
-	// }
-
-	// if category.LoanOfficer != nil {
-	// 	params.Column5 = true
-	// 	params.LoanOfficer = *category.LoanOfficer
-	// }
-
-	// if category.Status != nil {
-	// 	params.Column7 = true
-	// 	params.Status = generated.LoansStatus(pkg.PtrToStr(category.Status))
-	// }
-
 	params := generated.ListLoansParams{
 		Column1: "",
-		FullName:   "", // Placeholder for client_name or loan_officer_name
-		FullName_2: "", // Another placeholder for name search
+		FullName:   "", 
+		FullName_2: "", 
 		Column4: "",
-		FINDINSET: "", // Placeholder for multiple statuses
+		FINDINSET: "", 
 		Limit:    int32(pgData.PageSize),
 		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	}
 
 	params2 := generated.CountLoansParams{
 		Column1: "",
-		FullName:   "", // Placeholder for client_name or loan_officer_name
-		FullName_2: "", // Another placeholder for name search
+		FullName:   "", 
+		FullName_2: "", 
 		Column4: "",
-		FINDINSET: "", // Placeholder for multiple statuses
+		FINDINSET: "", 
 	}
 
 	if category.Search != nil {
@@ -142,8 +106,6 @@ func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Cat
 		params2.FINDINSET = *category.Statuses
 	}
 
-	log.Println(params)
-
 	loans, err := r.queries.ListLoans(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -152,14 +114,10 @@ func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Cat
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans: %s", err.Error())
 	}
 
-	// log.Println(loans)
-
 	totalLoans, err := r.queries.CountLoans(ctx, params2)
 	if err != nil {
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
 	}
-
-	log.Println(totalLoans)
 
 	result := make([]repository.Loan, len(loans))
 

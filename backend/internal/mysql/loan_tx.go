@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
@@ -94,37 +95,63 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 		return err
 	}
 
-	hasActiveLoan, err := r.queries.CheckActiveLoanForClient(ctx, loan.ClientID)
-	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to check if client has an active loan: %s", err.Error())
-	}
+	// hasActiveLoan, err := r.queries.CheckActiveLoanForClient(ctx, loan.ClientID)
+	// if err != nil {
+	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to check if client has an active loan: %s", err.Error())
+	// }
 
-	if hasActiveLoan {
-		return pkg.Errorf(pkg.ALREADY_EXISTS_ERROR, "client already has an active loan")
-	}
+	// if disburseLoan.DisbursedOn != nil {
+	// 	log.Println("Checking if has active loan")
+	// 	if hasActiveLoan {
+	// 		return pkg.Errorf(pkg.ALREADY_EXISTS_ERROR, "client already has an active loan")
+	// 	}
+	// }
 
 	err = r.db.ExecTx(ctx, func(q *generated.Queries) error {
-		_, err = r.queries.DisburseLoan(ctx, generated.DisburseLoanParams{
-			ID:     disburseLoan.ID,
-			Status: generated.LoansStatusACTIVE,
-			DisbursedOn: sql.NullTime{
-				Valid: true,
-				Time:  disburseLoan.DisbursedOn,
-			},
+		params := generated.DisburseLoanParams{
+			ID: disburseLoan.ID,
 			DisbursedBy: sql.NullInt32{
 				Valid: true,
 				Int32: int32(disburseLoan.DisbursedBy),
 			},
-			DueDate: sql.NullTime{
+		}
+
+		if disburseLoan.DisbursedOn != nil {
+			log.Println("Disbursing loan")
+			params.DisbursedOn = sql.NullTime{
 				Valid: true,
-				Time:  disburseLoan.DueDate.AddDate(0, 0, int(loan.InstallmentsPeriod)*int(loan.TotalInstallments)),
-			},
-		})
+				Time:  *disburseLoan.DisbursedOn,
+			}
+
+			dueDate := (*disburseLoan.DisbursedOn).AddDate(0, 0, int(loan.InstallmentsPeriod)*int(loan.TotalInstallments))
+
+			params.DueDate = sql.NullTime{
+				Valid: true,
+				Time:  dueDate,
+			}
+		}
+
+		if disburseLoan.Status != nil {
+			log.Println("changing status")
+			params.Status = generated.NullLoansStatus{
+				Valid: true,
+				LoansStatus: generated.LoansStatus(*disburseLoan.Status),
+			}
+		}
+
+		if disburseLoan.FeePaid != nil {
+			log.Println("changing fee paid")
+			params.FeePaid = sql.NullBool{
+				Valid: true,
+				Bool: true,
+			}
+		}
+
+		_, err = r.queries.DisburseLoan(ctx, params)
 		if err != nil {
 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to disburse loan: %s", err.Error())
 		}
 
-		// create installments
 		if err = helperCreateInstallation(ctx, q, loan.ID, loan.ProductID, loan.TotalInstallments, loan.InstallmentsPeriod); err != nil {
 			return err
 		}

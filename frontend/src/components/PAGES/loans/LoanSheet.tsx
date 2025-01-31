@@ -5,7 +5,7 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from '@/components/ui/sheet';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useContext, useState } from 'react';
 import { TableContext } from '@/context/TableContext';
@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
-import { isUser, isClient } from '@/lib/validators';
 import UserCardDisplay from '@/components/UI/UserCardDisplay';
 import ClientCardDisplay from '@/components/UI/ClientCardDisplay';
 import ProductCardDisplay from '@/components/UI/ProductCardDisplay';
@@ -35,12 +34,15 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { updateLoan } from '@/services/updateLoan';
 import { updateLoanType, loanStatus } from '@/lib/types';
+import { toast } from 'react-toastify';
+import { useAuth } from '@/hooks/useAuth';
 
 function LoanSheet() {
 	const [status, setStatus] = useState<loanStatus | null>(null);
 	const [disbursedDate, setDisbursedDate] = useState<string | null>(null);
 	const [feePaid, setFeePaid] = useState<boolean | null>(null);
 	const { selectedRow, setSelectedRow } = useContext(TableContext);
+	const { decoded } = useAuth();
 
 	const queryClient = useQueryClient();
 
@@ -52,7 +54,9 @@ function LoanSheet() {
 		const values: updateLoanType = {
 			id: Number(selectedRow.id),
 			status: status ? status : undefined,
-			disburseDate: disbursedDate ? disbursedDate : undefined,
+			disburseDate: disbursedDate
+				? format(disbursedDate, 'yyyy-MM-dd')
+				: undefined,
 			feePaid: feePaid ? feePaid : undefined,
 		};
 
@@ -60,25 +64,20 @@ function LoanSheet() {
 
 		mutation.mutate(values, {
 			onSuccess: (data) => {
-				console.log(data);
-				// we will invalidate but generally we need to add the updated loan into the state
-				queryClient.invalidateQueries({ queryKey: 'loans' });
+				queryClient.invalidateQueries({ queryKey: ['loans'] });
+				toast.success('Load Updated');
 			},
 			onError: (error) => {
-				console.log(error);
-				// show to toastify
+				toast.error(error.message);
 			},
+			onSettled: () => mutation.reset(),
 		});
 
 		setStatus(null);
 		setDisbursedDate(null);
 		setFeePaid(null);
-		queryClient.invalidateQueries({
-			queryKey: ['loans'],
-		});
+		setSelectedRow(null);
 	};
-
-	const isAdmin = true;
 
 	const fieldRenderers: Record<string, (value: any) => JSX.Element> = {
 		id: (value) => (
@@ -93,9 +92,20 @@ function LoanSheet() {
 		loanOfficer: (value) => <UserCardDisplay user={value} />,
 		loanPurpose: (value) => <>{value}</>,
 		approvedBy: (value) => <UserCardDisplay user={value} />,
-		disbursedBy: (value) => <UserCardDisplay user={value} />,
+		disbursedBy: (value) => {
+			if (value.id === 0) {
+				return (
+					<Input
+						readOnly
+						placeholder="-"
+						className="bg-gray-100 text-gray-500"
+					/>
+				);
+			}
+			return <UserCardDisplay user={value} />;
+		},
 		status: (value: string) => {
-			return value === 'INACTIVE' && isAdmin ? (
+			return value === 'INACTIVE' && decoded?.role === 'ADMIN' ? (
 				<div>
 					<Select
 						defaultValue="INACTIVE"
@@ -129,7 +139,10 @@ function LoanSheet() {
 											)}
 										>
 											{disbursedDate ? (
-												format(disbursedDate, 'PPP')
+												format(
+													disbursedDate,
+													'yyyy-MM-dd',
+												)
 											) : (
 												<span>Pick a date</span>
 											)}
@@ -147,9 +160,9 @@ function LoanSheet() {
 													? new Date(disbursedDate)
 													: undefined
 											}
-											onSelect={(date) =>
+											onSelect={(date: any) =>
 												setDisbursedDate(
-													format(date!, 'yyyy-MM-dd'),
+													format(date, 'yyyy-MM-dd'),
 												)
 											}
 											disabled={(date) =>
@@ -198,6 +211,41 @@ function LoanSheet() {
 				<Input
 					readOnly
 					placeholder="YES"
+					className="bg-gray-100 text-gray-500"
+				/>
+			);
+		},
+		dueDate: (value) => {
+			if (!value || value === '0001-01-01T00:00:00Z') {
+				value = '-';
+			}
+
+			return (
+				<Input
+					readOnly
+					placeholder={value === '-' ? value : format(value, 'PPP')}
+					className="bg-gray-100 text-gray-500"
+				/>
+			);
+		},
+		disbursedOn: (value) => {
+			if (!value || value === '0001-01-01T00:00:00Z') {
+				value = '-';
+			}
+
+			return (
+				<Input
+					readOnly
+					placeholder={value === '-' ? value : format(value, 'PPP')}
+					className="bg-gray-100 text-gray-500"
+				/>
+			);
+		},
+		createdAt: (value) => {
+			return (
+				<Input
+					readOnly
+					placeholder={format(value, 'PPP')}
 					className="bg-gray-100 text-gray-500"
 				/>
 			);

@@ -10,6 +10,7 @@ import (
 type Product struct {
 	ID             uint32    `json:"id"`
 	BranchID       uint32    `json:"branch_id"`
+	BranchName *string 	`json:"branchName"`
 	LoanAmount     float64   `json:"loan_amount"`
 	RepayAmount    float64   `json:"repay_amount"`
 	InterestAmount float64   `json:"interest_amount"`
@@ -27,7 +28,7 @@ type UpdateProduct struct {
 }
 
 type ProductRepository interface {
-	GetAllProducts(ctx context.Context, pgData *pkg.PaginationMetadata) ([]Product, error)
+	GetAllProducts(ctx context.Context, search *string, pgData *pkg.PaginationMetadata) ([]Product, pkg.PaginationMetadata, error)
 	GetProductByID(ctx context.Context, id uint32) (Product, error)
 	ListProductByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]Product, error)
 	CreateProduct(ctx context.Context, product *Product) (Product, error)

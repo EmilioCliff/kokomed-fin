@@ -1,6 +1,10 @@
 package repository
 
-import "context"
+import (
+	"context"
+
+	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+)
 
 type Branch struct {
 	ID   uint32 `json:"id"`
@@ -9,7 +13,7 @@ type Branch struct {
 
 type BranchRepository interface {
 	CreateBranch(ctx context.Context, branch *Branch) (Branch, error)
-	ListBranches(ctx context.Context) ([]Branch, error)
+	ListBranches(ctx context.Context, search *string, pgData *pkg.PaginationMetadata) ([]Branch, pkg.PaginationMetadata, error)
 	GetBranchByID(ctx context.Context, id uint32) (Branch, error)
 	UpdateBranch(ctx context.Context, name string, id uint32) (Branch, error)
 }

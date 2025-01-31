@@ -49,14 +49,31 @@ func (s *Server) getBranch(ctx *gin.Context) {
 }
 
 func (s *Server) listBranches(ctx *gin.Context) {
-	branches, err := s.repo.Branches.ListBranches(ctx)
+	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	branches, metadata, err := s.repo.Branches.ListBranches(ctx, pkg.StringPtr(ctx.Query("search")), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, branches)
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": metadata,
+		"data": branches,
+	})
 }
 
 func (s *Server) updateBranch(ctx *gin.Context) {

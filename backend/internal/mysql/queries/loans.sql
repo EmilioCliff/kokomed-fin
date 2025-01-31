@@ -19,11 +19,12 @@ VALUES (
 
 -- name: DisburseLoan :execresult
 UPDATE loans 
-    SET disbursed_on = ?,
-    disbursed_by = ?,
-    status = ?,
-    due_date = ?
-WHERE id = ?;
+    SET disbursed_on = coalesce(sqlc.narg("disbursed_on"), disbursed_on),
+    disbursed_by = sqlc.arg("disbursed_by"),
+    status = coalesce(sqlc.narg("status"), status),
+    due_date = coalesce(sqlc.narg("due_date"), due_date),
+    fee_paid =coalesce(sqlc.narg("fee_paid"), fee_paid)
+WHERE id = sqlc.arg("id");
 
 -- name: UpdateLoan :execresult
 UPDATE loans 
@@ -60,6 +61,7 @@ WHERE
         COALESCE(?, '') = '' 
         OR FIND_IN_SET(l.status, ?) > 0
     )
+ ORDER BY l.created_at DESC
 LIMIT ? OFFSET ?;
 
 

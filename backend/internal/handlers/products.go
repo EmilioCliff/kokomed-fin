@@ -20,11 +20,9 @@ type productResponse struct {
 // CreatedAt      time.Time `json:"created_at"`
 
 type createProductRequest struct {
-	BranchID    uint32  `binding:"required" json:"branch_id"`
-	LoanAmount  float64 `binding:"required" json:"loan_amount"`
-	RepayAmount float64 `binding:"required" json:"repay_amount"`
-	UpdatedBy   uint32  `binding:"required" json:"updated_by"`
-	// InterestAmount float64    `json:"interest_amount"` // calculate the interest amount
+	BranchID    uint32  `binding:"required" json:"branchId"`
+	LoanAmount  float64 `binding:"required" json:"loanAmount"`
+	RepayAmount float64 `binding:"required" json:"repayAmount"`
 }
 
 func (s *Server) createProduct(ctx *gin.Context) {
@@ -35,11 +33,25 @@ func (s *Server) createProduct(ctx *gin.Context) {
 		return
 	}
 
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
+
 	product, err := s.repo.Products.CreateProduct(ctx, &repository.Product{
 		BranchID:       req.BranchID,
 		LoanAmount:     req.LoanAmount,
 		RepayAmount:    req.RepayAmount,
-		UpdatedBy:      req.UpdatedBy,
+		UpdatedBy:      payloadData.UserID,
 		InterestAmount: req.RepayAmount - req.LoanAmount,
 	})
 	if err != nil {
@@ -91,7 +103,14 @@ func (s *Server) listProducts(ctx *gin.Context) {
 		return
 	}
 
-	products, err := s.repo.Products.GetAllProducts(ctx, &pkg.PaginationMetadata{CurrentPage: pageNo})
+	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	products, pgData, err := s.repo.Products.GetAllProducts(ctx, pkg.StringPtr(ctx.Query("search")), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -111,7 +130,10 @@ func (s *Server) listProducts(ctx *gin.Context) {
 		rsp[idx] = v
 	}
 
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": pgData,
+		"data": rsp,
+	})
 }
 
 func (s *Server) listProductsByBranch(ctx *gin.Context) {

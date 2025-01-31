@@ -1,6 +1,6 @@
 CREATE TABLE `branches` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
-  `name` VARCHAR(255) NOT NULL
+  `name` VARCHAR(255) UNIQUE NOT NULL 
 );
 
 CREATE TABLE `users` (

@@ -73,9 +73,14 @@ export const loanColumns: ColumnDef<Loan>[] = [
 		),
 		cell: ({ row }) => {
 			const date: string = row.getValue('disbursedOn');
+
+			if (!date || date === '0001-01-01T00:00:00Z') {
+				return <div className="w-50 truncate">-</div>;
+			}
+
 			return (
 				<div className="w-50 truncate">
-					{date !== '' ? format(date, 'dd MMM yyyy') : 'N/A'}
+					{format(date, 'dd MMM yyyy')}
 				</div>
 			);
 		},
@@ -88,9 +93,14 @@ export const loanColumns: ColumnDef<Loan>[] = [
 		),
 		cell: ({ row }) => {
 			const date: string = row.getValue('dueDate');
+
+			if (!date || date === '0001-01-01T00:00:00Z') {
+				return <div className="w-50 truncate">-</div>;
+			}
+
 			return (
 				<div className="w-50 truncate">
-					{date !== '' ? format(date, 'dd MMM yyyy') : 'N/A'}
+					{format(date, 'dd MMM yyyy')}
 				</div>
 			);
 		},

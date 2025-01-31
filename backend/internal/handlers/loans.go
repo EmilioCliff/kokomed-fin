@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -153,16 +154,31 @@ func (s *Server) createLoan(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, rsp)
 }
-
+// binding:"oneof=ACTIVE DEFAULTED"
 type disburseLoanRequest struct {
-	DisburseBy  uint32 `binding:"required" json:"disburse_by"`
-	DisbursedOn string `binding:"required" json:"disbursed_on"`
+	Status string ` json:"status"`
+	DisburseDate string `json:"disburseDate"`
+	FeePaid bool `json:"feePaid"`
 }
 
 func (s *Server) disburseLoan(ctx *gin.Context) {
 	id, err := pkg.StringToUint32(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
 
 		return
 	}
@@ -174,26 +190,42 @@ func (s *Server) disburseLoan(ctx *gin.Context) {
 		return
 	}
 
-	disbursedDate, err := time.Parse("2006-01-02", req.DisbursedOn)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
-
-		return
+	params := repository.DisburseLoan{
+		ID:          id,
+		DisbursedBy: payloadData.UserID,
 	}
 
-	err = s.repo.Loans.DisburseLoan(ctx, &repository.DisburseLoan{
-		DisbursedBy: req.DisburseBy,
-		DisbursedOn: disbursedDate,
-		ID:          id,
-		DueDate:     disbursedDate,
-	})
+	// if status has changed to ACTIVE get the disburse date
+	var disbursedDate time.Time
+	if req.Status == "ACTIVE" {
+		disbursedDate, err = time.Parse("2006-01-02", req.DisburseDate)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+			return
+		}
+
+		params.DisbursedOn = pkg.TimePtr(disbursedDate)
+	}
+
+	if req.Status != "" {
+		params.Status = pkg.StringPtr(req.Status)
+	}
+
+	if req.FeePaid {
+		params.FeePaid = &req.FeePaid
+	}
+
+	log.Println(req)
+
+	err = s.repo.Loans.DisburseLoan(ctx, &params)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Loan disbursed successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"success": "Loan disbursed successfully"})
 }
 
 type transferLoanOfficerRequest struct {
