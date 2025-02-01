@@ -6,7 +6,7 @@ import { Product } from '@/components/PAGES/products/schema';
 import { Branch } from '@/components/PAGES/branches/schema';
 
 export enum role {
-	USER = 'USER',
+	AGENT = 'AGENT',
 	ADMIN = 'ADMIN',
 	GUEST = 'GUEST',
 }
@@ -57,12 +57,12 @@ export interface tokenData extends Omit<commonresponse, 'data'> {
 	accessToken: string;
 }
 
-export interface getUserType extends Omit<commonresponse, 'data'> {
-	data: User;
-}
-
 export interface refreshTokenRes extends Omit<commonresponse, 'data'> {
 	accessToken: string;
+}
+
+export interface getUsersType extends Omit<commonresponse, 'data'> {
+	data: User[];
 }
 
 export interface getLoansType extends Omit<commonresponse, 'data'> {
@@ -94,4 +94,10 @@ export interface updateLoanType extends Omit<commonresponse, 'data'> {
 	status?: loanStatus;
 	disburseDate?: string;
 	feePaid?: boolean;
+}
+
+export interface updateUserType extends Omit<commonresponse, 'data'> {
+	id: number;
+	role?: role;
+	branchId?: number;
 }

@@ -23,13 +23,12 @@ type userResponse struct {
 }
 
 type createUserRequest struct {
-	Firstname   string `binding:"required"                   json:"firstname"`
-	Lastname    string `binding:"required"                   json:"lastname"`
-	PhoneNumber string `binding:"required"                   json:"phone_number"`
+	Firstname   string `binding:"required"                   json:"firstName"`
+	Lastname    string `binding:"required"                   json:"lastName"`
+	PhoneNumber string `binding:"required"                   json:"phoneNumber"`
 	Email       string `binding:"required"                   json:"email"`
-	BranchID    uint32 `binding:"required"                   json:"branch_id"`
+	BranchID    uint32 `binding:"required"                   json:"branchId"`
 	Role        string `binding:"required,oneof=admin agent" json:"role"`
-	CreatedBy   uint32 `binding:"required"                   json:"created_by"`
 }
 
 func (s *Server) createUser(ctx *gin.Context) {
@@ -50,15 +49,29 @@ func (s *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
+
 	user, err := s.repo.Users.CreateUser(ctx, &repository.User{
 		FullName:     req.Firstname + " " + req.Lastname,
 		PhoneNumber:  req.PhoneNumber,
 		Email:        req.Email,
 		Role:         strings.ToUpper(req.Role),
 		BranchID:     req.BranchID,
-		CreatedBy:    req.CreatedBy,
+		CreatedBy:    payloadData.UserID,
 		UpdatedAt:    time.Now(),
-		UpdatedBy:    req.CreatedBy,
+		UpdatedBy:    payloadData.UserID,
 		Password:     hashPassword, // have a default password(firstname.role.last3phonedigits)
 		RefreshToken: "defaulted",  // generate his refresh token(first login)
 	})
@@ -273,12 +286,37 @@ func (s *Server) getUser(ctx *gin.Context) {
 func (s *Server) listUsers(ctx *gin.Context) {
 	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	users, err := s.repo.Users.ListUsers(ctx, &pkg.PaginationMetadata{CurrentPage: pageNo})
+	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	params := repository.CategorySearch{}
+
+	name := ctx.Query("search")
+	if name != "" {
+		params.Search = pkg.StringPtr(name)
+	}
+
+	role := ctx.Query("role")
+	if role != "" {
+		roles := strings.Split(role, ",")
+
+		for i := range roles {
+			roles[i] = strings.TrimSpace(roles[i])
+		}
+
+		params.Role = pkg.StringPtr(strings.Join(roles, ","))
+	}
+
+	users, metadata, err := s.repo.Users.ListUsers(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -298,21 +336,35 @@ func (s *Server) listUsers(ctx *gin.Context) {
 		rsp[idx] = v
 	}
 
-	log.Println(rsp)
-
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": metadata,
+		"data": rsp,
+	})
 }
 
 type updateUserRequest struct {
-	Role      string `binding:"required,oneof=ADMIN AGENT" json:"role"`
-	BranchID  uint32 `binding:"required"                   json:"branch_id"`
-	UpdatedBy uint32 `binding:"required"                   json:"updated_by"`
+	Role      string `json:"role"`
+	BranchID  uint32 `json:"branchId"`
 }
 
 func (s *Server) updateUser(ctx *gin.Context) {
 	var req updateUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
 
 		return
 	}
@@ -324,13 +376,21 @@ func (s *Server) updateUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := s.repo.Users.UpdateUser(ctx, &repository.UpdateUser{
-		ID:        id,
-		Role:      pkg.StringPtr(req.Role),
-		BranchID:  pkg.Uint32Ptr(req.BranchID),
-		UpdatedBy: pkg.Uint32Ptr(req.UpdatedBy),
+	params := repository.UpdateUser{
+		ID: id,
+		UpdatedBy: pkg.Uint32Ptr(payloadData.UserID),
 		UpdatedAt: pkg.TimePtr(time.Now()),
-	})
+	}
+
+	if req.Role != "" {
+		params.Role = pkg.StringPtr(req.Role)
+	}
+
+	if req.BranchID != 0 {
+		params.BranchID = pkg.Uint32Ptr(req.BranchID)
+	}
+
+	user, err := s.repo.Users.UpdateUser(ctx, &params)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 

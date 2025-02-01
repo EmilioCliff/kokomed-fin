@@ -1,15 +1,11 @@
 import api from '@/API/api';
-import { updateLoanType } from '@/lib/types';
-import { format } from 'date-fns';
+import { updateUserType } from '@/lib/types';
 
-const updateLoan = async (data: updateLoanType) => {
+const updateUser = async (data: updateUserType) => {
+	console.log(data);
 	try {
-		if (data.status && !data.disburseDate) {
-			data.disburseDate = format(new Date(), 'yyyy-MM-dd');
-		}
-
 		const response = await api
-			.patch<updateLoanType>(`/loan/${data.id}/disburse`, data)
+			.patch<updateUserType>(`/user/${data.id}`, data)
 			.then((resp) => resp.data);
 
 		if (response.message) {
@@ -26,4 +22,4 @@ const updateLoan = async (data: updateLoanType) => {
 	}
 };
 
-export default updateLoan;
+export default updateUser;

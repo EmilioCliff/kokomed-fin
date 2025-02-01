@@ -8,7 +8,6 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useContext, useState } from 'react';
-import { TableContext } from '@/context/TableContext';
 import {
 	Popover,
 	PopoverContent,
@@ -32,16 +31,18 @@ import ProductCardDisplay from '@/components/UI/ProductCardDisplay';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { updateLoan } from '@/services/updateLoan';
+import updateLoan from '@/services/updateLoan';
 import { updateLoanType, loanStatus } from '@/lib/types';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/hooks/useAuth';
+import { useTable } from '@/hooks/useTable';
+import { role } from '@/lib/types';
 
 function LoanSheet() {
 	const [status, setStatus] = useState<loanStatus | null>(null);
 	const [disbursedDate, setDisbursedDate] = useState<string | null>(null);
 	const [feePaid, setFeePaid] = useState<boolean | null>(null);
-	const { selectedRow, setSelectedRow } = useContext(TableContext);
+	const { selectedRow, setSelectedRow } = useTable();
 	const { decoded } = useAuth();
 
 	const queryClient = useQueryClient();
@@ -105,7 +106,7 @@ function LoanSheet() {
 			return <UserCardDisplay user={value} />;
 		},
 		status: (value: string) => {
-			return value === 'INACTIVE' && decoded?.role === 'ADMIN' ? (
+			return value === 'INACTIVE' && decoded?.role === role.ADMIN ? (
 				<div>
 					<Select
 						defaultValue="INACTIVE"

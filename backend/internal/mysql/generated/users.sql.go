@@ -11,6 +11,43 @@ import (
 	"time"
 )
 
+const countUsersByCategory = `-- name: CountUsersByCategory :one
+SELECT COUNT(*) AS total_loans
+FROM users u
+JOIN branches b ON u.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(u.full_name) LIKE ?
+        OR LOWER(u.email) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(u.role, ?) > 0
+    )
+`
+
+type CountUsersByCategoryParams struct {
+	Column1   interface{} `json:"column_1"`
+	FullName  string      `json:"full_name"`
+	Email     string      `json:"email"`
+	Column4   interface{} `json:"column_4"`
+	FINDINSET string      `json:"FIND_IN_SET"`
+}
+
+func (q *Queries) CountUsersByCategory(ctx context.Context, arg CountUsersByCategoryParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUsersByCategory,
+		arg.Column1,
+		arg.FullName,
+		arg.Email,
+		arg.Column4,
+		arg.FINDINSET,
+	)
+	var total_loans int64
+	err := row.Scan(&total_loans)
+	return total_loans, err
+}
+
 const createUser = `-- name: CreateUser :execresult
 INSERT INTO users (full_name, phone_number, email, password, refresh_token, role, branch_id, updated_at, updated_by, created_by) 
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -158,6 +195,99 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.UpdatedAt,
 			&i.CreatedBy,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsersByCategory = `-- name: ListUsersByCategory :many
+SELECT 
+    u.id, u.full_name, u.phone_number, u.email, u.password, u.password_updated, u.refresh_token, u.role, u.branch_id, u.updated_by, u.updated_at, u.created_by, u.created_at, 
+    b.name AS branch_name
+FROM users u
+JOIN branches b ON u.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(u.full_name) LIKE ?
+        OR LOWER(u.email) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(u.role, ?) > 0
+    )
+ ORDER BY u.created_at DESC
+LIMIT ? OFFSET ?
+`
+
+type ListUsersByCategoryParams struct {
+	Column1   interface{} `json:"column_1"`
+	FullName  string      `json:"full_name"`
+	Email     string      `json:"email"`
+	Column4   interface{} `json:"column_4"`
+	FINDINSET string      `json:"FIND_IN_SET"`
+	Limit     int32       `json:"limit"`
+	Offset    int32       `json:"offset"`
+}
+
+type ListUsersByCategoryRow struct {
+	ID              uint32    `json:"id"`
+	FullName        string    `json:"full_name"`
+	PhoneNumber     string    `json:"phone_number"`
+	Email           string    `json:"email"`
+	Password        string    `json:"password"`
+	PasswordUpdated uint32    `json:"password_updated"`
+	RefreshToken    string    `json:"refresh_token"`
+	Role            UsersRole `json:"role"`
+	BranchID        uint32    `json:"branch_id"`
+	UpdatedBy       uint32    `json:"updated_by"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	CreatedBy       uint32    `json:"created_by"`
+	CreatedAt       time.Time `json:"created_at"`
+	BranchName      string    `json:"branch_name"`
+}
+
+func (q *Queries) ListUsersByCategory(ctx context.Context, arg ListUsersByCategoryParams) ([]ListUsersByCategoryRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUsersByCategory,
+		arg.Column1,
+		arg.FullName,
+		arg.Email,
+		arg.Column4,
+		arg.FINDINSET,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUsersByCategoryRow{}
+	for rows.Next() {
+		var i ListUsersByCategoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FullName,
+			&i.PhoneNumber,
+			&i.Email,
+			&i.Password,
+			&i.PasswordUpdated,
+			&i.RefreshToken,
+			&i.Role,
+			&i.BranchID,
+			&i.UpdatedBy,
+			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.CreatedAt,
+			&i.BranchName,
 		); err != nil {
 			return nil, err
 		}

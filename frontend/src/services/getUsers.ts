@@ -1,21 +1,43 @@
-import api from "@/API/api";
-import { getUserType } from "@/lib/types";
-export async function getUser() {
-  try {
-    const response = await api.get<getUserType>("/user?ID=12345").then((res) => res.data);
-    if (response.status === "Failure") {
-      // show error using toast
-      throw new Error(response.error);
-    }
+import api from '@/API/api';
+import { getUsersType } from '@/lib/types';
+import { tableFilterType } from '@/lib/types';
 
-    return response.data;
-  } catch (error) {
-    console.error(error);
-  }
-}
+const getUsers = async (
+	pageNumber: number,
+	pageSize: number,
+	filter: tableFilterType,
+	search: string,
+) => {
+	try {
+		let baseUrl = `/user?limit=${pageSize}&page=${pageNumber + 1}`;
 
-//   concurrent requests at once using Promise.all
-// Promise.all([getUserAccount(), getUserPermissions()])
-// .then(function ([acct, perm]) {
-// // ...
-// });
+		if (search) {
+			baseUrl = baseUrl + `&search=${encodeURIComponent(search)}`;
+		}
+
+		if (filter.options.length > 0) {
+			const roles = filter.options
+				.map(({ value }) => value.toUpperCase())
+				.join(',');
+			baseUrl += `&role=${encodeURIComponent(roles)}`;
+		}
+
+		const response = await api
+			.get<getUsersType>(baseUrl)
+			.then((res) => res.data);
+
+		if (response.message) {
+			throw new Error(response.message);
+		}
+
+		return response;
+	} catch (error: any) {
+		if (error.response) {
+			throw new Error(error.response.data.message);
+		}
+
+		throw new Error(error.message);
+	}
+};
+
+export default getUsers;

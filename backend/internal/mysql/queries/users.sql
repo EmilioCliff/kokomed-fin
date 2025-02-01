@@ -26,3 +26,37 @@ WHERE id = sqlc.arg("id");
 
 -- name: HelperUser :many
 SELECT id, full_name FROM users;
+
+-- name: ListUsersByCategory :many
+SELECT 
+    u.*, 
+    b.name AS branch_name
+FROM users u
+JOIN branches b ON u.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(u.full_name) LIKE ?
+        OR LOWER(u.email) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(u.role, ?) > 0
+    )
+ ORDER BY u.created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountUsersByCategory :one
+SELECT COUNT(*) AS total_loans
+FROM users u
+JOIN branches b ON u.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(u.full_name) LIKE ?
+        OR LOWER(u.email) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(u.role, ?) > 0
+    );

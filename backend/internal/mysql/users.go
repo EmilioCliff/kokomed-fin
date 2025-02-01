@@ -92,26 +92,72 @@ func (r *UserRepository) UpdateUserPassword(ctx context.Context, email string, p
 	return nil
 }
 
-func (r *UserRepository) ListUsers(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.User, error) {
-	users, err := r.queries.ListUsers(ctx, generated.ListUsersParams{
-		Limit:  int32(pgData.PageSize),
-		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
-	})
+func (r *UserRepository) ListUsers(ctx context.Context, category *repository.CategorySearch, pgData *pkg.PaginationMetadata) ([]repository.User, pkg.PaginationMetadata, error) {
+	params := generated.ListUsersByCategoryParams{
+		Column1: "",
+		FullName: "",
+		Email: "",
+		Column4: "",
+		FINDINSET: "",
+		Limit:    int32(pgData.PageSize),
+		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+	}
+
+	params2 := generated.CountUsersByCategoryParams{
+		Column1: "",
+		FullName: "",
+		Email: "",
+		Column4: "",
+		FINDINSET: "",
+	}
+
+	if category.Search != nil {
+		searchValue := "%" + *category.Search + "%"
+		params.Column1 = "has_search"
+		params.FullName = searchValue
+		params.Email = searchValue
+
+		params2.Column1 = "has_search"
+		params2.FullName = searchValue
+		params2.Email = searchValue
+	}
+
+	if category.Role != nil {
+		params.Column4 = "has_status"
+		params2.Column4 = "has_status"		
+		params.FINDINSET = *category.Role
+		params2.FINDINSET = *category.Role
+	}
+
+	users, err := r.queries.ListUsersByCategory(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no users found")
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no users found")
 		}
 
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get users: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get users: %s", err.Error())
+	}
+
+	totalUsers, err := r.queries.CountUsersByCategory(ctx, params2)
+	if err != nil {
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
 	}
 
 	result := make([]repository.User, len(users))
-
-	for i, user := range users {
-		result[i] = convertGeneratedUser(user)
+	for idx, user := range users {
+		result[idx] = repository.User{
+			ID: user.ID,
+			FullName: user.FullName,
+			PhoneNumber: user.PhoneNumber,
+			Email: user.Email,
+			Role: string(user.Role),
+			BranchName: &user.BranchName,
+			BranchID: user.BranchID,
+			CreatedAt: user.CreatedAt,
+		}
 	}
 
-	return result, nil
+	return result, pkg.CreatePaginationMetadata(uint32(totalUsers), pgData.PageSize, pgData.CurrentPage), nil
 }
 
 func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.UpdateUser) (repository.User, error) {

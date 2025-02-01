@@ -1,5 +1,4 @@
 import api from '@/API/api';
-import { Loan } from '@/components/PAGES/loans/schema';
 import { tableFilterType } from '@/lib/types';
 import { getLoansType } from '@/lib/types';
 
