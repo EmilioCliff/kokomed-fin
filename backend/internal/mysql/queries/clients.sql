@@ -22,14 +22,10 @@ SELECT * FROM clients WHERE id = ? LIMIT 1;
 
 -- name: UpdateClient :execresult
 UPDATE clients 
-    SET full_name = sqlc.arg("full_name"),
-    phone_number = sqlc.arg("phone_number"),
-    id_number = coalesce(sqlc.narg("id_number"), id_number),
+    SET id_number = coalesce(sqlc.narg("id_number"), id_number),
     dob = coalesce(sqlc.narg("dob"), dob),
-    gender = sqlc.arg("gender"),
-    active = sqlc.arg("active"),
-    branch_id = sqlc.arg("branch_id"),
-    assigned_staff = sqlc.arg("assigned_staff"),
+    active = coalesce(sqlc.narg("active"), active),
+    branch_id = coalesce(sqlc.narg("branch_id"), branch_id),
     updated_at = CURRENT_TIMESTAMP,
     updated_by = sqlc.arg("updated_by")
 WHERE id = sqlc.arg("id");
@@ -62,3 +58,45 @@ SELECT * FROM clients WHERE active = ? LIMIT ? OFFSET ?;
 
 -- name: HelperClient :many
 SELECT id, full_name FROM clients;
+
+-- name: ListClientsByCategory :many
+SELECT 
+    c.id, c.full_name, c.phone_number, c.id_number, c.dob, c.gender, c.active, 
+    c.branch_id, c.assigned_staff, c.overpayment, c.updated_by, 
+    c.updated_at, c.created_at, c.created_by, 
+    b.name AS branch_name,
+    COALESCE(SUM(DISTINCT COALESCE(p.loan_amount, 0) - COALESCE(l.paid_amount, 0)), 0) AS dueAmount
+FROM clients c
+JOIN branches b ON c.branch_id = b.id
+LEFT JOIN loans l ON c.id = l.client_id AND l.status = 'ACTIVE'
+LEFT JOIN products p ON l.product_id = p.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(c.phone_number) LIKE ?
+    )
+    AND (
+        sqlc.narg('active') IS NULL OR c.active = sqlc.narg('active')
+    )
+GROUP BY 
+    c.id, c.full_name, c.phone_number, c.id_number, c.dob, c.gender, c.active, 
+    c.branch_id, c.assigned_staff, c.overpayment, c.updated_by, 
+    c.updated_at, c.created_at, c.created_by, b.name
+ORDER BY c.created_at DESC
+LIMIT ? OFFSET ?;
+
+
+-- name: CountClientsByCategory :one
+SELECT COUNT(*) AS total_clients
+FROM clients c
+JOIN branches b ON c.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(c.phone_number) LIKE ?
+    )
+    AND (
+        sqlc.narg('active') IS NULL OR c.active = sqlc.narg('active')
+    );

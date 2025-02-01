@@ -8,7 +8,43 @@ package generated
 import (
 	"context"
 	"database/sql"
+	"time"
 )
+
+const countClientsByCategory = `-- name: CountClientsByCategory :one
+SELECT COUNT(*) AS total_clients
+FROM clients c
+JOIN branches b ON c.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(c.phone_number) LIKE ?
+    )
+    AND (
+        ? IS NULL OR c.active = ?
+    )
+`
+
+type CountClientsByCategoryParams struct {
+	Column1     interface{}  `json:"column_1"`
+	FullName    string       `json:"full_name"`
+	PhoneNumber string       `json:"phone_number"`
+	Active      sql.NullBool `json:"active"`
+}
+
+func (q *Queries) CountClientsByCategory(ctx context.Context, arg CountClientsByCategoryParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countClientsByCategory,
+		arg.Column1,
+		arg.FullName,
+		arg.PhoneNumber,
+		arg.Active,
+		arg.Active,
+	)
+	var total_clients int64
+	err := row.Scan(&total_clients)
+	return total_clients, err
+}
 
 const createClient = `-- name: CreateClient :execresult
 INSERT INTO clients (full_name, phone_number, id_number, dob, gender, active, branch_id, assigned_staff, updated_by, updated_at, created_by) 
@@ -275,22 +311,45 @@ func (q *Queries) ListClientsByBranch(ctx context.Context, arg ListClientsByBran
 	return items, nil
 }
 
-const updateClient = `-- name: UpdateClient :execresult
-UPDATE clients 
-    SET full_name = ?,
-    phone_number = ?,
-    id_number = coalesce(?, id_number),
-    dob = coalesce(?, dob),
-    gender = ?,
-    active = ?,
-    branch_id = ?,
-    assigned_staff = ?,
-    updated_at = CURRENT_TIMESTAMP,
-    updated_by = ?
-WHERE id = ?
+const listClientsByCategory = `-- name: ListClientsByCategory :many
+SELECT 
+    c.id, c.full_name, c.phone_number, c.id_number, c.dob, c.gender, c.active, 
+    c.branch_id, c.assigned_staff, c.overpayment, c.updated_by, 
+    c.updated_at, c.created_at, c.created_by, 
+    b.name AS branch_name,
+    COALESCE(SUM(DISTINCT COALESCE(p.loan_amount, 0) - COALESCE(l.paid_amount, 0)), 0) AS dueAmount
+FROM clients c
+JOIN branches b ON c.branch_id = b.id
+LEFT JOIN loans l ON c.id = l.client_id AND l.status = 'ACTIVE'
+LEFT JOIN products p ON l.product_id = p.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(c.phone_number) LIKE ?
+    )
+    AND (
+        ? IS NULL OR c.active = ?
+    )
+GROUP BY 
+    c.id, c.full_name, c.phone_number, c.id_number, c.dob, c.gender, c.active, 
+    c.branch_id, c.assigned_staff, c.overpayment, c.updated_by, 
+    c.updated_at, c.created_at, c.created_by, b.name
+ORDER BY c.created_at DESC
+LIMIT ? OFFSET ?
 `
 
-type UpdateClientParams struct {
+type ListClientsByCategoryParams struct {
+	Column1     interface{}  `json:"column_1"`
+	FullName    string       `json:"full_name"`
+	PhoneNumber string       `json:"phone_number"`
+	Active      sql.NullBool `json:"active"`
+	Limit       int32        `json:"limit"`
+	Offset      int32        `json:"offset"`
+}
+
+type ListClientsByCategoryRow struct {
+	ID            uint32         `json:"id"`
 	FullName      string         `json:"full_name"`
 	PhoneNumber   string         `json:"phone_number"`
 	IDNumber      sql.NullString `json:"id_number"`
@@ -299,20 +358,89 @@ type UpdateClientParams struct {
 	Active        bool           `json:"active"`
 	BranchID      uint32         `json:"branch_id"`
 	AssignedStaff uint32         `json:"assigned_staff"`
+	Overpayment   float64        `json:"overpayment"`
 	UpdatedBy     uint32         `json:"updated_by"`
-	ID            uint32         `json:"id"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	CreatedAt     time.Time      `json:"created_at"`
+	CreatedBy     uint32         `json:"created_by"`
+	BranchName    string         `json:"branch_name"`
+	Dueamount     interface{}    `json:"dueamount"`
+}
+
+func (q *Queries) ListClientsByCategory(ctx context.Context, arg ListClientsByCategoryParams) ([]ListClientsByCategoryRow, error) {
+	rows, err := q.db.QueryContext(ctx, listClientsByCategory,
+		arg.Column1,
+		arg.FullName,
+		arg.PhoneNumber,
+		arg.Active,
+		arg.Active,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListClientsByCategoryRow{}
+	for rows.Next() {
+		var i ListClientsByCategoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FullName,
+			&i.PhoneNumber,
+			&i.IDNumber,
+			&i.Dob,
+			&i.Gender,
+			&i.Active,
+			&i.BranchID,
+			&i.AssignedStaff,
+			&i.Overpayment,
+			&i.UpdatedBy,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+			&i.CreatedBy,
+			&i.BranchName,
+			&i.Dueamount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateClient = `-- name: UpdateClient :execresult
+UPDATE clients 
+    SET id_number = coalesce(?, id_number),
+    dob = coalesce(?, dob),
+    active = coalesce(?, active),
+    branch_id = coalesce(?, branch_id),
+    updated_at = CURRENT_TIMESTAMP,
+    updated_by = ?
+WHERE id = ?
+`
+
+type UpdateClientParams struct {
+	IDNumber  sql.NullString `json:"id_number"`
+	Dob       sql.NullTime   `json:"dob"`
+	Active    sql.NullBool   `json:"active"`
+	BranchID  sql.NullInt32  `json:"branch_id"`
+	UpdatedBy uint32         `json:"updated_by"`
+	ID        uint32         `json:"id"`
 }
 
 func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, updateClient,
-		arg.FullName,
-		arg.PhoneNumber,
 		arg.IDNumber,
 		arg.Dob,
-		arg.Gender,
 		arg.Active,
 		arg.BranchID,
-		arg.AssignedStaff,
 		arg.UpdatedBy,
 		arg.ID,
 	)

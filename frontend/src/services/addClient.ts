@@ -1,10 +1,11 @@
 import api from '@/API/api';
-import { updateUserType } from '@/lib/types';
+import { ClientFormType } from '@/components/PAGES/customers/schema';
+import { commonresponse } from '@/lib/types';
 
-const updateUser = async (data: updateUserType) => {
+const addClient = async (data: ClientFormType) => {
 	try {
 		const response = await api
-			.patch<updateUserType>(`/user/${data.id}`, data)
+			.post<commonresponse>('/client', data)
 			.then((resp) => resp.data);
 
 		if (response.message) {
@@ -21,4 +22,4 @@ const updateUser = async (data: updateUserType) => {
 	}
 };
 
-export default updateUser;
+export default addClient;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useState } from 'react';
 import { role } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,21 +8,14 @@ import { updateUserType } from '@/lib/types';
 import { toast } from 'react-toastify';
 import getFormData from '@/services/getFormData';
 import { format } from 'date-fns';
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover';
 import VirtualizeddSelect from '../../UI/VisualizedSelect';
 import {
 	Select,
 	SelectContent,
 	SelectGroup,
 	SelectItem,
-	SelectLabel,
 	SelectTrigger,
 	SelectValue,
-	SelectSeparator,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import {

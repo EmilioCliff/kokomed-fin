@@ -1,10 +1,12 @@
 import api from '@/API/api';
-import { updateUserType } from '@/lib/types';
+import { updateClientType } from '@/lib/types';
 
-const updateUser = async (data: updateUserType) => {
+const updateClient = async (data: updateClientType) => {
+	console.log(data);
+
 	try {
 		const response = await api
-			.patch<updateUserType>(`/user/${data.id}`, data)
+			.patch<updateClientType>(`/client/${data.id}`, data)
 			.then((resp) => resp.data);
 
 		if (response.message) {
@@ -21,4 +23,4 @@ const updateUser = async (data: updateUserType) => {
 	}
 };
 
-export default updateUser;
+export default updateClient;

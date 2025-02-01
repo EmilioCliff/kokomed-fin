@@ -24,27 +24,25 @@ type clientResponse struct {
 	CreatedBy     userShortResponse `json:"createdBy"` 
 	CreatedAt     time.Time         `json:"createdAt"`
 }
-// UpdatedBy     userShortResponse `json:"updated_by"` 
-// UpdatedAt     time.Time         `json:"updated_at"`
 
 type userShortResponse struct {
 	ID       uint32 `json:"id"`
-	FullName string `json:"full_name"`
+	FullName string `json:"fullName"`
+	PhoneNumber string `json:"phoneNumber"`
 	Email    string `json:"email"`
 	Role     string `json:"role"`
 }
 
 type createClientRequest struct {
-	FirstName     string `binding:"required"                   json:"first_name"`
-	LastName      string `binding:"required"                   json:"last_name"`
-	PhoneNumber   string `binding:"required"                   json:"phone_number"`
-	IdNumber      string `                                     json:"id_number"`
+	FirstName     string `binding:"required"                   json:"firstName"`
+	LastName      string `binding:"required"                   json:"lastName"`
+	PhoneNumber   string `binding:"required"                   json:"phoneNumber"`
+	IdNumber      string `                                     json:"idNumber"`
 	Dob           string `                                     json:"dob"`
 	Gender        string `binding:"required,oneof=MALE FEMALE" json:"gender"`
 	Active        bool   `                                     json:"active"`
-	BranchID      uint32 `binding:"required"                   json:"branch_id"`
-	AssignedStaff uint32 `binding:"required"                   json:"assigned_staff"`
-	// UpdatedBy     uint32 `binding:"required"                   json:"updated_by"`
+	BranchID      uint32 `binding:"required"                   json:"branchId"`
+	AssignedStaff uint32 `binding:"required"                   json:"assignedStaffId"`
 }
 
 func (s *Server) createClient(ctx *gin.Context) {
@@ -55,24 +53,28 @@ func (s *Server) createClient(ctx *gin.Context) {
 		return
 	}
 
-	payloadString, ok := ctx.Get(authorizationPayloadKey)
+	payload, ok := ctx.Get(authorizationPayloadKey)
 	if !ok {
-		ctx.JSON(http.StatusForbidden, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "No payload found in context")))
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
 
 		return
 	}
 
-	payload, _ := payloadString.(pkg.Payload)
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
 
 	params := &repository.Client{
 		FullName:      req.FirstName + " " + req.LastName,
 		PhoneNumber:   req.PhoneNumber,
 		Gender:        req.Gender,
-		Active:        req.Active,
 		BranchID:      req.BranchID,
 		AssignedStaff: req.AssignedStaff,
-		UpdatedBy:     payload.UserID,
-		CreatedBy:     payload.UserID,
+		UpdatedBy:     payloadData.UserID,
+		CreatedBy:     payloadData.UserID,
 	}
 
 	if req.Dob != "" {
@@ -107,8 +109,15 @@ func (s *Server) createClient(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, v)
 }
 
+type updateClient struct {
+	IdNumber      string `json:"idNumber"`
+	Dob           string `json:"dob"`
+	Active        string   `json:"active"`
+	BranchID      uint32 `json:"branchId"`
+}
+
 func (s *Server) updateClient(ctx *gin.Context) {
-	var req createClientRequest
+	var req updateClient
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
@@ -122,25 +131,23 @@ func (s *Server) updateClient(ctx *gin.Context) {
 		return
 	}
 
-	payloadString, ok := ctx.Get(authorizationPayloadKey)
+	payload, ok := ctx.Get(authorizationPayloadKey)
 	if !ok {
-		ctx.JSON(http.StatusForbidden, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "No payload found in context")))
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
 
 		return
 	}
 
-	payload, _ := payloadString.(pkg.Payload)
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
 
-	params := &repository.Client{
-		ID:            id,
-		FullName:      req.FirstName + " " + req.LastName,
-		PhoneNumber:   req.PhoneNumber,
-		Gender:        req.Gender,
-		Active:        req.Active,
-		BranchID:      req.BranchID,
-		AssignedStaff: req.AssignedStaff,
-		UpdatedBy:     payload.UserID,
-		CreatedBy:     payload.UserID,
+		return
+	}
+
+	params := &repository.UpdateClient{
+		ID: id,
+		UpdatedBy: payloadData.UserID,
 	}
 
 	if req.Dob != "" {
@@ -158,32 +165,60 @@ func (s *Server) updateClient(ctx *gin.Context) {
 		params.IdNumber = pkg.StringPtr(req.IdNumber)
 	}
 
-	client, err := s.repo.Clients.UpdateClient(ctx, params)
+	if req.Active != "" {
+		if req.Active == "true" {
+			params.Active = pkg.BoolPtr(true)
+		} else {
+			params.Active = pkg.BoolPtr(false)
+		}
+	}
+
+	if req.BranchID != 0 {
+		params.BranchID = pkg.Uint32Ptr(req.BranchID)
+	}
+
+	err = s.repo.Clients.UpdateClient(ctx, params)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	v, err := s.structureClient(&client, ctx)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, gin.H{"success": "Client Updated"})
 }
 
 func (s *Server) listClients(ctx *gin.Context) {
 	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	clients, err := s.repo.Clients.ListClients(ctx, &pkg.PaginationMetadata{CurrentPage: pageNo})
+	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	params := repository.ClientCategorySearch{}
+
+	name := ctx.Query("search")
+	if name != "" {
+		params.Search = pkg.StringPtr(name)
+	}
+
+	active := ctx.Query("active")
+	if active != "" {
+		if active == "2" {
+			params.Active = pkg.BoolPtr(false)
+		} else {
+			params.Active = pkg.BoolPtr(true)
+		}
+	}
+
+	clients, metadata, err := s.repo.Clients.ListClients(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -203,7 +238,10 @@ func (s *Server) listClients(ctx *gin.Context) {
 		rsp[idx] = v
 	}
 
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": metadata,
+		"data": rsp,
+	})
 }
 
 func (s *Server) getClient(ctx *gin.Context) {
@@ -335,10 +373,11 @@ func (s *Server) structureClient(c *repository.Client, ctx *gin.Context) (client
 		Gender:        c.Gender,
 		Active:        c.Active,
 		BranchName:    branch.Name,
-		AssignedStaff: userShortResponse{ID: assignedStaff.ID, FullName: assignedStaff.FullName},
+		AssignedStaff: userShortResponse{ID: assignedStaff.ID, FullName: assignedStaff.FullName, Email: assignedStaff.Email, PhoneNumber: assignedStaff.PhoneNumber},
 		Overpayment:   c.Overpayment,
-		CreatedBy:     userShortResponse{ID: createdBy.ID, FullName: createdBy.FullName},
+		CreatedBy:     userShortResponse{ID: createdBy.ID, FullName: createdBy.FullName, Email: createdBy.Email, PhoneNumber: createdBy.PhoneNumber},
 		CreatedAt:     c.CreatedAt,
+		DueAmount: c.DueAmount,
 	}
 	// UpdatedAt:     c.UpdatedAt,
 	// UpdatedBy:     userShortResponse{ID: updatedBy.ID, FullName: updatedBy.FullName},

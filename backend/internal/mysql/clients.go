@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"strconv"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
@@ -29,7 +30,7 @@ func (r *ClientRepository) CreateClient(ctx context.Context, client *repository.
 		FullName:      client.FullName,
 		PhoneNumber:   client.PhoneNumber,
 		Gender:        generated.ClientsGender(client.Gender),
-		Active:        client.Active,
+		Active:        true,
 		BranchID:      client.BranchID,
 		AssignedStaff: client.AssignedStaff,
 		UpdatedBy:     client.UpdatedBy,
@@ -65,16 +66,10 @@ func (r *ClientRepository) CreateClient(ctx context.Context, client *repository.
 	return *client, nil
 }
 
-func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.Client) (repository.Client, error) {
+func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.UpdateClient) (error) {
 	params := generated.UpdateClientParams{
-		ID:            client.ID,
-		FullName:      client.FullName,
-		PhoneNumber:   client.PhoneNumber,
-		Gender:        generated.ClientsGender(client.Gender),
-		Active:        client.Active,
-		BranchID:      client.BranchID,
-		AssignedStaff: client.AssignedStaff,
-		UpdatedBy:     client.UpdatedBy,
+		ID: client.ID,
+		UpdatedBy: client.UpdatedBy,
 	}
 
 	if client.IdNumber != nil {
@@ -91,12 +86,26 @@ func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.
 		}
 	}
 
-	_, err := r.queries.UpdateClient(ctx, params)
-	if err != nil {
-		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update client: %s", err.Error())
+	if client.Active != nil {
+		params.Active = sql.NullBool{
+			Valid: true,
+			Bool: *client.Active,
+		}
 	}
 
-	return *client, nil
+	if client.BranchID != nil {
+		params.BranchID = sql.NullInt32{
+			Valid: true,
+			Int32: int32(*client.BranchID),
+		}
+	}
+
+	_, err := r.queries.UpdateClient(ctx, params)
+	if err != nil {
+		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update client: %s", err.Error())
+	}
+
+	return  nil
 }
 
 func (r *ClientRepository) UpdateClientOverpayment(ctx context.Context, phoneNumber string, overpayment float64) error {
@@ -111,25 +120,97 @@ func (r *ClientRepository) UpdateClientOverpayment(ctx context.Context, phoneNum
 	return nil
 }
 
-func (r *ClientRepository) ListClients(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {
-	clients, err := r.queries.ListClients(ctx, generated.ListClientsParams{
-		Limit:  int32(pgData.PageSize),
-		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
-	})
+func (r *ClientRepository) ListClients(ctx context.Context, category *repository.ClientCategorySearch, pgData *pkg.PaginationMetadata) ([]repository.Client, pkg.PaginationMetadata, error) {
+	params := generated.ListClientsByCategoryParams{
+		Column1: "",
+		FullName: "",
+		PhoneNumber: "",
+		Limit:    int32(pgData.PageSize),
+		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+	}
+
+	params2 := generated.CountClientsByCategoryParams{
+		Column1: "",
+		FullName: "",
+		PhoneNumber: "",
+	}
+
+	if category.Search != nil {
+		searchValue := "%" + *category.Search + "%"
+		params.Column1 = "has_search"
+		params.FullName = searchValue
+		params.PhoneNumber = searchValue
+
+		params2.Column1 = "has_search"
+		params2.FullName = searchValue
+		params2.PhoneNumber = searchValue
+	}
+
+	if category.Active != nil {
+		params.Active = sql.NullBool{
+			Valid: category.Active != nil,
+			Bool: *category.Active,
+		}
+		params2.Active = sql.NullBool{
+			Valid: category.Active != nil,
+			Bool: *category.Active,
+		}
+	}
+
+	clients, err := r.queries.ListClientsByCategory(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no clients found")
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no clients found")
 		}
 
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list clients: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list clients: %s", err.Error())
+	}
+
+	totalClients, err := r.queries.CountClientsByCategory(ctx, params2)
+	if err != nil {
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
 	}
 
 	result := make([]repository.Client, len(clients))
 	for i, client := range clients {
-		result[i] = convertGeneratedClient(client)
+		var dob *time.Time
+
+		if client.Dob.Valid {
+			value := client.Dob.Time
+			dob = &value
+		}
+
+		var idNo *string
+
+		if client.IDNumber.Valid {
+			value := client.IDNumber.String
+			idNo = &value
+		}
+
+		dueAmountBtye, _ := client.Dueamount.([]byte)
+		dueAmount, _ := strconv.ParseFloat(string(dueAmountBtye), 64)
+
+		result[i] = repository.Client{
+			ID:            client.ID,
+			FullName:      client.FullName,
+			PhoneNumber:   client.PhoneNumber,
+			IdNumber:      idNo,
+			Dob:           dob,
+			Gender:        string(client.Gender),
+			Active:        client.Active,
+			BranchID:      client.BranchID,
+			AssignedStaff: client.AssignedStaff,
+			Overpayment:   client.Overpayment,
+			UpdatedBy:     client.UpdatedBy,
+			UpdatedAt:     client.UpdatedAt,
+			CreatedBy:     client.CreatedBy,
+			CreatedAt:     client.CreatedAt,
+			BranchName: &client.BranchName,
+			DueAmount: dueAmount,
+		}
 	}
 
-	return result, nil
+	return result, pkg.CreatePaginationMetadata(uint32(totalClients), pgData.PageSize, pgData.CurrentPage), nil
 }
 
 func (r *ClientRepository) GetClient(ctx context.Context, clientID uint32) (repository.Client, error) {

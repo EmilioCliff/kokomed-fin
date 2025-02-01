@@ -1,9 +1,9 @@
 import { ReactNode } from 'react';
-// import { User, Loan } from '@/data/schema';
 import { Loan } from '@/components/PAGES/loans/schema';
 import { User } from '@/components/PAGES/users/schema';
 import { Product } from '@/components/PAGES/products/schema';
 import { Branch } from '@/components/PAGES/branches/schema';
+import { Client } from '@/components/PAGES/customers/schema';
 
 export enum role {
 	AGENT = 'AGENT',
@@ -65,6 +65,10 @@ export interface getUsersType extends Omit<commonresponse, 'data'> {
 	data: User[];
 }
 
+export interface getClientsType extends Omit<commonresponse, 'data'> {
+	data: Client[];
+}
+
 export interface getLoansType extends Omit<commonresponse, 'data'> {
 	data: Loan[];
 }
@@ -100,4 +104,12 @@ export interface updateUserType extends Omit<commonresponse, 'data'> {
 	id: number;
 	role?: role;
 	branchId?: number;
+}
+
+export interface updateClientType extends Omit<commonresponse, 'data'> {
+	id: number;
+	idNumber?: string;
+	dob?: string;
+	branchId?: number;
+	active?: string;
 }
