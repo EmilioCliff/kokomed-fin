@@ -27,6 +27,7 @@ import {
 	SelectValue,
 	SelectSeparator,
 } from '@/components/ui/select';
+import { role } from '@/lib/types';
 
 interface UserFormProps {
 	onFormOpen: (isOpen: boolean) => void;
@@ -59,8 +60,8 @@ function UserForm({ onFormOpen }: UserFormProps) {
 	function onSubmit(values: UserFormType) {
 		mutation.mutate(values, {
 			onSuccess: (data) => {
-				queryClient.invalidateQueries({ queryKey: ['loans'] });
-				toast.success('Loan Added Successful');
+				queryClient.invalidateQueries({ queryKey: ['users'] });
+				toast.success('User Added Successful');
 			},
 			onError: (error: any) => {
 				toast.error(error.message);
@@ -177,31 +178,31 @@ function UserForm({ onFormOpen }: UserFormProps) {
 						/>
 						<FormField
 							control={form.control}
-							name="phoneNumber"
+							name="role"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Phone Number</FormLabel>
+									<FormLabel>Role</FormLabel>
 									<FormControl>
 										<Select
-											defaultValue="INACTIVE"
+											value={field.value}
 											onValueChange={(value) => {
-												const tmp =
-													value === 'INACTIVE'
-														? loanStatus.INACTIVE
-														: loanStatus.ACTIVE;
-												setStatus(tmp);
+												field.onChange(value);
 											}}
 										>
 											<SelectTrigger className="w-[180px]">
-												<SelectValue placeholder="INACTIVE" />
+												<SelectValue placeholder="Select Role" />
 											</SelectTrigger>
 											<SelectContent>
 												<SelectGroup>
-													<SelectItem value="INACTIVE">
-														INACTIVE
+													<SelectItem
+														value={role.ADMIN}
+													>
+														ADMIN
 													</SelectItem>
-													<SelectItem value="ACTIVE">
-														ACTIVE
+													<SelectItem
+														value={role.AGENT}
+													>
+														AGENT
 													</SelectItem>
 												</SelectGroup>
 											</SelectContent>
@@ -213,7 +214,7 @@ function UserForm({ onFormOpen }: UserFormProps) {
 						/>
 					</div>
 					<Button className="ml-auto block" type="submit">
-						Add Loan
+						Add User
 					</Button>
 				</form>
 			</Form>

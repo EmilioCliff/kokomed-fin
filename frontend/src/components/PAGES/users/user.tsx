@@ -2,6 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { User } from './schema';
 import DataTableColumnHeader from '../../table/data-table-column-header';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 export const userColumns: ColumnDef<User>[] = [
 	{
@@ -77,7 +78,14 @@ export const userColumns: ColumnDef<User>[] = [
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title="Role" />
 		),
-		cell: ({ row }) => <div className="w-[80]">{row.getValue('role')}</div>,
+		cell: ({ row }) => {
+			const role: string = row.getValue('role');
+			return (
+				<Badge variant={role === 'ADMIN' ? 'default' : 'secondary'}>
+					{role}
+				</Badge>
+			);
+		},
 		filterFn: (row, columnId, filterValue) => {
 			const role = row.original.role.toLowerCase();
 			return role.includes(filterValue);

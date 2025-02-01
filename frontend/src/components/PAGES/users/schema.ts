@@ -13,8 +13,8 @@ export const userSchema = z.object({
 export type User = z.infer<typeof userSchema>;
 
 export const userFormSchema = z.object({
-	firstName: z.string(),
-	lastName: z.string(),
+	firstName: z.string().min(2),
+	lastName: z.string().min(2),
 	phoneNumber: z
 		.string()
 		.length(10, 'Phone number must be exactly 10 digits')

@@ -18,8 +18,12 @@ import { useTable } from '@/hooks/useTable';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import getUsers from '@/services/getUsers';
 import UserSheet from './UserSheet';
+import { useAuth } from '@/hooks/useAuth';
+import { role } from '@/lib/types';
+import { toast } from 'react-toastify';
 
 function UsersPage() {
+	const { decoded } = useAuth();
 	const [formOpen, setFormOpen] = useState(false);
 	const { pageIndex, pageSize, filter, search, updateTableContext } =
 		useTable();
@@ -49,7 +53,16 @@ function UsersPage() {
 		<div className="px-4">
 			<div className="flex justify-between items-center mb-4">
 				<h1 className="text-3xl font-bold">Users</h1>
-				<Dialog open={formOpen} onOpenChange={setFormOpen}>
+				<Dialog
+					open={formOpen}
+					onOpenChange={() => {
+						if (!formOpen && decoded?.role !== role.ADMIN) {
+							toast.error('only admins can add users');
+							return;
+						}
+						setFormOpen(!formOpen);
+					}}
+				>
 					<DialogTrigger asChild>
 						<Button className="text-xs py-1 font-bold" size="sm">
 							Add New User
@@ -62,7 +75,7 @@ function UsersPage() {
 								Enter the details for the new user.
 							</DialogDescription>
 						</DialogHeader>
-						<UserForm />
+						<UserForm onFormOpen={setFormOpen} />
 					</DialogContent>
 				</Dialog>
 			</div>

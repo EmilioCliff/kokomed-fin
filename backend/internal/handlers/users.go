@@ -28,7 +28,7 @@ type createUserRequest struct {
 	PhoneNumber string `binding:"required"                   json:"phoneNumber"`
 	Email       string `binding:"required"                   json:"email"`
 	BranchID    uint32 `binding:"required"                   json:"branchId"`
-	Role        string `binding:"required,oneof=admin agent" json:"role"`
+	Role        string `binding:"required,oneof=ADMIN AGENT" json:"role"`
 }
 
 func (s *Server) createUser(ctx *gin.Context) {
