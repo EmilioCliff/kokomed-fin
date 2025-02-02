@@ -3,7 +3,6 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
@@ -21,19 +20,43 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 
 	req, _ := rq.(map[string]interface{})
 
-	amount, err := strconv.ParseFloat(req["TransAmount"].(string), 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	// amount := req["TransAmount"].(float64)
 
-		return
-	}
+	// amount, err := strconv.ParseFloat(string(mm), 64)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+	// 	return
+	// }
 
 	callbackData := services.MpesaCallbackData{
 		TransactionID: req["TransID"].(string),
 		AccountNumber: req["BillRefNumber"].(string),
 		PhoneNumber:   req["MSISDN"].(string),
 		PayingName:    req["FirstName"].(string),
-		Amount:        amount,
+		Amount:        req["TransAmount"].(float64),
+	}
+
+	// add a variable if it exist it means its coming from creating payment from app
+	// before intergrating to darajaAPI only
+	if req["App"] != "" {
+		callbackData.TransactionSource = "INTERNAL"
+
+		// payload, ok := ctx.Get(authorizationPayloadKey)
+		// if !ok {
+		// 	ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		// 	return
+		// }
+
+		// payloadData, ok := payload.(*pkg.Payload)
+		// if !ok {
+		// 	ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		// 	return
+		// }
+	} else {
+		callbackData.TransactionSource = "MPESA"
 	}
 
 	clientID, err := s.repo.Clients.GetClientIDByPhoneNumber(ctx, callbackData.AccountNumber)

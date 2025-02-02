@@ -50,6 +50,9 @@ DELETE FROM clients WHERE id = ?;
 -- name: GetClientIDByPhoneNumber :one
 SELECT id FROM clients WHERE phone_number = ? LIMIT 1;
 
+-- name: GetClientOverpayment :one
+SELECT overpayment FROM clients WHERE id = ? LIMIT 1;
+
 -- name: ListClientsByBranch :many
 SELECT * FROM clients WHERE branch_id = ? LIMIT ? OFFSET ?;
 

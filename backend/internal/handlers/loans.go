@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -215,8 +214,6 @@ func (s *Server) disburseLoan(ctx *gin.Context) {
 	if req.FeePaid {
 		params.FeePaid = &req.FeePaid
 	}
-
-	log.Println(req)
 
 	err = s.repo.Loans.DisburseLoan(ctx, &params)
 	if err != nil {

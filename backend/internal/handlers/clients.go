@@ -33,6 +33,15 @@ type userShortResponse struct {
 	Role     string `json:"role"`
 }
 
+type clientShortResponse struct {
+	Overpayment   float64           `json:"overpayment"`
+	DueAmount float64 `json:"dueAmount"`
+	ID       uint32 `json:"id"`
+	FullName string `json:"fullName"`
+	PhoneNumber string `json:"phoneNumber"`
+	BranchName string 	`json:"branchName"`
+}
+
 type createClientRequest struct {
 	FirstName     string `binding:"required"                   json:"firstName"`
 	LastName      string `binding:"required"                   json:"lastName"`

@@ -4,6 +4,7 @@ import { User } from '@/components/PAGES/users/schema';
 import { Product } from '@/components/PAGES/products/schema';
 import { Branch } from '@/components/PAGES/branches/schema';
 import { Client } from '@/components/PAGES/customers/schema';
+import { Payment } from '@/components/PAGES/payments/schema';
 
 export enum role {
 	AGENT = 'AGENT',
@@ -79,6 +80,10 @@ export interface getProductsType extends Omit<commonresponse, 'data'> {
 
 export interface getBranchesType extends Omit<commonresponse, 'data'> {
 	data: Branch[];
+}
+
+export interface getPaymentsType extends Omit<commonresponse, 'data'> {
+	data: Payment[];
 }
 
 export interface getFormDataType extends Omit<commonresponse, 'data'> {

@@ -1,9 +1,8 @@
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import LoanForm from '@/components/PAGES/loans/LoanForm';
 import { loanColumns } from '@/components/PAGES/loans/loan';
 import { DataTable } from '@/components/table/data-table';
 import TableSkeleton from '@/components/UI/TableSkeleton';
-import getFormData from '@/services/getFormData';
 
 import { statuses } from '@/data/loan';
 
@@ -19,14 +18,14 @@ import { Button } from '@/components/ui/button';
 import LoanSheet from './LoanSheet';
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { TableContext } from '@/context/TableContext';
 import { getLoans } from '@/services/getLoans';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useTable } from '@/hooks/useTable';
 
 export default function LoanPage() {
 	const [formOpen, setFormOpen] = useState(false);
 	const { pageIndex, pageSize, filter, search, updateTableContext } =
-		useContext(TableContext);
+		useTable();
 
 	const debouncedInput = useDebounce({ value: search, delay: 500 });
 

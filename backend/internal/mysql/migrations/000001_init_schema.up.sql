@@ -111,6 +111,8 @@ CREATE TABLE `non_posted` (
   `amount` DECIMAL(10,2) NOT NULL,
   `assign_to` INT NULL,
   `paid_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  
+  -- in future add someone assigning the payment
 
   CONSTRAINT fk_non_posted_assign_to FOREIGN KEY (`assign_to`) REFERENCES `clients` (`id`)
 );

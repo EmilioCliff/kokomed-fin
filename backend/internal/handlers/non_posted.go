@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -11,25 +13,51 @@ import (
 
 type nonPostedResponse struct {
 	ID                uint32            `json:"id"`
-	TransactionSource string            `json:"transaction_source"`
-	TransactionNumber string            `json:"transaction_number"`
-	AccountNumber     string            `json:"account_number"`
-	PhoneNumber       string            `json:"phone_number"`
-	PayingName        string            `json:"paying_name"`
+	TransactionSource string            `json:"transactionSource"`
+	TransactionNumber string            `json:"transactionNumber"`
+	AccountNumber     string            `json:"accountNumber"`
+	PhoneNumber       string            `json:"phoneNumber"`
+	PayingName        string            `json:"payingName"`
 	Amount            float64           `json:"amount"`
-	PaidDate          time.Time         `json:"paid_date"`
-	AssignedTo        userResponse `json:"assigned_to"`
+	PaidDate          time.Time         `json:"paidDate"`
+	AssignedTo        clientShortResponse `json:"assignedTo"`
+	Assigned bool	`json:"assigned"`
 }
 
 func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
 	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	payments, err := s.repo.NonPosted.ListNonPosted(ctx, &pkg.PaginationMetadata{CurrentPage: pageNo})
+	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	params := repository.NonPostedCategory{}
+
+	search := ctx.Query("search")
+	if search != "" {
+		params.Search = pkg.StringPtr(strings.ToLower(search))
+	}
+
+	source := ctx.Query("source")
+	if source != "" {
+		sources := strings.Split(source, ",")
+		
+		for i := range sources {
+			sources[i] = strings.TrimSpace(sources[i])
+		}
+		
+		params.Sources = pkg.StringPtr(strings.Join(sources, ","))
+	}
+
+	payments, metadata, err := s.repo.NonPosted.ListNonPosted(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -49,7 +77,10 @@ func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
 		rsp[idx] = v
 	}
 
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": metadata,
+		"data": rsp,
+	})
 }
 
 func (s *Server) listNonPostedByTransactionSource(ctx *gin.Context) {
@@ -199,8 +230,11 @@ func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (
 	}
 
 	if p.AssignedTo != nil {
-		client, err := s.repo.Users.GetUserByID(ctx, *p.AssignedTo)
+		v.Assigned = true
+		
+		client, err := s.repo.Clients.GetClient(ctx, *p.AssignedTo)
 		if err != nil {
+			log.Println(*p.AssignedTo)
 			return nonPostedResponse{}, err
 		}
 
@@ -209,14 +243,13 @@ func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (
 			return nonPostedResponse{}, err
 		}
 
-		v.AssignedTo = userResponse{
+		v.AssignedTo = clientShortResponse{
 			ID:          client.ID,
-			Fullname:   client.FullName,
-			Email: 	 client.Email,
+			FullName: client.FullName,
 			PhoneNumber: client.PhoneNumber,
-			Role:       client.Role,
+			Overpayment: client.Overpayment,
+			DueAmount: client.DueAmount,
 			BranchName: branch.Name,
-			CreatedAt: client.CreatedAt,
 		}
 	}
 

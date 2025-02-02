@@ -28,6 +28,45 @@ func (q *Queries) AssignNonPosted(ctx context.Context, arg AssignNonPostedParams
 	return q.db.ExecContext(ctx, assignNonPosted, arg.AssignTo, arg.TransactionSource, arg.ID)
 }
 
+const countNonPostedByCategory = `-- name: CountNonPostedByCategory :one
+SELECT COUNT(*) AS total_non_posted 
+FROM non_posted
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(paying_name) LIKE ?
+        OR LOWER(account_number) LIKE ?
+        OR LOWER(transaction_number) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(transaction_source, ?) > 0
+    )
+`
+
+type CountNonPostedByCategoryParams struct {
+	Column1           interface{} `json:"column_1"`
+	PayingName        string      `json:"paying_name"`
+	AccountNumber     string      `json:"account_number"`
+	TransactionNumber string      `json:"transaction_number"`
+	Column5           interface{} `json:"column_5"`
+	FINDINSET         string      `json:"FIND_IN_SET"`
+}
+
+func (q *Queries) CountNonPostedByCategory(ctx context.Context, arg CountNonPostedByCategoryParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countNonPostedByCategory,
+		arg.Column1,
+		arg.PayingName,
+		arg.AccountNumber,
+		arg.TransactionNumber,
+		arg.Column5,
+		arg.FINDINSET,
+	)
+	var total_non_posted int64
+	err := row.Scan(&total_non_posted)
+	return total_non_posted, err
+}
+
 const createNonPosted = `-- name: CreateNonPosted :execresult
 INSERT INTO non_posted (transaction_source, transaction_number, account_number, phone_number, paying_name, amount, paid_date, assign_to) 
 VALUES (
@@ -144,6 +183,77 @@ SELECT id, transaction_number, account_number, phone_number, paying_name, amount
 
 func (q *Queries) ListAllNonPostedByTransactionSource(ctx context.Context, transactionSource NonPostedTransactionSource) ([]NonPosted, error) {
 	rows, err := q.db.QueryContext(ctx, listAllNonPostedByTransactionSource, transactionSource)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []NonPosted{}
+	for rows.Next() {
+		var i NonPosted
+		if err := rows.Scan(
+			&i.ID,
+			&i.TransactionNumber,
+			&i.AccountNumber,
+			&i.PhoneNumber,
+			&i.PayingName,
+			&i.Amount,
+			&i.AssignTo,
+			&i.PaidDate,
+			&i.TransactionSource,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listNonPostedByCategory = `-- name: ListNonPostedByCategory :many
+SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date, transaction_source
+FROM non_posted
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(paying_name) LIKE ?
+        OR LOWER(account_number) LIKE ?
+        OR LOWER(transaction_number) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(transaction_source, ?) > 0
+    )
+ ORDER BY paid_date DESC
+LIMIT ? OFFSET ?
+`
+
+type ListNonPostedByCategoryParams struct {
+	Column1           interface{} `json:"column_1"`
+	PayingName        string      `json:"paying_name"`
+	AccountNumber     string      `json:"account_number"`
+	TransactionNumber string      `json:"transaction_number"`
+	Column5           interface{} `json:"column_5"`
+	FINDINSET         string      `json:"FIND_IN_SET"`
+	Limit             int32       `json:"limit"`
+	Offset            int32       `json:"offset"`
+}
+
+func (q *Queries) ListNonPostedByCategory(ctx context.Context, arg ListNonPostedByCategoryParams) ([]NonPosted, error) {
+	rows, err := q.db.QueryContext(ctx, listNonPostedByCategory,
+		arg.Column1,
+		arg.PayingName,
+		arg.AccountNumber,
+		arg.TransactionNumber,
+		arg.Column5,
+		arg.FINDINSET,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

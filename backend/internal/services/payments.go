@@ -5,6 +5,7 @@ import (
 )
 
 type MpesaCallbackData struct {
+	TransactionSource string `json:"transaction_source"`
 	TransactionID string  `json:"transaction_id"`
 	AccountNumber string  `json:"account_number"`
 	PhoneNumber   string  `json:"phone_number"`

@@ -18,10 +18,16 @@ type NonPosted struct {
 	PaidDate          time.Time `json:"paid_date"`
 	AssignedTo        *uint32   `json:"assigned_to"`
 }
+
+type NonPostedCategory struct {
+	Search *string `json:"search"`
+	Sources *string	`json:"sources"`
+}
+
 type NonPostedRepository interface {
 	CreateNonPosted(ctx context.Context, nonPosted *NonPosted) (NonPosted, error)
 	GetNonPosted(ctx context.Context, id uint32) (NonPosted, error)
-	ListNonPosted(ctx context.Context, pgData *pkg.PaginationMetadata) ([]NonPosted, error)
+	ListNonPosted(ctx context.Context, category *NonPostedCategory, pgData *pkg.PaginationMetadata) ([]NonPosted, pkg.PaginationMetadata, error)
 	ListNonPostedByTransactionSource(ctx context.Context, transactionSource string, pgData *pkg.PaginationMetadata) ([]NonPosted, error)
 	ListUnassignedNonPosted(ctx context.Context, pgData *pkg.PaginationMetadata) ([]NonPosted, error)
 	DeleteNonPosted(ctx context.Context, id uint32) error

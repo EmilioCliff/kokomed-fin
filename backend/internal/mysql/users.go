@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -52,6 +53,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *repository.User) 
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id uint32) (repository.User, error) {
 	user, err := r.queries.GetUser(ctx, id)
+	log.Println(user)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.User{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")

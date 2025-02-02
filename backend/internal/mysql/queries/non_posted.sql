@@ -34,3 +34,36 @@ WHERE id = sqlc.arg("id");
 
 -- name: DeleteNonPosted :exec
 DELETE FROM non_posted WHERE id = ?;
+
+-- name: ListNonPostedByCategory :many
+SELECT *
+FROM non_posted
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(paying_name) LIKE ?
+        OR LOWER(account_number) LIKE ?
+        OR LOWER(transaction_number) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(transaction_source, ?) > 0
+    )
+ ORDER BY paid_date DESC
+LIMIT ? OFFSET ?;
+
+
+-- name: CountNonPostedByCategory :one
+SELECT COUNT(*) AS total_non_posted 
+FROM non_posted
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(paying_name) LIKE ?
+        OR LOWER(account_number) LIKE ?
+        OR LOWER(transaction_number) LIKE ?
+    )
+    AND (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(transaction_source, ?) > 0
+    );

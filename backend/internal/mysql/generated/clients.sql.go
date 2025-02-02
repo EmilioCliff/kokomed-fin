@@ -136,6 +136,17 @@ func (q *Queries) GetClientIDByPhoneNumber(ctx context.Context, phoneNumber stri
 	return id, err
 }
 
+const getClientOverpayment = `-- name: GetClientOverpayment :one
+SELECT overpayment FROM clients WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetClientOverpayment(ctx context.Context, id uint32) (float64, error) {
+	row := q.db.QueryRowContext(ctx, getClientOverpayment, id)
+	var overpayment float64
+	err := row.Scan(&overpayment)
+	return overpayment, err
+}
+
 const helperClient = `-- name: HelperClient :many
 SELECT id, full_name FROM clients
 `
