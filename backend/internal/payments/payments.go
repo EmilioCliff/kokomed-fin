@@ -112,7 +112,7 @@ func (p *PaymentService) TriggerManualPayment(ctx context.Context, paymentData s
 				Valid: true,
 				Int32: int32(paymentData.ClientID),
 			},
-			TransactionSource: generated.NonPostedTransactionSourceINTERNAL,
+			TransactionSource: generated.NonPostedTransactionSourceMPESA, // to MPESA since attaching mpesa payment to client
 		})
 		if err != nil {
 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to assign non posted: %s", err.Error())
@@ -175,6 +175,14 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 	clientOverpayment, err := q.GetClientOverpayment(ctx, loanData.ClientID)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client overpayment: %s", err.Error())
+	}
+
+	// remove the overpayment from client account
+	if clientOverpayment > 0 {
+		_, err := q.NullifyClientOverpayment(ctx, loanData.ClientID)
+		if err != nil {
+			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get nullify client overpayment: %s", err.Error())
+		}
 	}
 
 	loan.PaidAmount += clientOverpayment
@@ -240,7 +248,7 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 
 			loan.PaidAmount -= i.RemainingAmount
 			totalPaid += i.RemainingAmount
-			log.Println("Paid full installment: ", loan.PaidAmount, " Total paid: ", totalPaid)
+			log.Println("Paid full installment: ", loan.PaidAmount, " Total paid: ", totalPaid, " Remaining Installment: ", i.RemainingAmount)
 		} else {
 			// pay installment partially
 			_, err := q.PayInstallment(ctx, generated.PayInstallmentParams{
@@ -277,14 +285,13 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan: %s", err.Error())
 	}
 
-	overpayment := loanData.PaidAmount
-	log.Println("This is the overpayment", overpayment)
-	if overpayment > 0 {
+	log.Println("This is the overpayment", loan.PaidAmount)
+	if loan.PaidAmount > 0 {
 		// if client has an overpayment for the loan link to his account
 		log.Println("Adding overpayment to client")
 		_, err = q.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
 			PhoneNumber: loanData.PhoneNumber,
-			Overpayment: overpayment,
+			Overpayment: loan.PaidAmount,
 			ClientID:    loanData.ClientID,
 		})
 		if err != nil {

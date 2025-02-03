@@ -3,7 +3,6 @@ package mysql
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -53,7 +52,6 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *repository.User) 
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id uint32) (repository.User, error) {
 	user, err := r.queries.GetUser(ctx, id)
-	log.Println(user)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.User{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
@@ -160,6 +158,12 @@ func (r *UserRepository) ListUsers(ctx context.Context, category *repository.Cat
 	}
 
 	return result, pkg.CreatePaginationMetadata(uint32(totalUsers), pgData.PageSize, pgData.CurrentPage), nil
+}
+
+func (r *UserRepository) CheckUserExistance(ctx context.Context, email string) bool {
+	count, _ := r.queries.CheckUserExistance(ctx, email)
+
+	return count > 0
 }
 
 func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.UpdateUser) (repository.User, error) {

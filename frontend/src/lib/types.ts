@@ -118,3 +118,8 @@ export interface updateClientType extends Omit<commonresponse, 'data'> {
 	branchId?: number;
 	active?: string;
 }
+
+export interface updatePaymentType extends Omit<commonresponse, 'data'> {
+	id: number;
+	clientId: number;
+}

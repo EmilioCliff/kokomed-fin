@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 	"github.com/gin-gonic/gin"
 )
@@ -106,6 +107,38 @@ type loginUserResponse struct {
 	RefreshTokenExpiresAt time.Time    `json:"refreshTokenExpiresAt"`
 }
 
+type forgotPasswordRequest struct {
+	Email string `binding:"required" json:"email"`
+}
+
+func (s *Server) forgotPassword(ctx *gin.Context) {
+	var req forgotPasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	// check if user exists in db
+	exists := s.repo.Users.CheckUserExistance(ctx, req.Email)
+	if !exists {
+		ctx.JSON(http.StatusNotFound, errorResponse(pkg.Errorf(pkg.NOT_FOUND_ERROR, "user not found")))
+
+		return
+	}
+
+	err := s.worker.DistributeTaskSendResetPassword(ctx, services.SendResetPasswordPayload{
+		Email: req.Email,
+	})
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"success": "email sent"})
+}
+
 func (s *Server) loginUser(ctx *gin.Context) {
 	var req loginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -181,8 +214,7 @@ func (s *Server) logoutUser(ctx *gin.Context) {
 }
 
 type updateUserCredentialsRequest struct {
-	Email       string `binding:"required" json:"email"`
-	NewPassword string `binding:"required" json:"new_password"`
+	NewPassword string `binding:"required" json:"newPassword"`
 }
 
 func (s *Server) updateUserCredentials(ctx *gin.Context) {
@@ -201,12 +233,7 @@ func (s *Server) updateUserCredentials(ctx *gin.Context) {
 		return
 	}
 
-	// check if the token is indeed the person confirm by email
-	if payload.Email != req.Email {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "cannot update another user password")))
-
-		return
-	}
+	// get token from redis db
 
 	hashpassword, err := pkg.GenerateHashPassword(req.NewPassword, s.config.PASSWORD_COST)
 	if err != nil {
@@ -215,7 +242,7 @@ func (s *Server) updateUserCredentials(ctx *gin.Context) {
 		return
 	}
 
-	err = s.repo.Users.UpdateUserPassword(ctx, req.Email, hashpassword)
+	err = s.repo.Users.UpdateUserPassword(ctx, payload.Email, hashpassword)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 

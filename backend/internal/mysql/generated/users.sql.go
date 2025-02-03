@@ -11,6 +11,17 @@ import (
 	"time"
 )
 
+const checkUserExistance = `-- name: CheckUserExistance :one
+SELECT COUNT(*) AS user_count FROM users WHERE email = ? LIMIT 1
+`
+
+func (q *Queries) CheckUserExistance(ctx context.Context, email string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, checkUserExistance, email)
+	var user_count int64
+	err := row.Scan(&user_count)
+	return user_count, err
+}
+
 const countUsersByCategory = `-- name: CountUsersByCategory :one
 SELECT COUNT(*) AS total_loans
 FROM users u

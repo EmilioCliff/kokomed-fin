@@ -86,8 +86,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 }
 
 type paymentByAdminRequest struct {
-	ClientID uint32 `binding:"required" json:"client_id"`
-	AdminID  uint32 `binding:"required" json:"admin_id"`
+	ClientID uint32 `binding:"required" json:"clientId"`
 }
 
 func (s *Server) paymentByAdmin(ctx *gin.Context) {
@@ -105,10 +104,24 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 		return
 	}
 
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
+
 	err = s.payments.TriggerManualPayment(ctx, services.ManualPaymentData{
 		NonPostedID: id,
 		ClientID:    req.ClientID,
-		AdminUserID: req.AdminID,
+		AdminUserID: payloadData.UserID,
 	})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))

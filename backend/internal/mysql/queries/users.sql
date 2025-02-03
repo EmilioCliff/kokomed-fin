@@ -60,3 +60,6 @@ WHERE
         COALESCE(?, '') = '' 
         OR FIND_IN_SET(u.role, ?) > 0
     );
+
+-- name: CheckUserExistance :one
+SELECT COUNT(*) AS user_count FROM users WHERE email = ? LIMIT 1;

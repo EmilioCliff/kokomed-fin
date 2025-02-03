@@ -20,6 +20,9 @@ type Config struct {
 	PASSWORD_COST           int           `mapstructure:"PASSWORD_COST"`
 	RSA_PRIVATE_KEY         string        `mapstructure:"RSA_PRIVATE_KEY"`
 	RSA_PUBLIC_KEY          string        `mapstructure:"RSA_PUBLIC_KEY"`
+	EMAIL_SENDER_PASSWORD	string	`mapstructure:"EMAIL_SENDER_PASSWORD"`
+	EMAIL_SENDER_NAME	string	`mapstructure:"EMAIL_SENDER_NAME"`
+	EMAIL_SENDER_ADDRESS	string	`mapstructure:"EMAIL_SENDER_ADDRESS"`
 }
 
 // Loads app configuration from .env file.

@@ -43,6 +43,11 @@ WHERE
     OR 
     (id = sqlc.arg("client_id") AND sqlc.arg("client_id") IS NOT NULL);
 
+-- name: NullifyClientOverpayment :execresult
+UPDATE clients
+SET overpayment = 0
+WHERE id = ?;
+
 
 -- name: DeleteClient :execresult
 DELETE FROM clients WHERE id = ?;

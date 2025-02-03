@@ -426,6 +426,16 @@ func (q *Queries) ListClientsByCategory(ctx context.Context, arg ListClientsByCa
 	return items, nil
 }
 
+const nullifyClientOverpayment = `-- name: NullifyClientOverpayment :execresult
+UPDATE clients
+SET overpayment = 0
+WHERE id = ?
+`
+
+func (q *Queries) NullifyClientOverpayment(ctx context.Context, id uint32) (sql.Result, error) {
+	return q.db.ExecContext(ctx, nullifyClientOverpayment, id)
+}
+
 const updateClient = `-- name: UpdateClient :execresult
 UPDATE clients 
     SET id_number = coalesce(?, id_number),

@@ -95,17 +95,17 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 		return err
 	}
 
-	// hasActiveLoan, err := r.queries.CheckActiveLoanForClient(ctx, loan.ClientID)
-	// if err != nil {
-	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to check if client has an active loan: %s", err.Error())
-	// }
+	hasActiveLoan, err := r.queries.CheckActiveLoanForClient(ctx, loan.ClientID)
+	if err != nil {
+		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to check if client has an active loan: %s", err.Error())
+	}
 
-	// if disburseLoan.DisbursedOn != nil {
-	// 	log.Println("Checking if has active loan")
-	// 	if hasActiveLoan {
-	// 		return pkg.Errorf(pkg.ALREADY_EXISTS_ERROR, "client already has an active loan")
-	// 	}
-	// }
+	if disburseLoan.DisbursedOn != nil {
+		log.Println("Checking if has active loan")
+		if hasActiveLoan {
+			return pkg.Errorf(pkg.ALREADY_EXISTS_ERROR, "client already has an active loan")
+		}
+	}
 
 	err = r.db.ExecTx(ctx, func(q *generated.Queries) error {
 		params := generated.DisburseLoanParams{
@@ -152,8 +152,11 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to disburse loan: %s", err.Error())
 		}
 
-		if err = helperCreateInstallation(ctx, q, loan.ID, loan.ProductID, loan.TotalInstallments, loan.InstallmentsPeriod); err != nil {
-			return err
+		// here we will create installments if and only if the status was changed to active
+		if disburseLoan.Status != nil && generated.LoansStatus(*disburseLoan.Status) == generated.LoansStatusACTIVE {
+			if err = helperCreateInstallation(ctx, q, loan.ID, loan.ProductID, loan.TotalInstallments, loan.InstallmentsPeriod); err != nil {
+				return err
+			}
 		}
 
 		return nil

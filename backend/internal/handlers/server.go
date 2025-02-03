@@ -24,9 +24,10 @@ type Server struct {
 	repo   *mysql.MySQLRepo
 
 	payments services.PaymentService
+	worker services.WorkerService
 }
 
-func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, payment *payments.PaymentService) *Server {
+func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, payment *payments.PaymentService, worker services.WorkerService) *Server {
 	r := gin.Default()
 
 	s := &Server{
@@ -34,6 +35,7 @@ func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, pay
 		config:   config,
 		maker:    maker,
 		repo:     repo,
+		worker: worker,
 		payments: payment,
 		ln:       nil,
 	}
@@ -62,6 +64,7 @@ func (s *Server) setUpRoutes() {
 	authRoute.POST("/user", s.createUser)
 	authRoute.GET("/user", s.listUsers)
 	authRoute.GET("/user/:id", s.getUser)
+	v1.POST("/forgot-password", s.forgotPassword)
 	v1.PATCH("/user/reset-password/:token", s.updateUserCredentials)
 	authRoute.PATCH("/user/:id", s.updateUser)
 

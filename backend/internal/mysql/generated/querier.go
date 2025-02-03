@@ -12,6 +12,7 @@ import (
 type Querier interface {
 	AssignNonPosted(ctx context.Context, arg AssignNonPostedParams) (sql.Result, error)
 	CheckActiveLoanForClient(ctx context.Context, clientID uint32) (bool, error)
+	CheckUserExistance(ctx context.Context, email string) (int64, error)
 	CountBranchesByCategory(ctx context.Context, arg CountBranchesByCategoryParams) (int64, error)
 	CountClientsByCategory(ctx context.Context, arg CountClientsByCategoryParams) (int64, error)
 	CountLoans(ctx context.Context, arg CountLoansParams) (int64, error)
@@ -73,6 +74,7 @@ type Querier interface {
 	ListUnpaidInstallmentsByLoan(ctx context.Context, loanID uint32) ([]Installment, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
 	ListUsersByCategory(ctx context.Context, arg ListUsersByCategoryParams) ([]ListUsersByCategoryRow, error)
+	NullifyClientOverpayment(ctx context.Context, id uint32) (sql.Result, error)
 	PayInstallment(ctx context.Context, arg PayInstallmentParams) (sql.Result, error)
 	TransferLoan(ctx context.Context, arg TransferLoanParams) (sql.Result, error)
 	UpdateBranch(ctx context.Context, arg UpdateBranchParams) (sql.Result, error)

@@ -46,4 +46,5 @@ type UserRepository interface {
 	ListUsers(ctx context.Context, category *CategorySearch, pgData *pkg.PaginationMetadata) ([]User, pkg.PaginationMetadata, error)
 	UpdateUser(ctx context.Context, user *UpdateUser) (User, error)
 	UpdateUserPassword(ctx context.Context, email string, password string) error
+	CheckUserExistance(ctx context.Context, email string) bool
 }

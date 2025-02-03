@@ -10,6 +10,8 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/handlers"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/payments"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/workers"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -41,14 +43,32 @@ func main() {
 	repo := mysql.NewMySQLRepo(store)
 	paymentService := payments.NewPaymentService(repo, store)
 
-	server := handlers.NewServer(config, *maker, repo, paymentService)
+	sender := pkg.NewGmailSender(config.EMAIL_SENDER_NAME, config.EMAIL_SENDER_ADDRESS, config.EMAIL_SENDER_PASSWORD)
+
+	redisConfig := services.RedisConfig{
+		Address: "localhost:6379",
+		Password: "",
+		DB: 0,
+	}
+
+	worker := workers.NewWorkerService(redisConfig, sender, repo, *maker)
+
+	err = worker.StartProcessor()
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println("Started worker successfuly")
+
+
+	server := handlers.NewServer(config, *maker, repo, paymentService, worker)
 
 	log.Println("starting server at port ", config.HTTP_PORT)
 	if err := server.Start(); err != nil {
 		panic(err)
 	}
 
-	token, _ := maker.CreateToken("alice@example.com", 1, 1, "ADMIN", 10*time.Hour)
+	token, _ := maker.CreateToken("emiliocliff@gmail.com", 1, 1, "ADMIN", 10*time.Hour)
 
 	log.Println(token)
 
@@ -61,6 +81,8 @@ func main() {
 	if err = server.Stop(); err != nil {
 		log.Fatal(err)
 	}
+
+	worker.StopProcessor()
 
 	log.Println("Server shutdown ...")
 }

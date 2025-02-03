@@ -6,49 +6,61 @@ import {
 	CardContent,
 } from '@/components/ui/card';
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useLocation } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router';
-import { loginFormSchema, LoginForm } from './schema';
+import { useParams, useNavigate } from 'react-router';
 import {
 	Form,
 	FormControl,
 	FormField,
 	FormItem,
+	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
-import { useAuth } from '@/hooks/useAuth';
+import { GalleryVerticalEnd } from 'lucide-react';
+import resetPasswordService from '@/services/resetPassword';
+import { ResetPassowordFormType, resetPasswordFormSchema } from './schema';
 
-export default function LoginPage() {
-	const { login } = useAuth();
-
+function ResetPassword() {
 	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+	const { token } = useParams();
 	const navigate = useNavigate();
+
+	const mutation = useMutation({
+		mutationFn: resetPasswordService,
+	});
+
+	function onSubmit(values: ResetPassowordFormType) {
+		mutation.mutate(values, {
+			onSuccess: (data) => {
+				toast.success('Credentials Updated');
+			},
+			onError: (error: any) => {
+				toast.error(error.message);
+			},
+			onSettled: () => mutation.reset(),
+		});
+		// navigate("/login")
+	}
 
 	function onError(errors: any) {
 		console.log('Errors: ', errors);
 	}
 
-	const onSubmit = async (values: LoginForm) => {
-		try {
-			const data = await login(values.email, values.password);
-			if (data) {
-				navigate('/');
-			}
-		} catch (error: any) {
-			toast.error(error.message);
-		}
-	};
-
-	const form = useForm<LoginForm>({
-		resolver: zodResolver(loginFormSchema),
+	const form = useForm<ResetPassowordFormType>({
+		resolver: zodResolver(resetPasswordFormSchema),
 		defaultValues: {
-			email: '',
-			password: '',
+			token: token,
+			newPassword: '',
+			confirmPassword: '',
 		},
 	});
 
@@ -61,7 +73,7 @@ export default function LoginPage() {
 					<Card className="mx-auto max-w-4xl border-none shadow-none flex-col text-center">
 						<CardHeader className="space-y-1 gap-4">
 							<CardTitle className="text-2xl font-bold">
-								LOGIN
+								Reset Password
 							</CardTitle>
 							<CardDescription className="">
 								Welcome to Kokomed Finance System
@@ -79,24 +91,12 @@ export default function LoginPage() {
 									>
 										<FormField
 											control={form.control}
-											name="email"
+											name="newPassword"
 											render={({ field }) => (
 												<FormItem>
-													<FormControl>
-														<Input
-															placeholder="Email"
-															{...field}
-														/>
-													</FormControl>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-										<FormField
-											control={form.control}
-											name="password"
-											render={({ field }) => (
-												<FormItem>
+													<p className="text-start">
+														New Password
+													</p>
 													<FormControl>
 														<div className="space-y-2 relative">
 															<Input
@@ -137,6 +137,54 @@ export default function LoginPage() {
 												</FormItem>
 											)}
 										/>
+										<FormField
+											control={form.control}
+											name="confirmPassword"
+											render={({ field }) => (
+												<FormItem>
+													<p className="text-start">
+														Confirm Password
+													</p>
+													<FormControl>
+														<div className="space-y-2 relative">
+															<Input
+																placeholder="Password"
+																type={
+																	showConfirmPassword
+																		? 'text'
+																		: 'password'
+																}
+																{...field}
+															/>
+															<button
+																type="button"
+																className="absolute right-3 top-1/3 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+																onClick={() =>
+																	setShowConfirmPassword(
+																		(
+																			prevState,
+																		) =>
+																			!prevState,
+																	)
+																}
+																aria-label={
+																	showConfirmPassword
+																		? 'Hide password'
+																		: 'Show password'
+																}
+															>
+																{showConfirmPassword ? (
+																	<EyeOff className="h-5 w-5" />
+																) : (
+																	<Eye className="h-5 w-5" />
+																)}
+															</button>
+														</div>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
 
 										<Button
 											className=" ml-auto mr-auto"
@@ -154,3 +202,5 @@ export default function LoginPage() {
 		</>
 	);
 }
+
+export default ResetPassword;

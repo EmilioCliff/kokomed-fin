@@ -43,7 +43,7 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 	function onSubmit(values: PaymentFormType) {
 		mutation.mutate(values, {
 			onSuccess: (data) => {
-				queryClient.invalidateQueries({ queryKey: ['loans'] });
+				queryClient.invalidateQueries({ queryKey: ['payments'] });
 				toast.success('Loan Added Successful');
 			},
 			onError: (error: any) => {
