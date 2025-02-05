@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
@@ -96,21 +99,34 @@ func (s *Server) getProduct(ctx *gin.Context) {
 }
 
 func (s *Server) listProducts(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	log.Println("cache miss")
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	products, pgData, err := s.repo.Products.GetAllProducts(ctx, pkg.StringPtr(ctx.Query("search")), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	cacheParams := map[string][]string{
+		"page": {pageNoStr},
+		"limit": {pageSizeStr},
+	}
+
+	search := ctx.Query("search")
+	if search != "" {
+		cacheParams["search"] = []string{search}
+	}
+
+	products, pgData, err := s.repo.Products.GetAllProducts(ctx, pkg.StringPtr(search), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -130,10 +146,21 @@ func (s *Server) listProducts(ctx *gin.Context) {
 		rsp[idx] = v
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"metadata": pgData,
 		"data": rsp,
-	})
+	}
+
+	cacheKey := constructCacheKey("product", cacheParams)
+
+	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (s *Server) listProductsByBranch(ctx *gin.Context) {
@@ -175,18 +202,33 @@ func (s *Server) listProductsByBranch(ctx *gin.Context) {
 }
 
 func (s *Server) structureProduct(p *repository.Product, ctx *gin.Context) (productResponse, error) {
+	cacheKey := fmt.Sprintf("product:%v", p.ID)
+	var dataCached productResponse
+
+	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
+	if exists {
+		log.Println("Cached Hit: ", cacheKey)
+		return dataCached, nil
+	}
+
 	branch, err := s.repo.Branches.GetBranchByID(ctx, p.BranchID)
 	if err != nil {
 		return productResponse{}, err
 	}
 
-	return productResponse{
+	rsp := productResponse{
 		ID:             p.ID,
 		LoanAmount:     p.LoanAmount,
 		BranchName:     branch.Name,
 		RepayAmount:    p.RepayAmount,
 		InterestAmount: p.InterestAmount,
-		}, nil
+		}
+
+	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
+		return productResponse{}, err
+	}
+
+	return rsp, nil
 		// UpdatedBy:      p.UpdatedBy,
 		// UpdatedAt:      p.UpdatedAt,
 		// CreatedAt:      p.CreatedAt,

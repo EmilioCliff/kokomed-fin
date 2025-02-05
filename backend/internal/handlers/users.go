@@ -234,6 +234,8 @@ func (s *Server) updateUserCredentials(ctx *gin.Context) {
 	}
 
 	// get token from redis db
+	// send a uuid then connect uuid to the redis key value
+	// ttl is 10 min expiration of the token
 
 	hashpassword, err := pkg.GenerateHashPassword(req.NewPassword, s.config.PASSWORD_COST)
 	if err != nil {
@@ -311,14 +313,18 @@ func (s *Server) getUser(ctx *gin.Context) {
 }
 
 func (s *Server) listUsers(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
+	log.Println("cache miss")
+
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
@@ -326,10 +332,15 @@ func (s *Server) listUsers(ctx *gin.Context) {
 	}
 
 	params := repository.CategorySearch{}
+	cacheParams := map[string][]string{
+		"page": {pageNoStr},
+		"limit": {pageSizeStr},
+	}
 
 	name := ctx.Query("search")
 	if name != "" {
 		params.Search = pkg.StringPtr(name)
+		cacheParams["search"] = []string{name}
 	}
 
 	role := ctx.Query("role")
@@ -341,6 +352,7 @@ func (s *Server) listUsers(ctx *gin.Context) {
 		}
 
 		params.Role = pkg.StringPtr(strings.Join(roles, ","))
+		cacheParams["role"] = []string{strings.Join(roles, ",")}
 	}
 
 	users, metadata, err := s.repo.Users.ListUsers(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
@@ -363,10 +375,21 @@ func (s *Server) listUsers(ctx *gin.Context) {
 		rsp[idx] = v
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"metadata": metadata,
 		"data": rsp,
-	})
+	}
+
+	cacheKey := constructCacheKey("user", cacheParams)
+
+	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
 }
 
 type updateUserRequest struct {
@@ -435,12 +458,21 @@ func (s *Server) updateUser(ctx *gin.Context) {
 }
 
 func (s *Server) convertGeneratedUser(ctx *gin.Context, user *repository.User) (userResponse, error) {
+	cacheKey := fmt.Sprintf("user:%v", user.ID)
+	var dataCached userResponse
+
+	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
+	if exists {
+		log.Println("Cached Hit: ", cacheKey)
+		return dataCached, nil
+	}
+
 	branch, err := s.repo.Branches.GetBranchByID(ctx, user.BranchID)
 	if err != nil {
 		return userResponse{}, err
 	}
 
-	return userResponse{
+	rsp := userResponse{
 		ID:          user.ID,
 		Fullname:    user.FullName,
 		Email:       user.Email,
@@ -449,5 +481,11 @@ func (s *Server) convertGeneratedUser(ctx *gin.Context, user *repository.User) (
 		BranchName:  branch.Name,
 		CreatedAt:   user.CreatedAt,
 		// RefreshToken: user.RefreshToken,
-	}, nil
+	}
+
+	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
+		return userResponse{}, err
+	}
+
+	return rsp, nil
 }

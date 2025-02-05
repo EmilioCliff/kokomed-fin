@@ -10,6 +10,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/handlers"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/payments"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/redis"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/workers"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
@@ -40,6 +41,8 @@ func main() {
 	}
 	log.Println("db opened successfuly")
 
+	cache := redis.NewCacheClient("localhost:6379", "", 1)
+
 	repo := mysql.NewMySQLRepo(store)
 	paymentService := payments.NewPaymentService(repo, store)
 
@@ -61,7 +64,7 @@ func main() {
 	log.Println("Started worker successfuly")
 
 
-	server := handlers.NewServer(config, *maker, repo, paymentService, worker)
+	server := handlers.NewServer(config, *maker, repo, paymentService, worker, cache)
 
 	log.Println("starting server at port ", config.HTTP_PORT)
 	if err := server.Start(); err != nil {

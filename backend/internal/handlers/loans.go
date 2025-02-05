@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -280,14 +282,17 @@ func (s *Server) getLoan(ctx *gin.Context) {
 }
 
 func (s *Server) listLoansByCategory(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
+	log.Println("cache miss")
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
@@ -295,6 +300,10 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 	}
 
 	params := repository.Category{}
+	cacheParams := map[string][]string{
+		"page": {pageNoStr},
+		"limit": {pageSizeStr},
+	}
 
 	b := ctx.Query("branch")
 	if b != "" {
@@ -306,11 +315,13 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 		}
 
 		params.BranchID = pkg.Uint32Ptr(branchID)
+		cacheParams["branch"] = []string{b}
 	}
 
 	search := ctx.Query("search")
 	if search != "" {
 		params.Search = pkg.StringPtr(strings.ToLower(search))
+		cacheParams["search"] = []string{search}
 	}
 
 	status := ctx.Query("status")
@@ -322,6 +333,7 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 		}
 		
 		params.Statuses = pkg.StringPtr(strings.Join(statuses, ","))
+		cacheParams["status"] = []string{strings.Join(statuses, ",")}
 	}
 
 	loans, pgData, err := s.repo.Loans.ListLoans(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
@@ -342,13 +354,33 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 		}
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"metadata": pgData,
 		"data": rsp, 
-	})
+	}
+
+	cacheKey := constructCacheKey("loan", cacheParams)
+
+	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanResponse, error) {
+	cacheKey := fmt.Sprintf("loan:%v", loan.ID)
+	var dataCached loanResponse
+
+	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
+	if exists {
+		log.Println("Cached Hit: ", cacheKey)
+		return dataCached, nil
+	}
+
 	product, err := s.repo.Products.GetProductByID(ctx, loan.ProductID)
 	if err != nil {
 		return loanResponse{}, err
@@ -443,7 +475,7 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 		loan.LoanPurpose = pkg.StringPtr("")
 	}
 
-	return loanResponse{
+	rsp := loanResponse{
 		ID: loan.ID,
 		Product: productResponse{
 			ID:             product.ID,
@@ -484,5 +516,11 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 		UpdatedBy:          updatedBy,
 		CreatedBy:          createdBy,
 		CreatedAt:          loan.CreatedAt,
-	}, nil
+	}
+
+	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
+		return loanResponse{}, err
+	}
+
+	return rsp, nil
 }

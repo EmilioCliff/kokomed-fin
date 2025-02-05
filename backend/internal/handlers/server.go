@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
@@ -25,9 +28,10 @@ type Server struct {
 
 	payments services.PaymentService
 	worker services.WorkerService
+	cache services.CacheService
 }
 
-func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, payment *payments.PaymentService, worker services.WorkerService) *Server {
+func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, payment *payments.PaymentService, worker services.WorkerService, cache services.CacheService) *Server {
 	r := gin.Default()
 
 	s := &Server{
@@ -36,6 +40,7 @@ func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, pay
 		maker:    maker,
 		repo:     repo,
 		worker: worker,
+		cache: cache,
 		payments: payment,
 		ln:       nil,
 	}
@@ -54,6 +59,8 @@ func (s *Server) setUpRoutes() {
 	// protected routes
 	authRoute := v1Auth.Use(authMiddleware(s.maker))
 
+	cachedRoutes := authRoute.Use(redisCacheMiddleware(s.cache))
+
 	// health check
 	s.router.GET("/health-check", s.healthCheckHandler)
 
@@ -62,7 +69,7 @@ func (s *Server) setUpRoutes() {
 	v1.GET("/refreshToken", s.refreshToken)
 	authRoute.GET("/logout", s.logoutUser)
 	authRoute.POST("/user", s.createUser)
-	authRoute.GET("/user", s.listUsers)
+	cachedRoutes.GET("/user", s.listUsers)
 	authRoute.GET("/user/:id", s.getUser)
 	v1.POST("/forgot-password", s.forgotPassword)
 	v1.PATCH("/user/reset-password/:token", s.updateUserCredentials)
@@ -70,7 +77,7 @@ func (s *Server) setUpRoutes() {
 
 	// clients routes
 	authRoute.POST("/client", s.createClient)
-	authRoute.GET("/client", s.listClients)
+	cachedRoutes.GET("/client", s.listClients)
 	authRoute.GET("/client/branch/:id", s.listClientsByBranch)
 	authRoute.GET("/client/status", s.listClientsByActive) // use query params
 	authRoute.GET("/client/:id", s.getClient)
@@ -78,18 +85,18 @@ func (s *Server) setUpRoutes() {
 
 	// product routes
 	authRoute.POST("/product", s.createProduct)
-	authRoute.GET("/product", s.listProducts)
+	cachedRoutes.GET("/product", s.listProducts)
 	authRoute.GET("/product/branch/:id", s.listProductsByBranch)
 	authRoute.GET("/product/:id", s.getProduct)
 
 	// non-posted routes
-	authRoute.GET("/non-posted/all", s.listAllNonPostedPayments)
+	cachedRoutes.GET("/non-posted/all", s.listAllNonPostedPayments)
 	authRoute.GET("/non-posted/unassigned", s.listUnassignedNonPostedPayments)
 	authRoute.GET("/non-posted/by-id/:id", s.getNonPostedPayment)
 	authRoute.GET("/non-posted/by-type/:type", s.listNonPostedByTransactionSource)
 
 	// branches routes
-	authRoute.GET("/branch", s.listBranches)
+	cachedRoutes.GET("/branch", s.listBranches)
 	authRoute.GET("/branch/:id", s.getBranch)
 	authRoute.POST("/branch", s.createBranch)
 	authRoute.PATCH("/branch/:id", s.updateBranch)
@@ -99,7 +106,7 @@ func (s *Server) setUpRoutes() {
 	authRoute.PATCH("/loan/:id/disburse", s.disburseLoan)
 	authRoute.PATCH("/loan/:id/assign", s.transferLoanOfficer)
 	authRoute.GET("/loan/:id", s.getLoan)
-	authRoute.GET("/loan", s.listLoansByCategory)
+	cachedRoutes.GET("/loan", s.listLoansByCategory)
 
 	// payments routes
 	v1.POST("/payment/callback", s.paymentCallback)
@@ -162,4 +169,21 @@ func errorResponse(err error) gin.H {
 		"status_code": pkg.ErrorCode(err),
 		"message":     pkg.ErrorMessage(err),
 	}
+}
+
+func constructCacheKey(path string, queryParams map[string][]string) string {
+	const prefix = "/api/v1/"
+	if strings.HasPrefix(path, prefix) {
+		path = strings.TrimPrefix(path, prefix)
+	}
+
+	var queryParts []string
+	for key, values := range queryParams {
+		for _, value := range values {
+			queryParts = append(queryParts, fmt.Sprintf("%s=%s", key, value))
+		}
+	}
+	sort.Strings(queryParts) // Sort to ensure cache key consistency
+
+	return fmt.Sprintf("%s:%s", path, strings.Join(queryParts, ":"))
 }

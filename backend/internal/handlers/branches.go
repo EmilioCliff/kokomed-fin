@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
@@ -49,31 +51,55 @@ func (s *Server) getBranch(ctx *gin.Context) {
 }
 
 func (s *Server) listBranches(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	log.Println("cache miss")
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	branches, metadata, err := s.repo.Branches.ListBranches(ctx, pkg.StringPtr(ctx.Query("search")), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	cacheParams := map[string][]string{
+		"page": {pageNoStr},
+		"limit": {pageSizeStr},
+	}
+
+	search := ctx.Query("search")
+	if search != "" {
+		cacheParams["search"] = []string{search}
+	}
+
+	branches, metadata, err := s.repo.Branches.ListBranches(ctx, pkg.StringPtr(search), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"metadata": metadata,
 		"data": branches,
-	})
+	}
+
+	cacheKey := constructCacheKey("branch", cacheParams)
+
+	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (s *Server) updateBranch(ctx *gin.Context) {

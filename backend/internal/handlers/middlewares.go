@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 	"github.com/gin-gonic/gin"
-	// "github.com/redis/go-redis/v9"
 	// "github.com/rs/zerolog"
 	// "github.com/rs/zerolog/log"
 )
@@ -84,31 +85,29 @@ func authMiddleware(maker pkg.JWTMaker) gin.HandlerFunc {
 // 	}
 // }
 
-// func redisCacheMiddleware(redis *redis.Client) gin.HandlerFunc {
-// 	return func(ctx *gin.Context) {
-// 		requestPath := ctx.Request.URL.Path
+func redisCacheMiddleware(cache services.CacheService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		requestPath := ctx.Request.URL.Path
+		queryParams := ctx.Request.URL.Query()
 
-// 		cacheData, err := redis.Get(ctx, requestPath).Bytes()
-// 		if err == nil {
-// 			log.Info().
-// 				Msgf("cached hit for: %v", requestPath)
+		cacheKey := constructCacheKey(requestPath, queryParams)
 
-// 			var jsonData any
-// 			if err := json.Unmarshal(cacheData, &jsonData); err != nil {
-// 				ctx.AbortWithError(http.StatusInternalServerError, errors.New("could not unmarshal redis cache"))
+		var target any
 
-// 				return
-// 			}
+		log.Println(cacheKey)
 
-// 			// ctx.Data(http.StatusOK, "application/json", cacheData)
-// 			ctx.AbortWithStatusJSON(http.StatusOK, jsonData)
+		exists, _ := cache.Get(ctx, cacheKey, &target)
+		if exists {
+			log.Println("Cache hit for: ", cacheKey)
 
-// 			return
-// 		}
+			ctx.AbortWithStatusJSON(http.StatusOK, target)
 
-// 		ctx.Next()
-// 	}
-// }
+			return
+		}
+
+		ctx.Next()
+	}
+}
 
 func CORSmiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {

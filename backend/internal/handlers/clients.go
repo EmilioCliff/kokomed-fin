@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -197,14 +199,17 @@ func (s *Server) updateClient(ctx *gin.Context) {
 }
 
 func (s *Server) listClients(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
+	log.Println("cache miss")
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	pageSize, err := pkg.StringToUint32(ctx.DefaultQuery("limit", "10"))
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
@@ -212,18 +217,25 @@ func (s *Server) listClients(ctx *gin.Context) {
 	}
 
 	params := repository.ClientCategorySearch{}
+	cacheParams := map[string][]string{
+		"page": {pageNoStr},
+		"limit": {pageSizeStr},
+	}
 
 	name := ctx.Query("search")
 	if name != "" {
 		params.Search = pkg.StringPtr(name)
+		cacheParams["search"] = []string{name}
 	}
 
 	active := ctx.Query("active")
 	if active != "" {
 		if active == "2" {
 			params.Active = pkg.BoolPtr(false)
+			cacheParams["active"] = []string{"2"}
 		} else {
 			params.Active = pkg.BoolPtr(true)
+			cacheParams["active"] = []string{"1"}
 		}
 	}
 
@@ -247,10 +259,21 @@ func (s *Server) listClients(ctx *gin.Context) {
 		rsp[idx] = v
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"metadata": metadata,
 		"data": rsp,
-	})
+	}
+
+	cacheKey := constructCacheKey("client", cacheParams)
+
+	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (s *Server) getClient(ctx *gin.Context) {
@@ -355,6 +378,15 @@ func (s *Server) listClientsByActive(ctx *gin.Context) {
 }
 
 func (s *Server) structureClient(c *repository.Client, ctx *gin.Context) (clientResponse, error) {
+	cacheKey := fmt.Sprintf("client:%v", c.ID)
+	var dataCached clientResponse
+
+	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
+	if exists {
+		log.Println("Cached Hit: ", cacheKey)
+		return dataCached, nil
+	}
+
 	assignedStaff, err := s.repo.Users.GetUserByID(ctx, c.AssignedStaff)
 	if err != nil {
 		return clientResponse{}, err
@@ -397,6 +429,10 @@ func (s *Server) structureClient(c *repository.Client, ctx *gin.Context) (client
 
 	if c.IdNumber != nil {
 		rsp.IdNumber = *c.IdNumber
+	}
+
+	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
+		return clientResponse{}, err
 	}
 
 	return rsp, nil
