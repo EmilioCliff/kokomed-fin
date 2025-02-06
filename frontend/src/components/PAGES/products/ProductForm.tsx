@@ -45,7 +45,7 @@ function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
 	});
 
 	function onSubmit(values: ProductFormType) {
-		mutation.mutate(values, {
+		mutation.mutateAsync(values, {
 			onSuccess: () => {
 				console.log('Success');
 				toast.success('Product Added Successful');
