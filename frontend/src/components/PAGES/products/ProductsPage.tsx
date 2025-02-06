@@ -25,7 +25,7 @@ function ProductsPage() {
 
 	const debouncedInput = useDebounce({ value: search, delay: 500 });
 
-	const { isLoading, error, data } = useQuery({
+	const { isLoading, error, data, refetch } = useQuery({
 		queryKey: ['products', pageIndex, pageSize, debouncedInput],
 		queryFn: () => getProducts(pageIndex, pageSize, debouncedInput),
 		staleTime: 5 * 1000,
@@ -63,7 +63,10 @@ function ProductsPage() {
 								Enter the details for the new product.
 							</DialogDescription>
 						</DialogHeader>
-						<ProductForm onFormOpen={setFormOpen} />
+						<ProductForm
+							onMutation={refetch}
+							onFormOpen={setFormOpen}
+						/>
 					</DialogContent>
 				</Dialog>
 			</div>

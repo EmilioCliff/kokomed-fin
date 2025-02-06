@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import VirtualizeddSelect from '../../UI/VisualizedSelect';
@@ -20,9 +20,10 @@ import { Button } from '@/components/ui/button';
 
 interface ProductFormProps {
 	onFormOpen: (isOpen: boolean) => void;
+	onMutation: () => void;
 }
 
-function ProductForm({ onFormOpen }: ProductFormProps) {
+function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
 	const { isLoading, data, error } = useQuery({
 		queryKey: ['loans/form'],
 		queryFn: () => getFormData(false, false, false, true),
@@ -37,7 +38,7 @@ function ProductForm({ onFormOpen }: ProductFormProps) {
 			repayAmount: 0,
 		},
 	});
-	const queryClient = useQueryClient();
+	// const queryClient = useQueryClient();
 
 	const mutation = useMutation({
 		mutationFn: addProduct,
@@ -46,8 +47,9 @@ function ProductForm({ onFormOpen }: ProductFormProps) {
 	function onSubmit(values: ProductFormType) {
 		mutation.mutate(values, {
 			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['products'] });
 				toast.success('Product Added Successful');
+				onMutation();
+				// queryClient.invalidateQueries({ queryKey: ['products'] });
 			},
 			onError: (error: any) => {
 				toast.error(error.message);
