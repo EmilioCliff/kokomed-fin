@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"log"
-	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -31,13 +30,12 @@ type Config struct {
 }
 
 // Loads app configuration from .env file.
-func LoadConfig(path string) (Config, error) {
+func LoadConfig(path ,name, configType string) (Config, error) {
 	viper.AddConfigPath(path)
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
+	viper.SetConfigName(name)
+	viper.SetConfigType(configType)
 
 	viper.AutomaticEnv()
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	// if file not found use authomatic env
 	if err := viper.ReadInConfig(); err != nil {
@@ -49,7 +47,6 @@ func LoadConfig(path string) (Config, error) {
 	}
 
 	var config Config
-	err := viper.Unmarshal(&config)
 
-	return config, err
+	return config, viper.Unmarshal(&config)
 }
