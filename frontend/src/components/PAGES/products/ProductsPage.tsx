@@ -28,7 +28,7 @@ function ProductsPage() {
 	const { isLoading, error, data, refetch } = useQuery({
 		queryKey: ['products', pageIndex, pageSize, debouncedInput],
 		queryFn: () => getProducts(pageIndex, pageSize, debouncedInput),
-		staleTime: 5 * 1000,
+		staleTime: 0,
 		placeholderData: keepPreviousData,
 	});
 
