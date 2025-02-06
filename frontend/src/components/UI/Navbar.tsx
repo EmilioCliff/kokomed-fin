@@ -22,7 +22,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 function Navbar() {
 	const { toggleSidebar, open } = useSidebar();
-	const { logout } = useAuth();
+	const { logout, decoded } = useAuth();
 
 	return (
 		<>
@@ -61,7 +61,12 @@ function Navbar() {
 									<AvatarImage src="https://github.com/shadcn.png" />
 									<AvatarFallback>CN</AvatarFallback>
 								</Avatar>
-								<p className="my-auto">JOAN</p>
+								<p className="my-auto">
+									{decoded?.email
+										?.split('@')[0]
+										?.split('.')[0]
+										.toUpperCase()}
+								</p>
 								<ChevronDown size={20} className="my-auto" />
 							</div>
 						</DropdownMenuTrigger>

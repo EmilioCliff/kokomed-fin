@@ -117,7 +117,7 @@ func (s *Server) createClient(ctx *gin.Context) {
 		return
 	}
 
-	s.cache.DelAll(ctx, "client:limit*")
+	s.cache.DelAll(ctx, "client:limit=*")
 
 	ctx.JSON(http.StatusOK, v)
 }
@@ -198,7 +198,7 @@ func (s *Server) updateClient(ctx *gin.Context) {
 	}
 
 	s.cache.Del(ctx, fmt.Sprintf("client:%d", id))
-	s.cache.DelAll(ctx, "client:limit*")
+	s.cache.DelAll(ctx, "client:limit=*")
 
 	ctx.JSON(http.StatusOK, gin.H{"success": "Client Updated"})
 }

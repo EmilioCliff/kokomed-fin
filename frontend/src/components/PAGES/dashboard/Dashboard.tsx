@@ -70,8 +70,6 @@ function Dashboard() {
 		staleTime: 5 * 1000,
 	});
 
-	console.log(data);
-
 	if (isLoading) {
 		return <DashboardSkeleton />;
 	}

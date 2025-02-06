@@ -47,6 +47,8 @@ func (r *HelperRepository) GetDashboardData(ctx context.Context) (repository.Das
 		inactiveLoans[idx] = repository.InactiveLoan{
 			ID:          loans.ID,
 			Amount:      loans.LoanAmount,
+			ClientName: loans.FullName,
+			ApprovedByName: loans.FullName_2,
 			RepayAmount: loans.RepayAmount,
 			ApprovedOn:  loans.CreatedAt,
 		}

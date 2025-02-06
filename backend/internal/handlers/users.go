@@ -91,7 +91,7 @@ func (s *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	s.cache.DelAll(ctx, "user:limit*")
+	s.cache.DelAll(ctx, "user:limit=*")
 
 	ctx.JSON(http.StatusOK, v)
 }
@@ -459,7 +459,7 @@ func (s *Server) updateUser(ctx *gin.Context) {
 	}
 
 	s.cache.Del(ctx, fmt.Sprintf("user:%d", id))
-	s.cache.DelAll(ctx, "user:limit*")
+	s.cache.DelAll(ctx, "user:limit=*")
 
 	ctx.JSON(http.StatusOK, v)
 }

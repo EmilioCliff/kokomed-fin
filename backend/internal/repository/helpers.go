@@ -42,6 +42,8 @@ type InactiveLoan struct {
 	ID uint32 `json:"id"`
 	Amount float64 `json:"amount"`
 	RepayAmount float64 `json:"repayAmount"`
+	ClientName string `json:"clientName"`
+	ApprovedByName string `json:"approvedByName"`
 	Client ClientDashboardResponse `json:"client"`
 	LoanOfficer UserDashboardResponse `json:"loanOfficer"`
 	ApprovedBy UserDashboardResponse `json:"approvedBy"`

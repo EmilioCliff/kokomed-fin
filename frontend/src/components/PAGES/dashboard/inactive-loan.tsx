@@ -22,7 +22,7 @@ export const inactiveLoanColumns: ColumnDef<InactiveLoan>[] = [
 			<DataTableColumnHeader column={column} title="Client Name" />
 		),
 		cell: ({ row }) => (
-			<div className="w-[80]">{row.original.client.fullName}</div>
+			<div className="w-[80]">{row.original.clientName}</div>
 		),
 		enableSorting: true,
 		filterFn: (row, filterValue) => {
@@ -51,25 +51,17 @@ export const inactiveLoanColumns: ColumnDef<InactiveLoan>[] = [
 		enableSorting: true,
 	},
 	{
-		id: 'loanOfficerName',
-		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Loan Officer" />
-		),
-		cell: ({ row }) => <div>{row.original.loanOfficer.fullName}</div>,
-		enableSorting: true,
-	},
-	{
 		id: 'approvedByName',
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title="Approved By" />
 		),
-		cell: ({ row }) => <div>{row.original.approvedBy.fullName}</div>,
+		cell: ({ row }) => <div>{row.original.approvedByName}</div>,
 		enableSorting: true,
 	},
 	{
 		accessorKey: 'approvedOn',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Approved Date" />
+			<DataTableColumnHeader column={column} title="Approved On" />
 		),
 		cell: ({ row }) => (
 			<div>

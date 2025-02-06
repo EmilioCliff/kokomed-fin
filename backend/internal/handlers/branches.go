@@ -29,7 +29,7 @@ func (s *Server) createBranch(ctx *gin.Context) {
 		return
 	}
 
-	s.cache.DelAll(ctx, "branch:limit*")
+	s.cache.DelAll(ctx, "branch:limit=*")
 
 	ctx.JSON(http.StatusOK, branch)
 }

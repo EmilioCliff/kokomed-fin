@@ -70,7 +70,7 @@ func (s *Server) createProduct(ctx *gin.Context) {
 		return
 	}
 
-	s.cache.DelAll(ctx, "product:limit*")
+	s.cache.DelAll(ctx, "product:limit=*")
 
 	ctx.JSON(http.StatusOK, v)
 }

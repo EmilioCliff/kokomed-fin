@@ -6,6 +6,8 @@ export const inactiveLoanSchema = z.object({
 	id: z.number(),
 	amount: z.number(),
 	repayAmount: z.number(),
+	clientName: z.string(),
+	approvedByName: z.string(),
 	client: clientSchema,
 	loanOfficer: userSchema,
 	approvedBy: userSchema,

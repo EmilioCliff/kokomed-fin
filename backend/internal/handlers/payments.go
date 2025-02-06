@@ -80,7 +80,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 		return
 	}
 
-	s.cache.DelAll(ctx, "non-posted/all:limit*")
+	s.cache.DelAll(ctx, "non-posted/all:limit=*")
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"ResultCode": 0,
@@ -133,7 +133,7 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 	}
 
 	s.cache.Del(ctx, fmt.Sprintf("non-posted:%d", id))
-	s.cache.DelAll(ctx, "non-posted/all:limit*")
+	s.cache.DelAll(ctx, "non-posted/all:limit=*")
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

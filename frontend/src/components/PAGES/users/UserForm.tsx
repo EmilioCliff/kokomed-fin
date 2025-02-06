@@ -157,7 +157,7 @@ function UserForm({ onFormOpen }: UserFormProps) {
 							name="branchId"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Product</FormLabel>
+									<FormLabel>Branch</FormLabel>
 									<FormControl>
 										{data?.branch && (
 											<VirtualizeddSelect

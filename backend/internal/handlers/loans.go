@@ -153,7 +153,7 @@ func (s *Server) createLoan(ctx *gin.Context) {
 		return
 	}
 
-	s.cache.DelAll(ctx, "loan:limit*")
+	s.cache.DelAll(ctx, "loan:limit=*")
 
 	ctx.JSON(http.StatusOK, rsp)
 }
@@ -227,7 +227,7 @@ func (s *Server) disburseLoan(ctx *gin.Context) {
 	}
 
 	s.cache.Del(ctx, fmt.Sprintf("loan:%d", id))
-	s.cache.DelAll(ctx, "loan:limit*")
+	s.cache.DelAll(ctx, "loan:limit=*")
 
 	ctx.JSON(http.StatusOK, gin.H{"success": "Loan disbursed successfully"})
 }
