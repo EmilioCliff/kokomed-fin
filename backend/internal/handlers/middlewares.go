@@ -110,7 +110,22 @@ func redisCacheMiddleware(cache services.CacheService) gin.HandlerFunc {
 }
 
 func CORSmiddleware() gin.HandlerFunc {
+	allowedOrigins := []string{
+        "https://kokomed-fin.vercel.app",
+        "https://frontend-production-91ce.up.railway.app",
+		"localhost:5173",
+    }
+
 	return func(ctx *gin.Context) {
+		origin := ctx.Request.Header.Get("Origin")
+        
+        for _, allowedOrigin := range allowedOrigins {
+            if origin == allowedOrigin {
+                ctx.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+                break
+            }
+        }
+
 		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "https://kokomed-fin.vercel.app")
 		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
