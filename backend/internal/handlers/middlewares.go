@@ -112,7 +112,7 @@ func redisCacheMiddleware(cache services.CacheService) gin.HandlerFunc {
 func CORSmiddleware() gin.HandlerFunc {
 	allowedOrigins := []string{
         "https://kokomed-fin.vercel.app",
-        "https://frontend-production-91ce.up.railway.app",
+        "https://frontend-production-786b.up.railway.app",
 		"http://localhost:5173",
     }
 
