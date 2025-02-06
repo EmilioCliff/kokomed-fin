@@ -32,6 +32,8 @@ function ProductsPage() {
 		placeholderData: keepPreviousData,
 	});
 
+	console.log(data);
+
 	if (data?.metadata) {
 		updateTableContext(data.metadata);
 	}
