@@ -1,10 +1,10 @@
-FROM node:23-alpine3.20 AS build
+FROM node:20-alpine
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY package.json .
 RUN npm install
+RUN npm i -g serve
 COPY . .
 RUN npm run build
 
 EXPOSE 3000
-CMD ["npm", "run", "preview"]
- 
+CMD [ "serve", "-s", "dist" ]
