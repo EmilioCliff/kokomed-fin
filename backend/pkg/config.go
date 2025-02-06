@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -36,6 +37,7 @@ func LoadConfig(path string) (Config, error) {
 	viper.SetConfigType("yaml")
 
 	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	// if file not found use authomatic env
 	if err := viper.ReadInConfig(); err != nil {

@@ -26,6 +26,7 @@ func main() {
 		panic(err)
 	}
 	log.Println("config loaded successfuly")
+	log.Println("RAW ENV:", os.Getenv("HTTP_PORT"), os.Getenv("PORT"), os.Getenv("MYSQL_USER"))
 	log.Println(config)
 
 	maker, err := pkg.NewJWTMaker(config.RSA_PRIVATE_KEY, config.RSA_PUBLIC_KEY, config)
