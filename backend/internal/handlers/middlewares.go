@@ -111,11 +111,11 @@ func redisCacheMiddleware(cache services.CacheService) gin.HandlerFunc {
 
 func CORSmiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // Use "*" or a specific domain
+		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "https://kokomed-fin.vercel.app")
 		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true") // Allow credentials if needed
-		ctx.Writer.Header().Set("Access-Control-Max-Age", "86400")          // Cache preflight response for 1 day
+		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true") 
+		ctx.Writer.Header().Set("Access-Control-Max-Age", "86400")          
 
 		// Handle preflight (OPTIONS) requests
 		if ctx.Request.Method == http.MethodOptions {
