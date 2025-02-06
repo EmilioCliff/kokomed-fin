@@ -24,7 +24,7 @@ export const productColumns: ColumnDef<Product>[] = [
 		cell: ({ row }) => (
 			<div className="w-[80]">{row.getValue('branchName')}</div>
 		),
-		filterFn: (row, columnId, filterValue) => {
+		filterFn: (row, filterValue) => {
 			const name = row.original.branchName.toLowerCase();
 			return name.includes(filterValue.toLowerCase());
 		},

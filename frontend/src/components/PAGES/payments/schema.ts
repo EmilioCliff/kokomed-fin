@@ -17,11 +17,17 @@ export const paymentSchema = z.object({
 export type Payment = z.infer<typeof paymentSchema>;
 
 export const paymentFormSchema = z.object({
-	TransAmount: z.coerce.number(),
-	TransID: z.string(),
-	BillRefNumber: z.string(),
-	MSISDN: z.string(),
-	FirstName: z.string(),
+	TransAmount: z.number().gt(0, { message: 'Select valid amount' }),
+	TransID: z
+		.string()
+		.min(3, { message: 'Must be 3 or more characters long' }),
+	BillRefNumber: z
+		.string()
+		.min(10, { message: 'Must be 10 characters long' }),
+	MSISDN: z.string().min(10, { message: 'Must be 10 characters long' }),
+	FirstName: z
+		.string()
+		.min(3, { message: 'Must be 3 or more characters long' }),
 	App: z.string(),
 });
 

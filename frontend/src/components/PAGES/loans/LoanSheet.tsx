@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/sheet';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import {
 	Popover,
 	PopoverContent,
@@ -64,7 +64,7 @@ function LoanSheet() {
 		console.log(values);
 
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['loans'] });
 				toast.success('Load Updated');
 			},

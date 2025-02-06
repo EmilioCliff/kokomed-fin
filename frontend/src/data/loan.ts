@@ -1,5 +1,3 @@
-import { Value } from '@radix-ui/react-select';
-
 export const statuses = [
 	{
 		value: 'inactive',

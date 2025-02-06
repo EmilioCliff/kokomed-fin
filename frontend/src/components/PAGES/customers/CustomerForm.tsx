@@ -6,14 +6,13 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-toastify';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import VirtualizeddSelect from '../../UI/VisualizedSelect';
 import addClient from '@/services/addClient';
 import {
 	Form,
 	FormControl,
 	FormField,
-	FormDescription,
 	FormItem,
 	FormLabel,
 	FormMessage,
@@ -68,7 +67,7 @@ function CustomerForm({ onFormOpen }: UserFormProps) {
 
 	function onSubmit(values: ClientFormType) {
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['clients'] });
 				toast.success('Customer Added Successful');
 			},

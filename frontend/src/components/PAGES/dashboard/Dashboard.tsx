@@ -1,13 +1,11 @@
 import Widgets from '@/components/UI/Widgets';
 import LoanStatusChart from '@/components/UI/LoanStatusChart';
 import RecentPayments from '@/components/PAGES/dashboard/RecentPayments';
-import { generateRandomInactiveLoans } from '@/lib/generator';
 import { DataTable } from '@/components/table/data-table';
 import { inactiveLoanColumns } from './inactive-loan';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DashboardSkeleton from '@/components/UI/DashboardSkeleton';
-import { DashboardData } from './schema';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getDashboardData } from '@/services/helpers';
 
 // const widgets = [

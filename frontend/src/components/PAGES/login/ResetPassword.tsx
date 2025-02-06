@@ -7,23 +7,20 @@ import {
 } from '@/components/ui/card';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useLocation } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-toastify';
-import { useParams, useNavigate } from 'react-router';
+import { useParams } from 'react-router';
 import {
 	Form,
 	FormControl,
 	FormField,
 	FormItem,
-	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
-import { GalleryVerticalEnd } from 'lucide-react';
 import resetPasswordService from '@/services/resetPassword';
 import { ResetPassowordFormType, resetPasswordFormSchema } from './schema';
 
@@ -32,7 +29,6 @@ function ResetPassword() {
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 	const { token } = useParams();
-	const navigate = useNavigate();
 
 	const mutation = useMutation({
 		mutationFn: resetPasswordService,
@@ -40,7 +36,7 @@ function ResetPassword() {
 
 	function onSubmit(values: ResetPassowordFormType) {
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				toast.success('Credentials Updated');
 			},
 			onError: (error: any) => {

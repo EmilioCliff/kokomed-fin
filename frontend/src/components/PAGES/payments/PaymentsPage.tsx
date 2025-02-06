@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/table/data-table';
 import { paymentColumns } from './payment';
-import { paymentSources, assignedStatus } from '@/data/loan';
+import { paymentSources } from '@/data/loan';
 
 function PaymentsPage() {
 	const [formOpen, setFormOpen] = useState(false);

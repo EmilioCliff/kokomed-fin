@@ -1,5 +1,5 @@
 import { Table, Column } from '@tanstack/react-table';
-import { useState, useMemo, useContext } from 'react';
+import { useContext } from 'react';
 import { TableContext } from '@/context/TableContext';
 import { X } from 'lucide-react';
 

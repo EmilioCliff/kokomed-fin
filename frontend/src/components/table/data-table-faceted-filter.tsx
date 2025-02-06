@@ -15,8 +15,6 @@ import {
 } from '../ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Separator } from '../ui/separator';
-import { useContext } from 'react';
-import { TableContext } from '@/context/TableContext';
 import { useTable } from '@/hooks/useTable';
 
 interface DataTableFacetedFilterProps<TData, TValue> {

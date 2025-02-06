@@ -1,15 +1,13 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
 import Spinner from '@/components/UI/Spinner';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { PaymentFormType, paymentFormSchema } from './schema';
 import addPayment from '@/services/addPayment';
 import {
 	Form,
 	FormControl,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -42,7 +40,7 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 
 	function onSubmit(values: PaymentFormType) {
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['payments'] });
 				toast.success('Loan Added Successful');
 			},
@@ -51,7 +49,7 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 			},
 			onSettled: () => mutation.reset(),
 		});
-		// onFormOpen(false);
+		onFormOpen(false);
 	}
 
 	function onError(errors: any) {

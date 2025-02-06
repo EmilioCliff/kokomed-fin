@@ -66,7 +66,7 @@ function CustomerSheet() {
 		};
 
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['clients'] });
 				toast.success('User Updated');
 			},

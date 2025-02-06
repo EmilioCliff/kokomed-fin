@@ -9,7 +9,6 @@ import { role } from '@/lib/types';
 import getFormData from '@/services/getFormData';
 import { Input } from '@/components/ui/input';
 import ClientCardDisplay from '@/components/UI/ClientCardDisplay';
-import { Client } from '../customers/schema';
 import {
 	Sheet,
 	SheetContent,
@@ -47,7 +46,7 @@ function PaymentSheet() {
 		console.log(values);
 
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['payments'] });
 				toast.success('Load Updated');
 			},

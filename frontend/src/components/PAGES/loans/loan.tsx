@@ -26,7 +26,7 @@ export const loanColumns: ColumnDef<Loan>[] = [
 		cell: ({ row }) => (
 			<div className="w-[80]">{row.original.client.fullName}</div>
 		),
-		filterFn: (row, columnId, filterValue) => {
+		filterFn: (row, filterValue) => {
 			const fullName = row.original.client.fullName.toLowerCase();
 			const loanOfficerName =
 				row.original.loanOfficer.fullName.toLowerCase();
@@ -55,7 +55,7 @@ export const loanColumns: ColumnDef<Loan>[] = [
 			<DataTableColumnHeader column={column} title="Loan Officer" />
 		),
 		cell: ({ row }) => <div>{row.original.loanOfficer.fullName}</div>,
-		filterFn: (row, columnId, filterValue) => {
+		filterFn: (row, filterValue) => {
 			const fullName = row.original.client.fullName.toLowerCase();
 			const loanOfficerName =
 				row.original.loanOfficer.fullName.toLowerCase();

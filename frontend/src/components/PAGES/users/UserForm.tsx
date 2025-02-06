@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import getFormData from '@/services/getFormData';
 import { UserFormType, userFormSchema } from './schema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import VirtualizeddSelect from '../../UI/VisualizedSelect';
 import addUser from '@/services/addUser';
 import { toast } from 'react-toastify';
@@ -22,10 +22,8 @@ import {
 	SelectContent,
 	SelectGroup,
 	SelectItem,
-	SelectLabel,
 	SelectTrigger,
 	SelectValue,
-	SelectSeparator,
 } from '@/components/ui/select';
 import { role } from '@/lib/types';
 
@@ -59,7 +57,7 @@ function UserForm({ onFormOpen }: UserFormProps) {
 
 	function onSubmit(values: UserFormType) {
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['users'] });
 				toast.success('User Added Successful');
 			},

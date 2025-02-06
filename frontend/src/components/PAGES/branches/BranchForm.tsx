@@ -36,7 +36,7 @@ function BranchForm({ onFormOpen }: LoanFormProps) {
 
 	function onSubmit(values: BranchFormType) {
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['branches'] });
 				toast.success('Branch Added Successful');
 			},

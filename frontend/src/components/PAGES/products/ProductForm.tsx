@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import VirtualizeddSelect from '../../UI/VisualizedSelect';
-import { cn } from '@/lib/utils';
 import Spinner from '@/components/UI/Spinner';
 import addProduct from '@/services/addProduct';
 import getFormData from '@/services/getFormData';
@@ -11,7 +10,6 @@ import { toast } from 'react-toastify';
 import {
 	Form,
 	FormControl,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -47,7 +45,7 @@ function ProductForm({ onFormOpen }: ProductFormProps) {
 
 	function onSubmit(values: ProductFormType) {
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['products'] });
 				toast.success('Product Added Successful');
 			},

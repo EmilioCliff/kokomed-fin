@@ -21,7 +21,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	config, err := pkg.LoadConfig("../../.envs/.local")
+	config, err := pkg.LoadConfig(".")
 	if err != nil {
 		panic(err)
 	}

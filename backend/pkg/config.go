@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	CONFIG_PATH				string		  `mapstructure:"CONFIG_PATH"`
 	HTTP_PORT               string        `mapstructure:"HTTP_PORT"`
 	MYSQL_USER              string        `mapstructure:"MYSQL_USER"`
 	MYSQL_PASSWORD          string        `mapstructure:"MYSQL_PASSWORD"`

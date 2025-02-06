@@ -55,7 +55,7 @@ function UserSheet() {
 		console.log(values);
 
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['users'] });
 				toast.success('User Updated');
 			},

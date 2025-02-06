@@ -36,7 +36,7 @@ export const userColumns: ColumnDef<User>[] = [
 		cell: ({ row }) => (
 			<div className="w-[80]">{row.getValue('fullName')}</div>
 		),
-		filterFn: (row, columnId, filterValue) => {
+		filterFn: (row, filterValue) => {
 			const fullName = row.original.fullName.toLowerCase();
 			const email = row.original.email.toLowerCase();
 			return (
@@ -52,7 +52,7 @@ export const userColumns: ColumnDef<User>[] = [
 			<DataTableColumnHeader column={column} title="Email" />
 		),
 		cell: ({ row }) => <div className="">{row.getValue('email')}</div>,
-		filterFn: (row, columnId, filterValue) => {
+		filterFn: (row, filterValue) => {
 			const fullName = row.original.fullName.toLowerCase();
 			const email = row.original.email.toLowerCase();
 			return (
@@ -86,7 +86,7 @@ export const userColumns: ColumnDef<User>[] = [
 				</Badge>
 			);
 		},
-		filterFn: (row, columnId, filterValue) => {
+		filterFn: (row, filterValue) => {
 			const role = row.original.role.toLowerCase();
 			return role.includes(filterValue);
 		},

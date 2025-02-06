@@ -21,7 +21,7 @@ export const branchColumns: ColumnDef<Branch>[] = [
 			<DataTableColumnHeader column={column} title="Branch Name" />
 		),
 		cell: ({ row }) => <div className="w-[80]">{row.original.name}</div>,
-		filterFn: (row, columnId, filterValue) => {
+		filterFn: (row, filterValue) => {
 			const name = row.original.name.toLowerCase();
 			return name.includes(filterValue.toLowerCase());
 		},

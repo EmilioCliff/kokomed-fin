@@ -35,7 +35,7 @@ export const clientColumns: ColumnDef<Client>[] = [
 		cell: ({ row }) => (
 			<div className="w-[80]">{row.getValue('fullName')}</div>
 		),
-		filterFn: (row, columnId, filterValue) => {
+		filterFn: (row, filterValue) => {
 			const fullName = row.original.fullName.toLowerCase();
 			const phoneNumber = row.original.phoneNumber.toLowerCase();
 			return (
@@ -53,7 +53,7 @@ export const clientColumns: ColumnDef<Client>[] = [
 		cell: ({ row }) => (
 			<div className="w-[80]">{row.getValue('phoneNumber')}</div>
 		),
-		filterFn: (row, columnId, filterValue) => {
+		filterFn: (row, filterValue) => {
 			const fullName = row.original.fullName.toLowerCase();
 			const phoneNumber = row.original.phoneNumber.toLowerCase();
 			return (

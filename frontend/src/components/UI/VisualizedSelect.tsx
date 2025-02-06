@@ -9,7 +9,6 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { commonDataResponse } from '@/lib/types';
-import { getFormDataType } from '@/lib/types';
 
 interface VirtualizeddSelectProps {
 	options: commonDataResponse[];
@@ -27,6 +26,8 @@ export default function VirtualizeddSelect({
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedOption, setSelectedOption] = useState('');
 	const [open, setOpen] = useState(false);
+	// change
+	console.log(value);
 
 	const filteredOptions = useMemo(() => {
 		return options.filter((option) =>

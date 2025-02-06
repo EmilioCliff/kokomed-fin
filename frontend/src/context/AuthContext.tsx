@@ -7,7 +7,6 @@ import refreshTokenService from '@/services/refreshToken';
 import logoutService from '@/services/logout';
 import { jwtDecode } from 'jwt-decode';
 import { role } from '@/lib/types';
-import { z } from 'zod';
 
 export interface AuthContextType {
 	accessToken: string | null;

@@ -65,7 +65,7 @@ export default function LoanForm({ onFormOpen }: LoanFormProps) {
 
 	function onSubmit(values: LoanFormType) {
 		mutation.mutate(values, {
-			onSuccess: (data) => {
+			onSuccess: () => {
 				queryClient.invalidateQueries({ queryKey: ['loans'] });
 				toast.success('Loan Added Successful');
 			},

@@ -7,7 +7,6 @@ import {
 	ChevronRight,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
-import { useContext } from 'react';
 import {
 	Sidebar,
 	SidebarContent,
@@ -26,7 +25,6 @@ import {
 	CollapsibleTrigger,
 	CollapsibleContent,
 } from '../ui/collapsible';
-import { TableContext } from '@/context/TableContext';
 import { useTable } from '@/hooks/useTable';
 
 function AppSidebar() {
