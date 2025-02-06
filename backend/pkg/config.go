@@ -23,6 +23,8 @@ type Config struct {
 	EMAIL_SENDER_PASSWORD	string	`mapstructure:"EMAIL_SENDER_PASSWORD"`
 	EMAIL_SENDER_NAME	string	`mapstructure:"EMAIL_SENDER_NAME"`
 	EMAIL_SENDER_ADDRESS	string	`mapstructure:"EMAIL_SENDER_ADDRESS"`
+	REDIS_ADDRESS	string	`mapstructure:"REDIS_ADDRESS"`
+	REDIS_PASSWORD	string	`mapstructure:"REDIS_PASSWORD"`
 }
 
 // Loads app configuration from .env file.

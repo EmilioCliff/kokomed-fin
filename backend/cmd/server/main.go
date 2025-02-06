@@ -41,7 +41,7 @@ func main() {
 	}
 	log.Println("db opened successfuly")
 
-	cache := redis.NewCacheClient("localhost:6379", "", 1)
+	cache := redis.NewCacheClient(config.REDIS_ADDRESS, config.REDIS_PASSWORD, 1)
 
 	repo := mysql.NewMySQLRepo(store)
 	paymentService := payments.NewPaymentService(repo, store)
@@ -49,8 +49,8 @@ func main() {
 	sender := pkg.NewGmailSender(config.EMAIL_SENDER_NAME, config.EMAIL_SENDER_ADDRESS, config.EMAIL_SENDER_PASSWORD)
 
 	redisConfig := services.RedisConfig{
-		Address: "127.0.0.1:6379",
-		Password: "",
+		Address: config.REDIS_ADDRESS,
+		Password: config.REDIS_PASSWORD,
 		DB: 0,
 	}
 
