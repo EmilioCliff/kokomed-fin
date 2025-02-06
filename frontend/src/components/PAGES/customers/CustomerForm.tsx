@@ -286,9 +286,9 @@ function CustomerForm({ onFormOpen }: UserFormProps) {
 								<FormItem>
 									<FormLabel>Assigned Agent</FormLabel>
 									<FormControl>
-										{data?.client && (
+										{data?.user && (
 											<VirtualizeddSelect
-												options={data.client}
+												options={data.user}
 												placeholder="Assign To Agent"
 												value={field.value}
 												onChange={(id) =>
