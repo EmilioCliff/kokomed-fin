@@ -114,6 +114,7 @@ func CORSmiddleware() gin.HandlerFunc {
         "https://kokomed-fin.vercel.app",
         "https://frontend-production-786b.up.railway.app",
 		"http://localhost:5173",
+		"http:frontend",
     }
 
 	return func(ctx *gin.Context) {
