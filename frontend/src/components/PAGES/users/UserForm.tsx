@@ -53,19 +53,17 @@ function UserForm({ onFormOpen }: UserFormProps) {
 
 	const mutation = useMutation({
 		mutationFn: addUser,
+		onSuccess: async () => {
+			toast.success('User Added Successful');
+			await queryClient.invalidateQueries({ queryKey: ['users'] });
+		},
+		onError: (error: any) => {
+			toast.error(error.message);
+		},
 	});
 
 	function onSubmit(values: UserFormType) {
-		mutation.mutate(values, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['users'] });
-				toast.success('User Added Successful');
-			},
-			onError: (error: any) => {
-				toast.error(error.message);
-			},
-			onSettled: () => mutation.reset(),
-		});
+		mutation.mutate(values);
 		onFormOpen(false);
 	}
 

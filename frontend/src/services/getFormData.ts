@@ -34,6 +34,8 @@ const getFormData = async (
 			throw new Error(response.message);
 		}
 
+		console.log(response);
+
 		return response;
 	} catch (error: any) {
 		if (error.response) {

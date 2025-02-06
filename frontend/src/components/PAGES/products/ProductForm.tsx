@@ -43,15 +43,11 @@ function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
 	const mutation = useMutation({
 		mutationFn: addProduct,
 		onSuccess: async (data) => {
-			console.log('Success');
-			console.log(data);
 			toast.success('Product Added Successful');
-			onMutation();
 			await queryClient.invalidateQueries({ queryKey: ['products'] });
 			onFormOpen(false);
 		},
 		onError: (error: any) => {
-			console.log('Error');
 			toast.error(error.message);
 		},
 	});
