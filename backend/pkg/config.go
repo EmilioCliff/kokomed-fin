@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"log"
 	"time"
 
 	"github.com/spf13/viper"
@@ -38,8 +39,8 @@ func LoadConfig(path string) (Config, error) {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return Config{}, Errorf(NOT_FOUND_ERROR, "config file not found")
-		}
+			log.Println("Config file not found, using environment variables")
+		} 
 
 		return Config{}, Errorf(INTERNAL_ERROR, "failed to read config: %s", err.Error())
 	}
