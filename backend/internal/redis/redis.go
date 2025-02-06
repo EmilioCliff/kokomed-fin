@@ -56,6 +56,7 @@ func (r *redisCache) Del(ctx context.Context, key string) error {
 func (r *redisCache) DelAll(ctx context.Context, pattern string) error {
 	iter := r.client.Scan(ctx, 0, pattern, 100).Iterator()
 	for iter.Next(ctx) {
+		log.Println("Deleting Key: ", iter.Val())
 		if err := r.client.Del(ctx, iter.Val()).Err(); err != nil {
 			log.Printf("Failed to delete key: %s, error: %v\n", iter.Val(), err)
 		}
