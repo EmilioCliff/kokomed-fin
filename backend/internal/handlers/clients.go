@@ -117,6 +117,8 @@ func (s *Server) createClient(ctx *gin.Context) {
 		return
 	}
 
+	s.cache.DelAll(ctx, "client:limit*")
+
 	ctx.JSON(http.StatusOK, v)
 }
 
@@ -195,6 +197,9 @@ func (s *Server) updateClient(ctx *gin.Context) {
 		return
 	}
 
+	s.cache.Del(ctx, fmt.Sprintf("client:%d", id))
+	s.cache.DelAll(ctx, "client:limit*")
+
 	ctx.JSON(http.StatusOK, gin.H{"success": "Client Updated"})
 }
 
@@ -266,7 +271,7 @@ func (s *Server) listClients(ctx *gin.Context) {
 
 	cacheKey := constructCacheKey("client", cacheParams)
 
-	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
 

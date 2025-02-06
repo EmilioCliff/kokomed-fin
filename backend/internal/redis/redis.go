@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
@@ -49,7 +50,26 @@ func (r *redisCache) Get(ctx context.Context, key string, target interface{}) (b
 }
 
 func (r *redisCache) Del(ctx context.Context, key string) error {
+	log.Println("Del: ", key)
 	return r.client.Del(ctx, key).Err()
+}
+
+func (r *redisCache) DelAll(ctx context.Context, pattern string) error {
+	log.Println("DelAll: ", pattern)
+
+	iter := r.client.Scan(ctx, 0, pattern, 0).Iterator()
+	for iter.Next(ctx) {
+		if err := r.client.Del(ctx, iter.Val()).Err(); err != nil {
+			log.Printf("Failed to delete key: %s, error: %v\n", iter.Val(), err)
+		}
+	}
+
+	if err := iter.Err(); err != nil {
+		log.Printf("Error scanning keys: %v\n", err)
+		return err
+	}
+
+	return nil
 }
 
 func (r *redisCache) Exists(ctx context.Context, key string) (bool, error) {

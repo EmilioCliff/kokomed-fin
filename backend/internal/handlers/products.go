@@ -70,6 +70,8 @@ func (s *Server) createProduct(ctx *gin.Context) {
 		return
 	}
 
+	s.cache.DelAll(ctx, "product:limit*")
+
 	ctx.JSON(http.StatusOK, v)
 }
 
@@ -153,7 +155,7 @@ func (s *Server) listProducts(ctx *gin.Context) {
 
 	cacheKey := constructCacheKey("product", cacheParams)
 
-	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
 
@@ -229,7 +231,4 @@ func (s *Server) structureProduct(p *repository.Product, ctx *gin.Context) (prod
 	}
 
 	return rsp, nil
-		// UpdatedBy:      p.UpdatedBy,
-		// UpdatedAt:      p.UpdatedAt,
-		// CreatedAt:      p.CreatedAt,
 }

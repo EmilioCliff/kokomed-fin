@@ -91,6 +91,8 @@ func (s *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
+	s.cache.DelAll(ctx, "user:limit*")
+
 	ctx.JSON(http.StatusOK, v)
 }
 
@@ -251,6 +253,8 @@ func (s *Server) updateUserCredentials(ctx *gin.Context) {
 		return
 	}
 
+	s.cache.Del(ctx, fmt.Sprintf("user:%d", payload.UserID))
+
 	ctx.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
@@ -382,7 +386,7 @@ func (s *Server) listUsers(ctx *gin.Context) {
 
 	cacheKey := constructCacheKey("user", cacheParams)
 
-	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
 
@@ -453,6 +457,9 @@ func (s *Server) updateUser(ctx *gin.Context) {
 
 		return
 	}
+
+	s.cache.Del(ctx, fmt.Sprintf("user:%d", id))
+	s.cache.DelAll(ctx, "user:limit*")
 
 	ctx.JSON(http.StatusOK, v)
 }

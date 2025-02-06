@@ -29,6 +29,8 @@ func (s *Server) createBranch(ctx *gin.Context) {
 		return
 	}
 
+	s.cache.DelAll(ctx, "branch:limit*")
+
 	ctx.JSON(http.StatusOK, branch)
 }
 
@@ -92,7 +94,7 @@ func (s *Server) listBranches(ctx *gin.Context) {
 
 	cacheKey := constructCacheKey("branch", cacheParams)
 
-	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
 

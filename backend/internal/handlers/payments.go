@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -79,6 +80,8 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 		return
 	}
 
+	s.cache.DelAll(ctx, "non-posted/all:limit*")
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"ResultCode": 0,
 		"ResultDesc": "Accepted",
@@ -128,6 +131,9 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 
 		return
 	}
+
+	s.cache.Del(ctx, fmt.Sprintf("non-posted:%d", id))
+	s.cache.DelAll(ctx, "non-posted/all:limit*")
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

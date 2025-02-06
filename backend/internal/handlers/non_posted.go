@@ -92,9 +92,9 @@ func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
 		"data": rsp,
 	}
 
-	cacheKey := constructCacheKey("loan", cacheParams)
+	cacheKey := constructCacheKey("non-posted/all", cacheParams)
 
-	err = s.cache.Set(ctx, cacheKey, response, 20*time.Second)
+	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
 

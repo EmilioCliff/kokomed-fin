@@ -49,7 +49,7 @@ func main() {
 	sender := pkg.NewGmailSender(config.EMAIL_SENDER_NAME, config.EMAIL_SENDER_ADDRESS, config.EMAIL_SENDER_PASSWORD)
 
 	redisConfig := services.RedisConfig{
-		Address: "localhost:6379",
+		Address: "127.0.0.1:6379",
 		Password: "",
 		DB: 0,
 	}
