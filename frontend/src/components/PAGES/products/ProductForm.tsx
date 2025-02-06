@@ -47,14 +47,17 @@ function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
 	function onSubmit(values: ProductFormType) {
 		mutation.mutate(values, {
 			onSuccess: () => {
+				console.log('Success');
 				toast.success('Product Added Successful');
 				onMutation();
 				// queryClient.invalidateQueries({ queryKey: ['products'] });
 			},
 			onError: (error: any) => {
+				console.log('Error');
 				toast.error(error.message);
 			},
 			onSettled: async () => {
+				console.log('Settled');
 				return await queryClient.invalidateQueries({
 					queryKey: ['products'],
 				});
