@@ -21,11 +21,12 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	config, err := pkg.LoadConfig(".")
+	config, err := pkg.LoadConfig("../../.envs/.local")
 	if err != nil {
 		panic(err)
 	}
 	log.Println("config loaded successfuly")
+	log.Println(config)
 
 	maker, err := pkg.NewJWTMaker(config.RSA_PRIVATE_KEY, config.RSA_PUBLIC_KEY, config)
 	if err != nil {
