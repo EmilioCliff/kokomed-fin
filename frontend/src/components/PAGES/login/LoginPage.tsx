@@ -24,6 +24,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginPage() {
+	console.log(import.meta.env.VITE_API_URL);
 	const { login } = useAuth();
 
 	const [showPassword, setShowPassword] = useState(false);
