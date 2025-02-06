@@ -42,7 +42,7 @@ interface UserFormProps {
 function CustomerForm({ onFormOpen }: UserFormProps) {
 	const { isLoading, data, error } = useQuery({
 		queryKey: ['clients/form'],
-		queryFn: () => getFormData(false, true, false, true),
+		queryFn: () => getFormData(false, false, true, true),
 		staleTime: 5 * 1000,
 	});
 
