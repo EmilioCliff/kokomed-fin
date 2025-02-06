@@ -55,7 +55,6 @@ function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
 				toast.error(error.message);
 			},
 			onSettled: async () => {
-				mutation.reset();
 				return await queryClient.invalidateQueries({
 					queryKey: ['products'],
 				});

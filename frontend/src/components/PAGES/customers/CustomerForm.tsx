@@ -41,7 +41,7 @@ interface UserFormProps {
 
 function CustomerForm({ onFormOpen }: UserFormProps) {
 	const { isLoading, data, error } = useQuery({
-		queryKey: ['loans/form'],
+		queryKey: ['clients/form'],
 		queryFn: () => getFormData(false, true, false, true),
 		staleTime: 5 * 1000,
 	});
@@ -67,8 +67,8 @@ function CustomerForm({ onFormOpen }: UserFormProps) {
 
 	function onSubmit(values: ClientFormType) {
 		mutation.mutate(values, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['clients'] });
+			onSuccess: async () => {
+				await queryClient.invalidateQueries({ queryKey: ['clients'] });
 				toast.success('Customer Added Successful');
 			},
 			onError: (error: any) => {

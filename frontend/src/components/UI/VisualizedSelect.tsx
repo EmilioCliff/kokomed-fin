@@ -26,8 +26,8 @@ export default function VirtualizeddSelect({
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedOption, setSelectedOption] = useState('');
 	const [open, setOpen] = useState(false);
-	// change
-	console.log(value);
+
+	// console.log(value);
 
 	const filteredOptions = useMemo(() => {
 		return options.filter((option) =>
