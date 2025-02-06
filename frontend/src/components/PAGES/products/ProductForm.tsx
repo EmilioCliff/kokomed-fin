@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import VirtualizeddSelect from '../../UI/VisualizedSelect';
@@ -38,7 +38,7 @@ function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
 			repayAmount: 0,
 		},
 	});
-	// const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
 	const mutation = useMutation({
 		mutationFn: addProduct,
@@ -54,7 +54,12 @@ function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
 			onError: (error: any) => {
 				toast.error(error.message);
 			},
-			onSettled: () => mutation.reset(),
+			onSettled: async () => {
+				mutation.reset();
+				return await queryClient.invalidateQueries({
+					queryKey: ['products'],
+				});
+			},
 		});
 		onFormOpen(false);
 	}
