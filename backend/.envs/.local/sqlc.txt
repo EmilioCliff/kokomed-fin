@@ -38,6 +38,16 @@ $ curl -L https://github.com/golang-migrate/migrate/releases/download/$version/m
 -- LIMIT ? OFFSET ?;
 
 
+{
+	"rewrites": [
+		{
+			"source": "/(.*)",
+			"destination": "/index.html"
+		}
+	]
+}
+
+
 <Sheet
 				open={!!selectedRow}
 				onOpenChange={(open: boolean) => {
