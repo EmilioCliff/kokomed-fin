@@ -34,7 +34,6 @@ export default function LoginPage() {
 	}
 
 	const onSubmit = async (values: LoginForm) => {
-		console.log(values);
 		try {
 			const data = await login(values.email, values.password);
 			if (data) {

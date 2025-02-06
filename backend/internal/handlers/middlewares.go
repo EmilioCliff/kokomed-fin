@@ -113,7 +113,7 @@ func CORSmiddleware() gin.HandlerFunc {
 	allowedOrigins := []string{
         "https://kokomed-fin.vercel.app",
         "https://frontend-production-91ce.up.railway.app",
-		"localhost:5173",
+		"http://localhost:5173",
     }
 
 	return func(ctx *gin.Context) {
@@ -126,7 +126,6 @@ func CORSmiddleware() gin.HandlerFunc {
             }
         }
 
-		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "https://kokomed-fin.vercel.app")
 		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true") 
