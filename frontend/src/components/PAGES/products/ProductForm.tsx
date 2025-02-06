@@ -42,28 +42,22 @@ function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
 
 	const mutation = useMutation({
 		mutationFn: addProduct,
+		onSuccess: async (data) => {
+			console.log('Success');
+			console.log(data);
+			toast.success('Product Added Successful');
+			onMutation();
+			await queryClient.invalidateQueries({ queryKey: ['products'] });
+			onFormOpen(false);
+		},
+		onError: (error: any) => {
+			console.log('Error');
+			toast.error(error.message);
+		},
 	});
 
 	function onSubmit(values: ProductFormType) {
-		mutation.mutateAsync(values, {
-			onSuccess: () => {
-				console.log('Success');
-				toast.success('Product Added Successful');
-				onMutation();
-				// queryClient.invalidateQueries({ queryKey: ['products'] });
-			},
-			onError: (error: any) => {
-				console.log('Error');
-				toast.error(error.message);
-			},
-			onSettled: async () => {
-				console.log('Settled');
-				return await queryClient.invalidateQueries({
-					queryKey: ['products'],
-				});
-			},
-		});
-		onFormOpen(false);
+		mutation.mutate(values);
 	}
 
 	function onError(errors: any) {
