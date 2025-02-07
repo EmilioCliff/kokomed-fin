@@ -72,6 +72,111 @@ func (mr *MockQuerierMockRecorder) CheckActiveLoanForClient(ctx, clientID any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckActiveLoanForClient", reflect.TypeOf((*MockQuerier)(nil).CheckActiveLoanForClient), ctx, clientID)
 }
 
+// CheckUserExistance mocks base method.
+func (m *MockQuerier) CheckUserExistance(ctx context.Context, email string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckUserExistance", ctx, email)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckUserExistance indicates an expected call of CheckUserExistance.
+func (mr *MockQuerierMockRecorder) CheckUserExistance(ctx, email any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckUserExistance", reflect.TypeOf((*MockQuerier)(nil).CheckUserExistance), ctx, email)
+}
+
+// CountBranchesByCategory mocks base method.
+func (m *MockQuerier) CountBranchesByCategory(ctx context.Context, arg generated.CountBranchesByCategoryParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountBranchesByCategory", ctx, arg)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountBranchesByCategory indicates an expected call of CountBranchesByCategory.
+func (mr *MockQuerierMockRecorder) CountBranchesByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountBranchesByCategory", reflect.TypeOf((*MockQuerier)(nil).CountBranchesByCategory), ctx, arg)
+}
+
+// CountClientsByCategory mocks base method.
+func (m *MockQuerier) CountClientsByCategory(ctx context.Context, arg generated.CountClientsByCategoryParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountClientsByCategory", ctx, arg)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountClientsByCategory indicates an expected call of CountClientsByCategory.
+func (mr *MockQuerierMockRecorder) CountClientsByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountClientsByCategory", reflect.TypeOf((*MockQuerier)(nil).CountClientsByCategory), ctx, arg)
+}
+
+// CountLoans mocks base method.
+func (m *MockQuerier) CountLoans(ctx context.Context, arg generated.CountLoansParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountLoans", ctx, arg)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountLoans indicates an expected call of CountLoans.
+func (mr *MockQuerierMockRecorder) CountLoans(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountLoans", reflect.TypeOf((*MockQuerier)(nil).CountLoans), ctx, arg)
+}
+
+// CountLoansByCategory mocks base method.
+func (m *MockQuerier) CountLoansByCategory(ctx context.Context, arg generated.CountLoansByCategoryParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountLoansByCategory", ctx, arg)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountLoansByCategory indicates an expected call of CountLoansByCategory.
+func (mr *MockQuerierMockRecorder) CountLoansByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountLoansByCategory", reflect.TypeOf((*MockQuerier)(nil).CountLoansByCategory), ctx, arg)
+}
+
+// CountNonPostedByCategory mocks base method.
+func (m *MockQuerier) CountNonPostedByCategory(ctx context.Context, arg generated.CountNonPostedByCategoryParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountNonPostedByCategory", ctx, arg)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountNonPostedByCategory indicates an expected call of CountNonPostedByCategory.
+func (mr *MockQuerierMockRecorder) CountNonPostedByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountNonPostedByCategory", reflect.TypeOf((*MockQuerier)(nil).CountNonPostedByCategory), ctx, arg)
+}
+
+// CountUsersByCategory mocks base method.
+func (m *MockQuerier) CountUsersByCategory(ctx context.Context, arg generated.CountUsersByCategoryParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountUsersByCategory", ctx, arg)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountUsersByCategory indicates an expected call of CountUsersByCategory.
+func (mr *MockQuerierMockRecorder) CountUsersByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountUsersByCategory", reflect.TypeOf((*MockQuerier)(nil).CountUsersByCategory), ctx, arg)
+}
+
 // CreateBranch mocks base method.
 func (m *MockQuerier) CreateBranch(ctx context.Context, name string) (sql.Result, error) {
 	m.ctrl.T.Helper()
@@ -368,6 +473,21 @@ func (mr *MockQuerierMockRecorder) GetClientIDByPhoneNumber(ctx, phoneNumber any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientIDByPhoneNumber", reflect.TypeOf((*MockQuerier)(nil).GetClientIDByPhoneNumber), ctx, phoneNumber)
 }
 
+// GetClientOverpayment mocks base method.
+func (m *MockQuerier) GetClientOverpayment(ctx context.Context, id uint32) (float64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetClientOverpayment", ctx, id)
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetClientOverpayment indicates an expected call of GetClientOverpayment.
+func (mr *MockQuerierMockRecorder) GetClientOverpayment(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientOverpayment", reflect.TypeOf((*MockQuerier)(nil).GetClientOverpayment), ctx, id)
+}
+
 // GetInstallment mocks base method.
 func (m *MockQuerier) GetInstallment(ctx context.Context, id uint32) (generated.Installment, error) {
 	m.ctrl.T.Helper()
@@ -563,6 +683,21 @@ func (mr *MockQuerierMockRecorder) ListAllNonPostedByTransactionSource(ctx, tran
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllNonPostedByTransactionSource", reflect.TypeOf((*MockQuerier)(nil).ListAllNonPostedByTransactionSource), ctx, transactionSource)
 }
 
+// ListBrachesByCategory mocks base method.
+func (m *MockQuerier) ListBrachesByCategory(ctx context.Context, arg generated.ListBrachesByCategoryParams) ([]generated.Branch, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListBrachesByCategory", ctx, arg)
+	ret0, _ := ret[0].([]generated.Branch)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBrachesByCategory indicates an expected call of ListBrachesByCategory.
+func (mr *MockQuerierMockRecorder) ListBrachesByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBrachesByCategory", reflect.TypeOf((*MockQuerier)(nil).ListBrachesByCategory), ctx, arg)
+}
+
 // ListBranches mocks base method.
 func (m *MockQuerier) ListBranches(ctx context.Context) ([]generated.Branch, error) {
 	m.ctrl.T.Helper()
@@ -621,6 +756,21 @@ func (m *MockQuerier) ListClientsByBranch(ctx context.Context, arg generated.Lis
 func (mr *MockQuerierMockRecorder) ListClientsByBranch(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListClientsByBranch", reflect.TypeOf((*MockQuerier)(nil).ListClientsByBranch), ctx, arg)
+}
+
+// ListClientsByCategory mocks base method.
+func (m *MockQuerier) ListClientsByCategory(ctx context.Context, arg generated.ListClientsByCategoryParams) ([]generated.ListClientsByCategoryRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListClientsByCategory", ctx, arg)
+	ret0, _ := ret[0].([]generated.ListClientsByCategoryRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListClientsByCategory indicates an expected call of ListClientsByCategory.
+func (mr *MockQuerierMockRecorder) ListClientsByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListClientsByCategory", reflect.TypeOf((*MockQuerier)(nil).ListClientsByCategory), ctx, arg)
 }
 
 // ListInstallmentsByLoan mocks base method.
@@ -713,6 +863,21 @@ func (mr *MockQuerierMockRecorder) ListNonDisbursedLoans(ctx, arg any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNonDisbursedLoans", reflect.TypeOf((*MockQuerier)(nil).ListNonDisbursedLoans), ctx, arg)
 }
 
+// ListNonPostedByCategory mocks base method.
+func (m *MockQuerier) ListNonPostedByCategory(ctx context.Context, arg generated.ListNonPostedByCategoryParams) ([]generated.NonPosted, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListNonPostedByCategory", ctx, arg)
+	ret0, _ := ret[0].([]generated.NonPosted)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListNonPostedByCategory indicates an expected call of ListNonPostedByCategory.
+func (mr *MockQuerierMockRecorder) ListNonPostedByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNonPostedByCategory", reflect.TypeOf((*MockQuerier)(nil).ListNonPostedByCategory), ctx, arg)
+}
+
 // ListNonPostedByTransactionSource mocks base method.
 func (m *MockQuerier) ListNonPostedByTransactionSource(ctx context.Context, arg generated.ListNonPostedByTransactionSourceParams) ([]generated.NonPosted, error) {
 	m.ctrl.T.Helper()
@@ -758,6 +923,21 @@ func (mr *MockQuerierMockRecorder) ListProductsByBranch(ctx, arg any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsByBranch", reflect.TypeOf((*MockQuerier)(nil).ListProductsByBranch), ctx, arg)
 }
 
+// ListProductsByCategory mocks base method.
+func (m *MockQuerier) ListProductsByCategory(ctx context.Context, arg generated.ListProductsByCategoryParams) ([]generated.ListProductsByCategoryRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListProductsByCategory", ctx, arg)
+	ret0, _ := ret[0].([]generated.ListProductsByCategoryRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListProductsByCategory indicates an expected call of ListProductsByCategory.
+func (mr *MockQuerierMockRecorder) ListProductsByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsByCategory", reflect.TypeOf((*MockQuerier)(nil).ListProductsByCategory), ctx, arg)
+}
+
 // ListUnassignedNonPosted mocks base method.
 func (m *MockQuerier) ListUnassignedNonPosted(ctx context.Context, arg generated.ListUnassignedNonPostedParams) ([]generated.NonPosted, error) {
 	m.ctrl.T.Helper()
@@ -801,6 +981,36 @@ func (m *MockQuerier) ListUsers(ctx context.Context, arg generated.ListUsersPara
 func (mr *MockQuerierMockRecorder) ListUsers(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockQuerier)(nil).ListUsers), ctx, arg)
+}
+
+// ListUsersByCategory mocks base method.
+func (m *MockQuerier) ListUsersByCategory(ctx context.Context, arg generated.ListUsersByCategoryParams) ([]generated.ListUsersByCategoryRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListUsersByCategory", ctx, arg)
+	ret0, _ := ret[0].([]generated.ListUsersByCategoryRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListUsersByCategory indicates an expected call of ListUsersByCategory.
+func (mr *MockQuerierMockRecorder) ListUsersByCategory(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsersByCategory", reflect.TypeOf((*MockQuerier)(nil).ListUsersByCategory), ctx, arg)
+}
+
+// NullifyClientOverpayment mocks base method.
+func (m *MockQuerier) NullifyClientOverpayment(ctx context.Context, id uint32) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NullifyClientOverpayment", ctx, id)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NullifyClientOverpayment indicates an expected call of NullifyClientOverpayment.
+func (mr *MockQuerierMockRecorder) NullifyClientOverpayment(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NullifyClientOverpayment", reflect.TypeOf((*MockQuerier)(nil).NullifyClientOverpayment), ctx, id)
 }
 
 // PayInstallment mocks base method.

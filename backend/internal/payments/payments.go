@@ -27,7 +27,7 @@ func NewPaymentService(mySQL *mysql.MySQLRepo, store *mysql.Store) *PaymentServi
 	}
 }
 
-func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *services.MpesaCallbackData) error {
+func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *services.MpesaCallbackData) (uint32, error) {
 	params := &repository.NonPosted{
 		TransactionSource: callbackData.TransactionSource,
 		TransactionNumber: callbackData.TransactionID,
@@ -39,20 +39,22 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 		PaidDate:          time.Now(),
 	}
 
+	loanID := uint32(0)
 	// if the payment is assigned to a client create a non posted and update the loan in tx
 	if params.AssignedTo != nil {
-		loanID, err := p.mySQL.Loans.GetClientActiceLoan(ctx, *params.AssignedTo)
+		var err error
+		loanID, err = p.mySQL.Loans.GetClientActiceLoan(ctx, *params.AssignedTo)
 		if err != nil {
 			if pkg.ErrorCode(err) == pkg.NOT_FOUND_ERROR {
 				// if client doesnt have a active loan add payment to the overpayment
 				if err = p.mySQL.Clients.UpdateClientOverpayment(ctx, params.AccountNumber, params.Amount); err != nil {
-					return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan overpayment: %s", err.Error())
+					return 0, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan overpayment: %s", err.Error())
 				}
 
-				return nil
+				return 0, nil
 			}
 
-			return err
+			return 0, err
 		}
 		
 		log.Println("Active Loan: ", loanID)
@@ -92,19 +94,20 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 			return err
 		})
 		if err != nil {
-			return err
+			return 0, err
 		}
 	} else {
 		_, err := p.mySQL.NonPosted.CreateNonPosted(ctx, params)
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
-	return nil
+	return loanID, nil
 }
 
-func (p *PaymentService) TriggerManualPayment(ctx context.Context, paymentData services.ManualPaymentData) error {
+func (p *PaymentService) TriggerManualPayment(ctx context.Context, paymentData services.ManualPaymentData) (uint32, error) {
+	loanID := uint32(0)
 	err := p.db.ExecTx(ctx, func(q *generated.Queries) error {
 		_, err := q.AssignNonPosted(ctx, generated.AssignNonPostedParams{
 			ID: paymentData.NonPostedID,
@@ -128,7 +131,7 @@ func (p *PaymentService) TriggerManualPayment(ctx context.Context, paymentData s
 		}
 
 		// get clients active loan
-		loanID, err := q.GetClientActiveLoan(ctx, generated.GetClientActiveLoanParams{
+		loanID, err = q.GetClientActiveLoan(ctx, generated.GetClientActiveLoanParams{
 			ClientID: paymentData.ClientID,
 			Status:   generated.LoansStatusACTIVE,
 		})
@@ -161,7 +164,7 @@ func (p *PaymentService) TriggerManualPayment(ctx context.Context, paymentData s
 		return nil
 	})
 
-	return err
+	return loanID, err
 }
 
 func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repository.UpdateLoan) error {

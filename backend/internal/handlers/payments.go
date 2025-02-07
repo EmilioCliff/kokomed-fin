@@ -74,12 +74,14 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 		callbackData.AssignedTo = pkg.Uint32Ptr(clientID)
 	}
 
-	if err := s.payments.ProcessCallback(ctx, &callbackData); err != nil {
+	loanId, err := s.payments.ProcessCallback(ctx, &callbackData); 
+	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
+	s.cache.Del(ctx, fmt.Sprintf("loan:%d", loanId))
 	s.cache.DelAll(ctx, "non-posted/all:limit=*")
 
 	ctx.JSON(http.StatusOK, gin.H{
@@ -121,7 +123,7 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 		return
 	}
 
-	err = s.payments.TriggerManualPayment(ctx, services.ManualPaymentData{
+	loanId, err := s.payments.TriggerManualPayment(ctx, services.ManualPaymentData{
 		NonPostedID: id,
 		ClientID:    req.ClientID,
 		AdminUserID: payloadData.UserID,
@@ -132,6 +134,7 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 		return
 	}
 
+	s.cache.Del(ctx, fmt.Sprintf("loan:%d", loanId))
 	s.cache.Del(ctx, fmt.Sprintf("non-posted:%d", id))
 	s.cache.DelAll(ctx, "non-posted/all:limit=*")
 
