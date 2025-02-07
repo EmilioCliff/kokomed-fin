@@ -2,8 +2,6 @@ import api from '@/API/api';
 import { updateClientType } from '@/lib/types';
 
 const updateClient = async (data: updateClientType) => {
-	console.log(data);
-
 	try {
 		const response = await api
 			.patch<updateClientType>(`/client/${data.id}`, data)

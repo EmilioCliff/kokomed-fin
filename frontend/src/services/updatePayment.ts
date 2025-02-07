@@ -2,7 +2,6 @@ import api from '@/API/api';
 import { updatePaymentType } from '@/lib/types';
 
 const updatePayment = async (data: updatePaymentType) => {
-	console.log(data);
 	try {
 		const response = await api
 			.patch<updatePaymentType>(`/payment/${data.id}/assign`, data)

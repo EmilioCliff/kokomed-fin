@@ -63,20 +63,18 @@ function CustomerForm({ onFormOpen }: UserFormProps) {
 
 	const mutation = useMutation({
 		mutationFn: addClient,
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ['clients'] });
+			toast.success('Customer Added Successful');
+		},
+		onError: (error: any) => {
+			toast.error(error.message);
+		},
+		onSettled: () => onFormOpen(false),
 	});
 
 	function onSubmit(values: ClientFormType) {
-		mutation.mutate(values, {
-			onSuccess: async () => {
-				await queryClient.invalidateQueries({ queryKey: ['clients'] });
-				toast.success('Customer Added Successful');
-			},
-			onError: (error: any) => {
-				toast.error(error.message);
-			},
-			onSettled: () => mutation.reset(),
-		});
-		onFormOpen(false);
+		mutation.mutate(values);
 	}
 
 	function onError(errors: any) {

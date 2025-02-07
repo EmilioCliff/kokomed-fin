@@ -83,8 +83,6 @@ export const paymentColumns: ColumnDef<Payment>[] = [
 		),
 		filterFn: (row, id, filterValues: string[]) => {
 			const cellValue = row.getValue(id);
-			console.log(filterValues);
-			console.log(cellValue);
 			return filterValues.includes(String(cellValue));
 		},
 		enableHiding: true,

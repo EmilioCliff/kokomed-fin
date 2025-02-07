@@ -16,7 +16,6 @@ const resetPasswordService = async (data: ResetPassowordFormType) => {
 
 		return response;
 	} catch (error: any) {
-		console.log(error);
 		if (error.response) {
 			throw new Error(error.response.data.message);
 		}

@@ -49,6 +49,19 @@ function LoanSheet() {
 
 	const mutation = useMutation({
 		mutationFn: updateLoan,
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ['loans'] });
+			toast.success('Load Updated');
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		},
+		onSettled: () => {
+			setStatus(null);
+			setDisbursedDate(null);
+			setFeePaid(null);
+			setSelectedRow(null);
+		},
 	});
 
 	const onSave = () => {
@@ -61,23 +74,7 @@ function LoanSheet() {
 			feePaid: feePaid ? feePaid : undefined,
 		};
 
-		console.log(values);
-
-		mutation.mutate(values, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['loans'] });
-				toast.success('Load Updated');
-			},
-			onError: (error) => {
-				toast.error(error.message);
-			},
-			onSettled: () => mutation.reset(),
-		});
-
-		setStatus(null);
-		setDisbursedDate(null);
-		setFeePaid(null);
-		setSelectedRow(null);
+		mutation.mutate(values);
 	};
 
 	const fieldRenderers: Record<string, (value: any) => JSX.Element> = {

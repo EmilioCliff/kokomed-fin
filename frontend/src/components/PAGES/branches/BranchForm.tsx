@@ -32,20 +32,18 @@ function BranchForm({ onFormOpen }: LoanFormProps) {
 
 	const mutation = useMutation({
 		mutationFn: addBranch,
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ['branches'] });
+			toast.success('Branch Added Successful');
+		},
+		onError: (error: any) => {
+			toast.error(error.message);
+		},
+		onSettled: () => onFormOpen(false),
 	});
 
 	function onSubmit(values: BranchFormType) {
-		mutation.mutate(values, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['branches'] });
-				toast.success('Branch Added Successful');
-			},
-			onError: (error: any) => {
-				toast.error(error.message);
-			},
-			onSettled: () => mutation.reset(),
-		});
-		onFormOpen(false);
+		mutation.mutate(values);
 	}
 
 	function onError(errors: any) {

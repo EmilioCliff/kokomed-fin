@@ -43,6 +43,18 @@ function UserSheet() {
 
 	const mutation = useMutation({
 		mutationFn: updateUser,
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ['users'] });
+			toast.success('User Updated');
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		},
+		onSettled: () => {
+			setUserRole(null);
+			setBranchId(null);
+			setSelectedRow(null);
+		},
 	});
 
 	const onSave = () => {
@@ -52,22 +64,7 @@ function UserSheet() {
 			branchId: branchId ? branchId : undefined,
 		};
 
-		console.log(values);
-
-		mutation.mutate(values, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['users'] });
-				toast.success('User Updated');
-			},
-			onError: (error) => {
-				toast.error(error.message);
-			},
-			onSettled: () => mutation.reset(),
-		});
-
-		setUserRole(null);
-		setBranchId(null);
-		setSelectedRow(null);
+		mutation.mutate(values);
 	};
 
 	const fieldRenderers: Record<string, (value: any) => JSX.Element> = {

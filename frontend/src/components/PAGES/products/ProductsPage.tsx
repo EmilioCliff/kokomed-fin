@@ -32,8 +32,6 @@ function ProductsPage() {
 		placeholderData: keepPreviousData,
 	});
 
-	console.log(data);
-
 	if (data?.metadata) {
 		updateTableContext(data.metadata);
 	}
@@ -63,10 +61,7 @@ function ProductsPage() {
 								Enter the details for the new product.
 							</DialogDescription>
 						</DialogHeader>
-						<ProductForm
-							onMutation={refetch}
-							onFormOpen={setFormOpen}
-						/>
+						<ProductForm onFormOpen={setFormOpen} />
 					</DialogContent>
 				</Dialog>
 			</div>

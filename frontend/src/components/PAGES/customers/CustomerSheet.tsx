@@ -54,6 +54,17 @@ function CustomerSheet() {
 
 	const mutation = useMutation({
 		mutationFn: updateClient,
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ['clients'] });
+			toast.success('User Updated');
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		},
+		onSettled: () => {
+			setBranchId(undefined);
+			setSelectedRow(null);
+		},
 	});
 
 	const onSave = () => {
@@ -65,19 +76,7 @@ function CustomerSheet() {
 			active: active ? active : undefined,
 		};
 
-		mutation.mutate(values, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['clients'] });
-				toast.success('User Updated');
-			},
-			onError: (error) => {
-				toast.error(error.message);
-			},
-			onSettled: () => mutation.reset(),
-		});
-
-		setBranchId(undefined);
-		setSelectedRow(null);
+		mutation.mutate(values);
 	};
 
 	const fieldRenderers: Record<string, (value: any) => JSX.Element> = {

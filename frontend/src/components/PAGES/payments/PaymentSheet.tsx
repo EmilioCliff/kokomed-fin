@@ -35,6 +35,17 @@ function PaymentSheet() {
 
 	const mutation = useMutation({
 		mutationFn: updatePayment,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['payments'] });
+			toast.success('Payment Assigned Successfully');
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		},
+		onSettled: () => {
+			setClientId(0);
+			setSelectedRow(null);
+		},
 	});
 
 	const onSave = () => {
@@ -43,21 +54,7 @@ function PaymentSheet() {
 			clientId: clientId ? clientId : 0,
 		};
 
-		console.log(values);
-
-		mutation.mutate(values, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['payments'] });
-				toast.success('Load Updated');
-			},
-			onError: (error) => {
-				toast.error(error.message);
-			},
-			onSettled: () => mutation.reset(),
-		});
-
-		setClientId(0);
-		setSelectedRow(null);
+		mutation.mutate(values);
 	};
 
 	const fieldRenderers: Record<string, (value: any) => JSX.Element> = {

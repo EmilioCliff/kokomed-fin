@@ -20,10 +20,9 @@ import { Button } from '@/components/ui/button';
 
 interface ProductFormProps {
 	onFormOpen: (isOpen: boolean) => void;
-	onMutation: () => void;
 }
 
-function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
+function ProductForm({ onFormOpen }: ProductFormProps) {
 	const { isLoading, data, error } = useQuery({
 		queryKey: ['loans/form'],
 		queryFn: () => getFormData(false, false, false, true),
@@ -42,14 +41,14 @@ function ProductForm({ onFormOpen, onMutation }: ProductFormProps) {
 
 	const mutation = useMutation({
 		mutationFn: addProduct,
-		onSuccess: async (data) => {
-			toast.success('Product Added Successful');
+		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: ['products'] });
-			onFormOpen(false);
+			toast.success('Product Added Successful');
 		},
 		onError: (error: any) => {
 			toast.error(error.message);
 		},
+		onSettled: () => onFormOpen(false),
 	});
 
 	function onSubmit(values: ProductFormType) {

@@ -61,20 +61,18 @@ export default function LoanForm({ onFormOpen }: LoanFormProps) {
 
 	const mutation = useMutation({
 		mutationFn: addLoan,
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ['loans'] });
+			toast.success('Loan Added Successful');
+		},
+		onError: (error: any) => {
+			toast.error(error.message);
+		},
+		onSettled: () => onFormOpen(false),
 	});
 
 	function onSubmit(values: LoanFormType) {
-		mutation.mutate(values, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['loans'] });
-				toast.success('Loan Added Successful');
-			},
-			onError: (error: any) => {
-				toast.error(error.message);
-			},
-			onSettled: () => mutation.reset(),
-		});
-		onFormOpen(false);
+		mutation.mutate(values);
 	}
 
 	function onError(errors: any) {

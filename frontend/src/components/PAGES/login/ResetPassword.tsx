@@ -32,19 +32,19 @@ function ResetPassword() {
 
 	const mutation = useMutation({
 		mutationFn: resetPasswordService,
+		onSuccess: () => {
+			toast.success('Credentials Updated');
+			// navigate('/login');
+		},
+		onError: (error: any) => {
+			toast.error(error.message);
+		},
 	});
 
 	function onSubmit(values: ResetPassowordFormType) {
 		mutation.mutate(values, {
-			onSuccess: () => {
-				toast.success('Credentials Updated');
-			},
-			onError: (error: any) => {
-				toast.error(error.message);
-			},
 			onSettled: () => mutation.reset(),
 		});
-		// navigate("/login")
 	}
 
 	function onError(errors: any) {

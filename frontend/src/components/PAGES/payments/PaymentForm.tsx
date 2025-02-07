@@ -36,20 +36,18 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 
 	const mutation = useMutation({
 		mutationFn: addPayment,
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ['payments'] });
+			toast.success('Payment Added Successful');
+		},
+		onError: (error: any) => {
+			toast.error(error.message);
+		},
+		onSettled: () => onFormOpen(false),
 	});
 
 	function onSubmit(values: PaymentFormType) {
-		mutation.mutate(values, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['payments'] });
-				toast.success('Loan Added Successful');
-			},
-			onError: (error: any) => {
-				toast.error(error.message);
-			},
-			onSettled: () => mutation.reset(),
-		});
-		onFormOpen(false);
+		mutation.mutate(values);
 	}
 
 	function onError(errors: any) {
