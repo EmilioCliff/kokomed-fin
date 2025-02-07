@@ -11,7 +11,7 @@ export const clientColumns: ColumnDef<Client>[] = [
 			<DataTableColumnHeader column={column} title="Client ID" />
 		),
 		cell: ({ row }) => (
-			<div className="text-center">{`${String(
+			<div className="text-center">{`CM${String(
 				row.getValue('id'),
 			).padStart(3, '0')}`}</div>
 		),

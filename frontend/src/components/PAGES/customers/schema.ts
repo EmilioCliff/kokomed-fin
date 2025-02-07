@@ -30,8 +30,8 @@ export const clientFormSchema = z.object({
 	// dob: z.string().date().optional(),
 	dob: z.string().optional(),
 	gender: z.enum(['MALE', 'FEMALE']),
-	branchId: z.number().gte(0, { message: 'Select valid branch' }),
-	assignedStaffId: z.number().gte(0, { message: 'Select valid staff' }),
+	branchId: z.number().gt(0, { message: 'Select valid branch' }),
+	assignedStaffId: z.number().gt(0, { message: 'Select valid staff' }),
 });
 
 export type ClientFormType = z.infer<typeof clientFormSchema>;

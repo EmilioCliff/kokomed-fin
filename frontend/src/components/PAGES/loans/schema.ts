@@ -5,11 +5,7 @@ import { productSchema } from '../products/schema';
 
 export const loanSchema = z.object({
 	id: z.number(),
-
 	product: productSchema,
-
-	// amount: z.number(),
-	// repayAmount: z.number(),
 	client: clientSchema,
 	loanOfficer: userSchema,
 	loanPurpose: z.string().optional(),
@@ -30,8 +26,6 @@ export const loanSchema = z.object({
 
 export type Loan = z.infer<typeof loanSchema>;
 
-// approvedBy: z.number(), add approved by when form is submitted
-// disburseBy: z.number().optional(), add disbursed by when form is submitted
 export const loanFormSchema = z.object({
 	productId: z.number().gt(0, { message: 'Select valid product' }),
 	clientId: z.number().gt(0, { message: 'Select valid client' }),

@@ -12,8 +12,12 @@ export type Product = z.infer<typeof productSchema>;
 
 export const productFormSchema = z.object({
 	branchId: z.number(),
-	loanAmount: z.coerce.number().min(0),
-	repayAmount: z.coerce.number().min(0),
+	loanAmount: z.coerce
+		.number()
+		.gt(0, { message: 'Select valid loan amount' }),
+	repayAmount: z.coerce
+		.number()
+		.gt(0, { message: 'Select valid repay amount' }),
 });
 
 export type ProductFormType = z.infer<typeof productFormSchema>;

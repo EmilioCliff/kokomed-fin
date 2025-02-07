@@ -17,7 +17,7 @@ export const paymentSchema = z.object({
 export type Payment = z.infer<typeof paymentSchema>;
 
 export const paymentFormSchema = z.object({
-	TransAmount: z.number().gt(0, { message: 'Select valid amount' }),
+	TransAmount: z.coerce.number().gt(0, { message: 'Select valid amount' }),
 	TransID: z
 		.string()
 		.min(3, { message: 'Must be 3 or more characters long' }),

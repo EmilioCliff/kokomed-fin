@@ -20,7 +20,7 @@ export const userFormSchema = z.object({
 		.length(10, 'Phone number must be exactly 10 digits')
 		.regex(/^\d+$/, 'Phone number must contain only digits'),
 	email: z.string().email({ message: 'Invalid email address' }),
-	branchId: z.number().gt(0),
+	branchId: z.number().gt(0, { message: 'Select valid branch' }),
 	role: z.enum(['ADMIN', 'AGENT']),
 });
 
