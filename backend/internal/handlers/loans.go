@@ -112,6 +112,7 @@ func (s *Server) createLoan(ctx *gin.Context) {
 		ProcessingFee:      req.ProcessingFee,
 		FeePaid:            false,
 		CreatedBy:          payloadData.UserID,
+		Status: 		   "INACTIVE",
 	}
 
 	if req.ProcessingFeePaid {
@@ -131,6 +132,7 @@ func (s *Server) createLoan(ctx *gin.Context) {
 		} 
 		params.DisbursedOn = pkg.TimePtr(disburseDate)
 		params.DisbursedBy = pkg.Uint32Ptr(payloadData.UserID)
+		params.Status = "ACTIVE"
 
 		params.DueDate = pkg.TimePtr(disburseDate.AddDate(0, 0, int(req.Installments)*int(req.InstallmentsPeriod)))
 	}
