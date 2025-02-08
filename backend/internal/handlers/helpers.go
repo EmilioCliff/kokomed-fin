@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -16,6 +17,8 @@ func (s *Server) getDashboardData(ctx *gin.Context) {
 
 		return 
 	}
+
+	log.Println(data)
 
 	ctx.JSON(http.StatusOK, data)
 }
