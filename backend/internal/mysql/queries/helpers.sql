@@ -5,11 +5,21 @@ WHERE paid_date >= NOW() - INTERVAL 15 DAY
 ORDER BY paid_date DESC LIMIT 10;
 
 -- name: DashBoardInactiveLoans :many
-SELECT l.id, p.loan_amount, u.full_name, u2.full_name, p.repay_amount, l.client_id, l.loan_officer, l.approved_by, l.created_at 
+SELECT 
+    l.id, 
+    p.loan_amount, 
+    c.full_name AS client_name, 
+    u.full_name AS approved_by_name, 
+    p.repay_amount, 
+    l.client_id, 
+    l.loan_officer, 
+    l.approved_by, 
+    l.created_at 
 FROM loans l 
-JOIN users u ON l.client_id = u.id
-JOIN users u2 ON l.approved_by = u2.id
-JOIN products p ON l.product_id = p.id WHERE l.status = 'INACTIVE'
+JOIN clients c ON l.client_id = c.id  
+JOIN users u ON l.approved_by = u.id  
+JOIN products p ON l.product_id = p.id 
+WHERE l.status = 'INACTIVE'
 ORDER BY l.created_at DESC LIMIT 10;
 
 -- name: DashBoardDataHelper :one

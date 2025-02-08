@@ -36,8 +36,6 @@ export default function LoanPage() {
 		placeholderData: keepPreviousData,
 	});
 
-	console.log(data);
-
 	if (data?.metadata) {
 		updateTableContext(data.metadata);
 	}
