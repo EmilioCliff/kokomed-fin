@@ -8,67 +8,14 @@ import DashboardSkeleton from '@/components/UI/DashboardSkeleton';
 import { useQuery } from '@tanstack/react-query';
 import { getDashboardData } from '@/services/helpers';
 
-// const widgets = [
-//   {
-//     title: 'Customers',
-//     icon: Users,
-//     mainAmount: 1000,
-//     active: 600,
-//     activeTitle: 'Active',
-//     closed: 400,
-//     closedTitle: 'Inactive',
-//   },
-//   {
-//     title: 'Loans',
-//     icon: Wallet,
-//     mainAmount: 2000,
-//     active: 20,
-//     activeTitle: 'Active',
-//     closed: 40,
-//     closedTitle: 'Inactive',
-//   },
-
-// totalLoanAmount, _ := data.TotalLoanAmount.(float64)
-// totalLoanDisbursed, _ := data.TotalLoanDisbursed.(float64)
-// totalLoanPaid, _ := data.TotalLoanPaid.(float64)
-// totalPaymentsReceived, _ := data.TotalPaymentsReceived.(float64)
-// totalNonPosted, _ := data.TotalNonPosted.(float64)
-
-//   {
-//     title: 'Transactions',
-//     icon: Flag,
-//     mainAmount: 600,
-//     active: 400,
-//     activeTitle: 'Disbursed',
-//     closed: 200,
-//     closedTitle: 'Received',
-//     currency: 'Ksh',
-//   },
-//   {
-//     title: 'Payments',
-//     icon: DollarSign,
-//     mainAmount: 500000,
-//     active: 400000,
-//     activeTitle: 'Posted',
-//     closed: 100000,
-//     closedTitle: 'Non-Posted',
-//     currency: 'Ksh',
-//   },
-// ];
-
-// const recentPayments = [
-//   { id: 1, borrower: 'John Doe', amount: 1000, date: '2023-04-15' },
-//   { id: 2, borrower: 'Jane Smith', amount: 750, date: '2023-04-14' },
-//   { id: 3, borrower: 'Bob Johnson', amount: 1200, date: '2023-04-13' },
-//   { id: 4, borrower: 'Alice Brown', amount: 500, date: '2023-04-12' },
-// ];
-
 function Dashboard() {
 	const { isLoading, error, data } = useQuery({
 		queryKey: ['dashboard'],
 		queryFn: getDashboardData,
 		staleTime: 5 * 1000,
 	});
+
+	console.log(data);
 
 	if (isLoading) {
 		return <DashboardSkeleton />;
