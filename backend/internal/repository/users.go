@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -47,4 +48,7 @@ type UserRepository interface {
 	UpdateUser(ctx context.Context, user *UpdateUser) (User, error)
 	UpdateUserPassword(ctx context.Context, email string, password string) error
 	CheckUserExistance(ctx context.Context, email string) bool
+
+	GetReportUserAdminData(ctx context.Context, filters services.ReportFilters) ([]services.UserAdminsReportData, error)
+	GetReportUserUsersData(ctx context.Context,id uint32, filters services.ReportFilters) ([]services.UserUsersReportData, error)
 }

@@ -108,7 +108,11 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 
 func (p *PaymentService) TriggerManualPayment(ctx context.Context, paymentData services.ManualPaymentData) (uint32, error) {
 	loanID := uint32(0)
-	err := p.db.ExecTx(ctx, func(q *generated.Queries) error {
+	adminFullname, err := p.mySQL.Helpers.GetUserFullname(ctx, paymentData.AdminUserID)
+	if err != nil {
+		return 0, err
+	}
+	err = p.db.ExecTx(ctx, func(q *generated.Queries) error {
 		_, err := q.AssignNonPosted(ctx, generated.AssignNonPostedParams{
 			ID: paymentData.NonPostedID,
 			AssignTo: sql.NullInt32{
@@ -116,6 +120,10 @@ func (p *PaymentService) TriggerManualPayment(ctx context.Context, paymentData s
 				Int32: int32(paymentData.ClientID),
 			},
 			TransactionSource: generated.NonPostedTransactionSourceMPESA, // to MPESA since attaching mpesa payment to client
+			AssignedBy: sql.NullString{
+				Valid: true,
+				String: adminFullname,
+			},
 		})
 		if err != nil {
 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to assign non posted: %s", err.Error())

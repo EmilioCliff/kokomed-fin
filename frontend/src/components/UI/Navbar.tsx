@@ -30,15 +30,21 @@ function Navbar() {
 				<div>
 					<Link
 						style={{ color: 'white' }}
-						className={`flex-none flex border-r-2 py-6 px-2 gap-2 ${
+						className={`flex-none flex border-r-2 py-2 px-2 gap-2 ${
 							open ? 'w-64' : ''
 						} hover:cursor-pointer border-indigo-200/20`}
 						to="/"
 					>
-						<Calendar />
-						<h3 className="text-lg font-extrabold tracking-widest">
-							Kokomed
-						</h3>
+						<div className="flex justify-center items-center">
+							<img
+								className="w-16 h-auto object-contain"
+								src="/afya_credit.png"
+								alt=""
+							/>
+							<h3 className="text-lg font-extrabold tracking-widest">
+								Afya Credit
+							</h3>
+						</div>
 					</Link>
 				</div>
 				<div className="border-r-2 py-6 px-4 border-indigo-200/20">

@@ -201,6 +201,19 @@ func (r *HelperRepository) GetBranchData(ctx context.Context) ([]repository.Bran
 	return rsp, nil
 }
 
+func (r *HelperRepository) GetUserFullname(ctx context.Context, id uint32) (string, error) {
+	name, err := r.queries.HelperUserById(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows{
+			return "", pkg.Errorf(pkg.NOT_FOUND_ERROR, "user not found")
+		}
+
+		return "", pkg.Errorf(pkg.INTERNAL_ERROR, "error getting user fullname", err)
+	}
+
+	return name, err
+}
+
 func (r *HelperRepository)userToClientDashboard(ctx context.Context, id uint32) repository.ClientDashboardResponse {
 	client, _ := r.queries.GetClient(ctx, id)
 

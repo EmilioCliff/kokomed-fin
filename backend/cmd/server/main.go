@@ -11,6 +11,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/payments"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/redis"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/reports"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/workers"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
@@ -63,8 +64,9 @@ func main() {
 
 	log.Println("Started worker successfuly")
 
+	report := reports.NewReportService(repo)
 
-	server := handlers.NewServer(config, *maker, repo, paymentService, worker, cache)
+	server := handlers.NewServer(config, *maker, repo, paymentService, worker, cache, report)
 
 	log.Println("starting server at port ", config.HTTP_PORT)
 	if err := server.Start(); err != nil {

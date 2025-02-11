@@ -26,7 +26,6 @@ type WorkerService interface {
 
 	ProcessSendResetPassword(ctx context.Context, task *asynq.Task) error
 
-	// distributor
 	DistributeTaskSendResetPassword(ctx context.Context, payload SendResetPasswordPayload, opt ...asynq.Option, ) error
 }
 

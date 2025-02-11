@@ -245,6 +245,7 @@ type NonPosted struct {
 	AssignTo          sql.NullInt32              `json:"assign_to"`
 	PaidDate          time.Time                  `json:"paid_date"`
 	TransactionSource NonPostedTransactionSource `json:"transaction_source"`
+	AssignedBy        string                     `json:"assigned_by"`
 }
 
 type Product struct {

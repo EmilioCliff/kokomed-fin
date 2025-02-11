@@ -6,7 +6,7 @@ VALUES (
     sqlc.narg("id_number"),
     sqlc.narg("dob"),
     sqlc.arg("gender"),
-    sqlc.arg("active"),
+    true,
     sqlc.arg("branch_id"),
     sqlc.arg("assigned_staff"),
     sqlc.arg("updated_by"),

@@ -29,7 +29,8 @@ SELECT * FROM non_posted WHERE id = ? LIMIT 1;
 -- name: AssignNonPosted :execresult
 UPDATE non_posted 
     SET assign_to = sqlc.arg("assign_to"),
-    transaction_source = sqlc.arg("transaction_source")
+    transaction_source = sqlc.arg("transaction_source"),
+    assigned_by = COALESCE(sqlc.narg("assigned_by"), assigned_by)
 WHERE id = sqlc.arg("id");
 
 -- name: DeleteNonPosted :exec

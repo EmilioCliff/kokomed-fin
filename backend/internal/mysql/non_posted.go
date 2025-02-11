@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -190,6 +191,37 @@ func (r *NonPostedRepository) DeleteNonPosted(ctx context.Context, id uint32) er
 	}
 
 	return nil
+}
+
+func (r *NonPostedRepository) GetReportPaymentData(ctx context.Context, filters services.ReportFilters) ([]services.PaymentReportData, error) {
+	nonPosteds, err := r.queries.GetPaymentReportData(ctx, generated.GetPaymentReportDataParams{
+		FromPaidDate: filters.StartDate,
+		ToPaidDate:   filters.EndDate,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no non posted found")
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report payment data: %s", err.Error())
+	}
+
+	rslt := make([]services.PaymentReportData, len(nonPosteds))
+
+	for i, nonPosted := range nonPosteds {
+		rslt[i] = services.PaymentReportData{
+			TransactionSource: string(nonPosted.TransactionSource),
+			TransactionNumber: nonPosted.TransactionNumber,
+			AccountNumber:     nonPosted.AccountNumber,
+			PayingName:        nonPosted.PayingName,
+			Amount:            nonPosted.Amount,
+			PaidDate:          nonPosted.PaidDate,
+			AssignedTo: nonPosted.AssignedName,
+			AssignedBy: nonPosted.AssignedBy,
+		}
+	}
+
+	return rslt, nil
 }
 
 func convertGenerateNonPosted(nonPosted generated.NonPosted) repository.NonPosted {

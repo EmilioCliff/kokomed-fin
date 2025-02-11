@@ -27,6 +27,10 @@ WHERE id = sqlc.arg("id");
 -- name: HelperUser :many
 SELECT id, full_name FROM users;
 
+-- name: HelperUserById :one
+SELECT full_name FROM users
+WHERE id = ?;
+
 -- name: ListUsersByCategory :many
 SELECT 
     u.*, 

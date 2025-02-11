@@ -3,10 +3,12 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -281,6 +283,56 @@ func convertGeneratedLoan(loan generated.Loan) repository.Loan {
 	}
 }
 
+func (r *LoanRepository) GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, error) {
+	loans, err := r.GetLoansReportData(ctx, GetLoansReportDataParams{
+		StartDate: filters.StartDate,
+		EndDate: filters.EndDate,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report loan data: %s", err.Error())
+	}
+
+	rslt := make([]services.LoanReportData, len(loans))
+
+	for i, loan := range loans {
+		rslt[i] = services.LoanReportData{
+			LoanID: loan.LoanID,
+			ClientName: loan.ClientName,
+			BranchName: loan.BranchName,
+			LoanOfficer: loan.LoanOfficer,
+			LoanAmount: loan.LoanAmount,
+			RepayAmount: loan.RepayAmount,
+			PaidAmount: loan.PaidAmount,
+			OutstandingAmount: pkg.InterfaceFloat64(loan.OutstandingAmount),
+			Status: loan.Status,
+			TotalInstallments: loan.TotalInstallments,
+			PaidInstallments: loan.PaidInstallments,
+			DueDate: pkg.TimePtr(loan.DueDate.Time),
+			DisbursedDate: pkg.TimePtr(loan.DisbursedDate.Time),
+			DefaultRisk: pkg.InterfaceFloat64(loan.DefaultRisk),
+		}
+	}
+
+	return rslt, nil
+}
+
+func (r *LoanRepository) GetReportLoanByIdData(ctx context.Context,id uint32) (services.LoanReportDataById, error) {
+	loan, err := r.GetLoanReportDataById(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return services.LoanReportDataById{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
+		}
+
+		return services.LoanReportDataById{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report loan by id data: %s", err.Error())
+	}
+
+	return convertLoanReportDataById(loan)
+}
+
 func convertGeneratedInstallment(installment generated.Installment) repository.Installment {
 	return repository.Installment{
 		ID:              installment.ID,
@@ -292,4 +344,31 @@ func convertGeneratedInstallment(installment generated.Installment) repository.I
 		PaidAt:          installment.PaidAt.Time,
 		DueDate:         installment.DueDate,
 	}
+}
+
+func convertLoanReportDataById(row GetLoanReportDataByIdRow) (services.LoanReportDataById, error) {
+	var installments []services.LoanReportDataByIdInstallmentDetails
+	if row.InstallmentDetails != nil {
+		installmentsJSON, err := json.Marshal(row.InstallmentDetails)
+		if err != nil {
+			return services.LoanReportDataById{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error marshalling installments: ", err)
+		}
+		err = json.Unmarshal(installmentsJSON, &installments) 
+		if err != nil {
+			return services.LoanReportDataById{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling installments: ", err)
+		}
+	}
+
+	return services.LoanReportDataById{
+		LoanID:                row.LoanID,
+		ClientName:            row.ClientName,
+		LoanAmount:            row.LoanAmount,
+		RepayAmount:           row.RepayAmount,
+		PaidAmount:            row.PaidAmount,
+		Status:                row.Status,
+		TotalInstallments:     row.TotalInstallments,
+		PaidInstallments:      row.PaidInstallments,
+		RemainingInstallments: row.RemainingInstallments,
+		InstallmentDetails:    installments,
+	}, nil
 }

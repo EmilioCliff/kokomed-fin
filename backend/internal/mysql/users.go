@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -219,6 +220,82 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.Update
 	}
 
 	return r.GetUserByID(ctx, user.ID)
+}
+
+func (r *UserRepository) GetReportUserAdminData(ctx context.Context, filters services.ReportFilters) ([]services.UserAdminsReportData, error) {
+	users, err := r.GetUserAdminsReportData(ctx, GetUserAdminsReportDataParams{
+		StartDate: filters.StartDate,
+		EndDate: filters.EndDate,
+		ActiveStart: filters.StartDate,
+		ActiveEnd: filters.EndDate,
+		CompletedStart: filters.StartDate,
+		CompletedEnd: filters.EndDate,
+		DefaultedStart: filters.StartDate,
+		DefaultedEnd: filters.EndDate,
+		TotalStart: filters.StartDate,
+		TotalEnd: filters.EndDate,
+		ClientsStart: filters.StartDate,
+		ClientsEnd: filters.EndDate,
+		PaymentsStart: filters.StartDate,
+		PaymentsEnd: filters.EndDate,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
+	}
+
+	rslt := make([]services.UserAdminsReportData, len(users))
+
+	for i, user := range users {
+		rslt[i] = services.UserAdminsReportData{
+			FullName: user.Name,
+			Roles: string(user.Role),
+			BranchName: user.BranchName.String,
+			ApprovedLoans: user.ApprovedLoans,
+			ActiveLoans: user.ActiveLoans,
+			CompletedLoans: user.CompletedLoans,
+			DefaultRate: pkg.InterfaceFloat64(user.DefaultRate),
+			ClientsRegistered: user.ClientsRegistered,
+			PaymentsAssigned: user.PaymentsAssigned,
+		}
+	}
+
+	return rslt, nil
+}
+func (r *UserRepository) GetReportUserUsersData(ctx context.Context, id uint32, filters services.ReportFilters) ([]services.UserUsersReportData, error) {
+	users, err := r.GetUserUsersReportData(ctx, GetUserUsersReportDataParams{
+		StartDate: filters.StartDate,
+		EndDate: filters.EndDate,
+		ID: id,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
+	}
+
+	rslt := make([]services.UserUsersReportData, len(users))
+
+	for i, user := range users {
+		rslt[i] = services.UserUsersReportData{
+			FullName: user.Name,
+			Roles: string(user.Role),
+			BranchName: user.Branch.String,
+			TotalClientsHandled: user.TotalClientsHandled,
+			TotalLoansApproved: user.LoansApproved,
+			TotalLoanAmountManaged: pkg.InterfaceFloat64(user.TotalLoanAmountManaged),
+			TotalCollectedAmount: pkg.InterfaceFloat64(user.TotalCollectedAmount),
+			DefaultRate: pkg.InterfaceFloat64(user.DefaultRate),
+			AssignedPayments: user.AssignedPayments,
+		}
+	}
+
+	return rslt, nil
 }
 
 func convertGeneratedUser(user generated.User) repository.User {

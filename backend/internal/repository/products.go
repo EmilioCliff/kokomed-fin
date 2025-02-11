@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -33,4 +34,6 @@ type ProductRepository interface {
 	ListProductByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]Product, error)
 	CreateProduct(ctx context.Context, product *Product) (Product, error)
 	DeleteProduct(ctx context.Context, id uint32) error
+
+	GetReportProductData(ctx context.Context, filters services.ReportFilters) ([]services.ProductReportData, error)
 }

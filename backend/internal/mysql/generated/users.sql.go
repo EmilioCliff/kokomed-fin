@@ -174,6 +174,18 @@ func (q *Queries) HelperUser(ctx context.Context) ([]HelperUserRow, error) {
 	return items, nil
 }
 
+const helperUserById = `-- name: HelperUserById :one
+SELECT full_name FROM users
+WHERE id = ?
+`
+
+func (q *Queries) HelperUserById(ctx context.Context, id uint32) (string, error) {
+	row := q.db.QueryRowContext(ctx, helperUserById, id)
+	var full_name string
+	err := row.Scan(&full_name)
+	return full_name, err
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, full_name, phone_number, email, password, password_updated, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users ORDER BY full_name DESC LIMIT ? OFFSET ?
 `

@@ -51,7 +51,6 @@ type createClientRequest struct {
 	IdNumber      string `                                     json:"idNumber"`
 	Dob           string `                                     json:"dob"`
 	Gender        string `binding:"required,oneof=MALE FEMALE" json:"gender"`
-	Active        bool   `                                     json:"active"`
 	BranchID      uint32 `binding:"required"                   json:"branchId"`
 	AssignedStaff uint32 `binding:"required"                   json:"assignedStaffId"`
 }

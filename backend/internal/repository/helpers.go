@@ -99,4 +99,7 @@ type HelperRepository interface {
 	GetClientData(ctx context.Context) ([]ClientData, error)
 	GetLoanOfficerData(ctx context.Context) ([]LoanOfficerData, error)
 	GetBranchData(ctx context.Context) ([]BranchData,  error)
+
+	// helpers for users
+	GetUserFullname(ctx context.Context, id uint32) (string, error)
 }

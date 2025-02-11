@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -80,4 +81,7 @@ type LoansRepository interface {
 	GetLoanInstallments(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]Installment, error)
 	GetInstallment(ctx context.Context, id uint32) (Installment, error)
 	UpdateInstallment(ctx context.Context, installment *UpdateInstallment) (Installment, error)
+
+	GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, error)
+	GetReportLoanByIdData(ctx context.Context,id uint32) (services.LoanReportDataById, error)
 }

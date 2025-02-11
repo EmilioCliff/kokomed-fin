@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -16,4 +17,6 @@ type BranchRepository interface {
 	ListBranches(ctx context.Context, search *string, pgData *pkg.PaginationMetadata) ([]Branch, pkg.PaginationMetadata, error)
 	GetBranchByID(ctx context.Context, id uint32) (Branch, error)
 	UpdateBranch(ctx context.Context, name string, id uint32) (Branch, error)
+
+	GetReportBranchData(ctx context.Context, filters services.ReportFilters) ([]services.BranchReportData, error)
 }

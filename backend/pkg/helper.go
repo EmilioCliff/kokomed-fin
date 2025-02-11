@@ -60,3 +60,16 @@ func TimePtr(t time.Time) *time.Time { return &t }
 
 // DurationPtr returns a pointer to the given time.Duration.
 func DurationPtr(d time.Duration) *time.Duration { return &d }
+
+func InterfaceFloat64(i interface{}) float64 {
+	iByte, ok := i.([]byte)
+	if !ok {
+		return 0.00
+	}
+	iFloat, err := strconv.ParseFloat(string(iByte), 64)
+	if err != nil {
+		return 0.00
+	}
+
+	return iFloat
+}

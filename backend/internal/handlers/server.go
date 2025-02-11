@@ -29,9 +29,10 @@ type Server struct {
 	payments services.PaymentService
 	worker services.WorkerService
 	cache services.CacheService
+	report services.ReportService
 }
 
-func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, payment *payments.PaymentService, worker services.WorkerService, cache services.CacheService) *Server {
+func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, payment *payments.PaymentService, worker services.WorkerService, cache services.CacheService, report services.ReportService) *Server {
 	r := gin.Default()
 
 	s := &Server{
@@ -41,6 +42,7 @@ func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, pay
 		repo:     repo,
 		worker: worker,
 		cache: cache,
+		report: report,
 		payments: payment,
 		ln:       nil,
 	}
@@ -118,6 +120,9 @@ func (s *Server) setUpRoutes() {
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)
 	authRoute.GET("/helper/formData", s.getLoanFormData)
+
+	// reports routes
+	authRoute.POST("/report", s.generateReport)
 
 	s.srv = &http.Server{
 		Addr:         s.config.HTTP_PORT,

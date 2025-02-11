@@ -1,0 +1,1 @@
+ALTER TABLE `non_posted` ADD COLUMN `assigned_by` VARCHAR(255) NOT NULL DEFAULT "APP";

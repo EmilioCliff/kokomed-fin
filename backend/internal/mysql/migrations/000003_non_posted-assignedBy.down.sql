@@ -1,0 +1,1 @@
+ALTER TABLE `non_posted` DROP COLUMN `assigned_by`;

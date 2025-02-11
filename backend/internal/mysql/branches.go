@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -101,6 +102,43 @@ func (r *BranchRepository) GetBranchByID(ctx context.Context, id uint32) (reposi
 		ID:   branch.ID,
 		Name: branch.Name,
 	}, nil
+}
+
+func (r *BranchRepository) GetReportBranchData(ctx context.Context, filters services.ReportFilters) ([]services.BranchReportData, error) {
+	branches, err := r.queries.GetBranchReportData(ctx, generated.GetBranchReportDataParams{
+		FromDisbursedOn: sql.NullTime{
+			Valid: true,
+			Time: filters.StartDate,
+		},
+		ToDisbursedOn: sql.NullTime{
+			Valid: true,
+			Time: filters.EndDate,
+		},
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no branches data found")
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report branches data: %s", err.Error())
+	}
+
+	rslt := make([]services.BranchReportData, len(branches))
+
+	for i, branch := range branches {
+		rslt[i] = services.BranchReportData{
+			BranchName: branch.BranchName,
+			TotalClients: branch.TotalClients,
+			TotalUsers: branch.TotalUsers,
+			LoansIssued: branch.TotalLoansIssued,
+			TotalDisbursed: pkg.InterfaceFloat64(branch.TotalDisbursedAmount),
+			TotalCollected: pkg.InterfaceFloat64(branch.TotalCollectedAmount),
+			TotalOutstanding: pkg.InterfaceFloat64(branch.TotalOutstandingAmount),
+			DefaultRate: pkg.InterfaceFloat64(branch.DefaultRate),
+		}
+	}
+
+	return rslt, nil
 }
 
 func (r *BranchRepository) UpdateBranch(ctx context.Context, name string, id uint32) (repository.Branch, error) {

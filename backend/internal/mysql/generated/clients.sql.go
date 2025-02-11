@@ -54,7 +54,7 @@ VALUES (
     ?,
     ?,
     ?,
-    ?,
+    true,
     ?,
     ?,
     ?,
@@ -69,7 +69,6 @@ type CreateClientParams struct {
 	IDNumber      sql.NullString `json:"id_number"`
 	Dob           sql.NullTime   `json:"dob"`
 	Gender        ClientsGender  `json:"gender"`
-	Active        bool           `json:"active"`
 	BranchID      uint32         `json:"branch_id"`
 	AssignedStaff uint32         `json:"assigned_staff"`
 	UpdatedBy     uint32         `json:"updated_by"`
@@ -83,7 +82,6 @@ func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (sql
 		arg.IDNumber,
 		arg.Dob,
 		arg.Gender,
-		arg.Active,
 		arg.BranchID,
 		arg.AssignedStaff,
 		arg.UpdatedBy,

@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -146,6 +147,38 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, id uint32) error 
 	}
 
 	return nil
+}
+
+func (r *ProductRepository) GetReportProductData(ctx context.Context, filters services.ReportFilters) ([]services.ProductReportData, error) {
+	products, err := r.GetProductReportData(ctx, GetProductReportDataParams{
+		StartDate: filters.StartDate,
+		EndDate: filters.EndDate,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no product found")
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report product data: %s", err.Error())
+	}
+
+	rslt := make([]services.ProductReportData, len(products))
+
+	for i, product := range products {
+		rslt[i] = services.ProductReportData{
+			ProductName: product.ProductName,
+			LoansIssued: product.TotalLoansIssued,
+			ActiveLoans: product.ActiveLoans,
+			CompletedLoans: product.CompletedLoans,
+			DefaultedLoans: product.DefaultedLoans,
+			AmountDisbursed: pkg.InterfaceFloat64(product.TotalAmountDisbursed),
+			AmountRepaid: pkg.InterfaceFloat64(product.TotalAmountRepaid),
+			OutstandingAmount: pkg.InterfaceFloat64(product.TotalOutstandingAmount),
+			DefaultRate: pkg.InterfaceFloat64(product.DefaultRate),
+		}
+	}
+
+	return rslt, nil
 }
 
 func convertGeneratedProducts(product generated.Product) repository.Product {

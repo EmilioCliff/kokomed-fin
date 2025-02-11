@@ -3,11 +3,13 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"strconv"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -30,7 +32,6 @@ func (r *ClientRepository) CreateClient(ctx context.Context, client *repository.
 		FullName:      client.FullName,
 		PhoneNumber:   client.PhoneNumber,
 		Gender:        generated.ClientsGender(client.Gender),
-		Active:        true,
 		BranchID:      client.BranchID,
 		AssignedStaff: client.AssignedStaff,
 		UpdatedBy:     client.UpdatedBy,
@@ -283,6 +284,60 @@ func (r *ClientRepository) ListClientsByActiveStatus(ctx context.Context, active
 	return result, nil
 }
 
+func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters services.ReportFilters) ([]services.ClientAdminsReportData, error) {
+	clients, err := r.GetClientAdminsReportData(ctx, GetClientAdminsReportDataParams{
+		StartDate: filters.StartDate,
+		EndDate: filters.EndDate,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no client found")
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report client admin data: %s", err.Error())
+	}
+
+	rslt := make([]services.ClientAdminsReportData, len(clients))
+
+	for i, client := range clients {
+		rslt[i] = services.ClientAdminsReportData{
+			Name: client.Name,
+			BranchName: client.BranchName.String,
+			TotalLoanGiven: client.TotalLoanGiven,
+			DefaultedLoans: client.DefaultedLoans,
+			ActiveLoans: client.ActiveLoans,
+			CompletedLoans: client.CompletedLoans,
+			InactiveLoans: client.InactiveLoans,
+			Overpayment: client.Overpayment,
+			PhoneNumber: client.PhoneNumber,
+			TotalPaid: pkg.InterfaceFloat64(client.TotalPaid),
+			TotalDisbursed: pkg.InterfaceFloat64(client.TotalDisbursed),
+			TotalOwed: pkg.InterfaceFloat64(client.TotalOwed),
+			RateScore: pkg.InterfaceFloat64(client.RateScore),
+			DefaultRate: pkg.InterfaceFloat64(client.DefaultRate),
+		}
+	}
+
+	return rslt, nil
+}
+
+func (r *ClientRepository) GetReportClientClientsData(ctx context.Context,id uint32, filters services.ReportFilters) (services.ClientClientsReportData, error) {
+	client, err := r.GetClientClientsReportData(ctx, GetClientClientsReportDataParams{
+		StartDate: filters.StartDate,
+		EndDate: filters.EndDate,
+		ID: id,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return services.ClientClientsReportData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no client found")
+		}
+
+		return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report client admin data: %s", err.Error())
+	}
+
+	return convertClientReportData(client)
+}
+
 func convertGeneratedClient(client generated.Client) repository.Client {
 	var dob *time.Time
 
@@ -314,4 +369,42 @@ func convertGeneratedClient(client generated.Client) repository.Client {
 		CreatedBy:     client.CreatedBy,
 		CreatedAt:     client.CreatedAt,
 	}
+}
+
+func convertClientReportData(row GetClientClientsReportDataRow) (services.ClientClientsReportData, error) {
+	var loans []services.ClientClientReportDataLoans
+	if row.Loans != nil {
+		loansJSON, err := json.Marshal(row.Loans) 
+		if err != nil {
+			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error marshalling loans: ", err)
+		}
+		err = json.Unmarshal(loansJSON, &loans) 
+		if err != nil {
+			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling loans: ", err)
+		}
+	}
+
+	var payments []services.ClientClientReportDataPayments
+	if row.Payments != nil {
+		paymentsJSON, err := json.Marshal(row.Payments) 
+		if err != nil {
+			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error marshalling payments: ", err)
+		}
+		err = json.Unmarshal(paymentsJSON, &payments) 
+		if err != nil {
+			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling payments: ", err)
+		}
+	}
+
+	return services.ClientClientsReportData{
+		Name:          row.Name,
+		PhoneNumber:   row.PhoneNumber,
+		IDNumber:      row.IDNumber,
+		Dob:           row.Dob,
+		BranchName:    row.BranchName,
+		AssignedStaff: row.AssignedStaff,
+		Active:        row.Active,
+		Loans:         loans,
+		Payments:      payments,
+	}, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
@@ -49,4 +50,7 @@ type ClientRepository interface {
 	GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error)
 	ListClientsByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]Client, error)
 	ListClientsByActiveStatus(ctx context.Context, active bool, pgData *pkg.PaginationMetadata) ([]Client, error)
+
+	GetReportClientAdminData(ctx context.Context, filters services.ReportFilters) ([]services.ClientAdminsReportData, error)
+	GetReportClientClientsData(ctx context.Context,id uint32, filters services.ReportFilters) (services.ClientClientsReportData, error)
 }
