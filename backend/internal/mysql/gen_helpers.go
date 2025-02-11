@@ -390,7 +390,7 @@ SELECT
                     'disbursed_on', l.disbursed_on,
                     'transaction_fee', l.fee_paid,
                     'created_by', created_by_user.full_name,
-                    'approved_by', approved_by_user.full_name
+                    'assigned_by', approved_by_user.full_name
                 )
             ), '[]'
         )
@@ -662,7 +662,7 @@ SELECT
         JSON_ARRAYAGG(
             JSON_OBJECT(
                 'installment_number', i.installment_number,
-                'amount_due', i.amount_due,
+                'installment_amount', i.amount_due,
                 'remaining_amount', i.remaining_amount,
                 'due_date', i.due_date,
                 'paid', i.paid,

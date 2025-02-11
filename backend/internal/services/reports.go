@@ -32,37 +32,37 @@ type ClientAdminsReportData struct {
 }
 
 type ClientClientsReportData struct {
-	Name          string         
-	PhoneNumber   string         
-	IDNumber      sql.NullString 
-	Dob           sql.NullTime   
-	BranchName    sql.NullString 
-	AssignedStaff sql.NullString 
-	Active        bool           
-	Loans         []ClientClientReportDataLoans    
-	Payments      []ClientClientReportDataPayments
+	Name          string                         `json:"name"`
+	PhoneNumber   string                         `json:"phone_number"`
+	IDNumber      sql.NullString                 `json:"id_number,omitempty"`
+	Dob           sql.NullTime                   `json:"dob,omitempty"`
+	BranchName    sql.NullString                 `json:"branch_name,omitempty"`
+	AssignedStaff sql.NullString                 `json:"assigned_staff,omitempty"`
+	Active        bool                           `json:"active"`
+	Loans         []ClientClientReportDataLoans  `json:"loans"`
+	Payments      []ClientClientReportDataPayments `json:"payments"`
 }
 
 type ClientClientReportDataLoans struct {
-	LoanId uint32
-	Status string
-	LoanAmount float64
-	RepayAmount float64
-	PaidAmount float64
-	DisbursedOn time.Time
-	TransactionFee uint16
-	CreatedBy string
-	AssignedBy string
+	LoanId         uint32    `json:"loan_id"`
+	Status         string    `json:"status"`
+	LoanAmount     float64   `json:"loan_amount"`
+	RepayAmount    float64   `json:"repay_amount"`
+	PaidAmount     float64   `json:"paid_amount"`
+	DisbursedOn    string `json:"disbursed_on"`
+	TransactionFee uint16    `json:"transaction_fee"`
+	CreatedBy      string    `json:"created_by"`
+	AssignedBy     string    `json:"assigned_by"`
 }
 
 type ClientClientReportDataPayments struct {
-	TransactionNumber string
-	TransactionSource string
-	AccountNumber string
-	PayingName string
-	AssignedBy string
-	AmountPaid float64
-	PaidDate time.Time
+	TransactionNumber string    `json:"transaction_number"`
+	TransactionSource string    `json:"transaction_source"`
+	AccountNumber     string    `json:"account_number"`
+	PayingName        string    `json:"paying_name"`
+	AssignedBy        string    `json:"assigned_by"`
+	AmountPaid        float64   `json:"amount_paid"`
+	PaidDate          string `json:"paid_date"`
 }
 
 type UserAdminsReportData struct {
@@ -141,25 +141,25 @@ type LoanReportData struct {
 }
 
 type LoanReportDataById struct {
-	LoanID                uint32      
-	ClientName            string      
-	LoanAmount            float64     
-	RepayAmount           float64     
-	PaidAmount            float64     
-	Status                string 	  
-	TotalInstallments     uint32      
-	PaidInstallments      int64       
-	RemainingInstallments uint32      
-	InstallmentDetails    []LoanReportDataByIdInstallmentDetails 
+	LoanID                uint32                                `json:"loan_id"`
+	ClientName            string                                `json:"client_name"`
+	LoanAmount            float64                               `json:"loan_amount"`
+	RepayAmount           float64                               `json:"repay_amount"`
+	PaidAmount            float64                               `json:"paid_amount"`
+	Status                string                                `json:"status"`
+	TotalInstallments     uint32                                `json:"total_installments"`
+	PaidInstallments      int64                                 `json:"paid_installments"`
+	RemainingInstallments uint32                                `json:"remaining_installments"`
+	InstallmentDetails    []LoanReportDataByIdInstallmentDetails `json:"installment_details"`
 }
 
 type LoanReportDataByIdInstallmentDetails struct {
-	InstallmentNumber int64
-	InstallmentAmount float64
-	RemainingAmount float64
-	DueDate time.Time
-	Paid  bool
-	PaidAt time.Time
+	InstallmentNumber int64     `json:"installment_number"`
+	InstallmentAmount float64   `json:"installment_amount"`
+	RemainingAmount   float64   `json:"remaining_amount"`
+	DueDate           string `json:"due_date"`
+	Paid              uint32      `json:"paid"`
+	PaidAt            string `json:"paid_at"`
 }
 
 type ReportService interface {

@@ -374,23 +374,25 @@ func convertGeneratedClient(client generated.Client) repository.Client {
 func convertClientReportData(row GetClientClientsReportDataRow) (services.ClientClientsReportData, error) {
 	var loans []services.ClientClientReportDataLoans
 	if row.Loans != nil {
-		loansJSON, err := json.Marshal(row.Loans) 
-		if err != nil {
-			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error marshalling loans: ", err)
+		loansByte, ok := row.Loans.([]byte)
+		if !ok {
+			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert loans to bytes")
 		}
-		err = json.Unmarshal(loansJSON, &loans) 
+
+		err := json.Unmarshal(loansByte, &loans)
 		if err != nil {
-			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling loans: ", err)
+			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling loans: %v", err)
 		}
 	}
 
 	var payments []services.ClientClientReportDataPayments
 	if row.Payments != nil {
-		paymentsJSON, err := json.Marshal(row.Payments) 
-		if err != nil {
-			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error marshalling payments: ", err)
+		paymentsByte, ok := row.Payments.([]byte)
+		if !ok {
+			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert payments to bytes")
 		}
-		err = json.Unmarshal(paymentsJSON, &payments) 
+
+		err := json.Unmarshal(paymentsByte, &payments) 
 		if err != nil {
 			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling payments: ", err)
 		}

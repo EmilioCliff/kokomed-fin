@@ -63,6 +63,10 @@ func (s *Server) generateReport(ctx *gin.Context) {
 		filters.ClientId = pkg.Uint32Ptr(req.ClientId)
 	}
 
+	if req.LoanId != 0 {
+		filters.LoanId = pkg.Uint32Ptr(req.LoanId)
+	}
+
 	var reportErr error
 	switch req.ReportName{
 		case "payment":

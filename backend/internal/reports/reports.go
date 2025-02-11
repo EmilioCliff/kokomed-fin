@@ -71,6 +71,7 @@ func (r *ReportServiceImpl) GenerateUsersReport(ctx context.Context, format stri
 		log.Println(data)
 
 		report = newUserReport([]services.UserAdminsReportData{}, data, format, filters)
+		format = "pdf"
 	} else {
 		data, err := r.store.Users.GetReportUserAdminData(ctx, filters)
 		if err != nil {
@@ -102,6 +103,7 @@ func (r *ReportServiceImpl) GenerateClientsReport(ctx context.Context, format st
 		log.Println(data)
 
 		report = newClientReport([]services.ClientAdminsReportData{}, data, format, filters)
+		format = "pdf"
 	} else {
 		data, err := r.store.Clients.GetReportClientAdminData(ctx, filters)
 		if err != nil {
@@ -143,7 +145,7 @@ func (r *ReportServiceImpl) GenerateLoansReport(ctx context.Context, format stri
 	var report *loanReport
 
 	if filters.LoanId != nil {
-		data, err := r.store.Loans.GetReportLoanByIdData(ctx, *filters.ClientId)
+		data, err := r.store.Loans.GetReportLoanByIdData(ctx, *filters.LoanId)
 		if err != nil {
 			return err
 		}
@@ -151,6 +153,7 @@ func (r *ReportServiceImpl) GenerateLoansReport(ctx context.Context, format stri
 		log.Println(data)
 
 		report = newLoanReport([]services.LoanReportData{}, data, format, filters)
+		format = "pdf"
 	} else {
 		data, err := r.store.Loans.GetReportLoanData(ctx, filters)
 		if err != nil {

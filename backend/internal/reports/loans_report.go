@@ -157,7 +157,7 @@ func (lr *loanReport) adminReportPDF() error {
 }
 
 func (lr *loanReport) loanReportPDF() error {
-	log.Println("Generating user report")
+	log.Println("Generating loanId report")
 	if err := lr.addLogo(); err != nil {
 		return err
 	}

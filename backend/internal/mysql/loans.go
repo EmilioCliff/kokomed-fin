@@ -349,11 +349,12 @@ func convertGeneratedInstallment(installment generated.Installment) repository.I
 func convertLoanReportDataById(row GetLoanReportDataByIdRow) (services.LoanReportDataById, error) {
 	var installments []services.LoanReportDataByIdInstallmentDetails
 	if row.InstallmentDetails != nil {
-		installmentsJSON, err := json.Marshal(row.InstallmentDetails)
-		if err != nil {
-			return services.LoanReportDataById{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error marshalling installments: ", err)
+		installmentsBytes, ok := row.InstallmentDetails.([]byte)
+		if !ok {
+			return services.LoanReportDataById{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert installments to bytes")
 		}
-		err = json.Unmarshal(installmentsJSON, &installments) 
+
+		err := json.Unmarshal(installmentsBytes, &installments) 
 		if err != nil {
 			return services.LoanReportDataById{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling installments: ", err)
 		}

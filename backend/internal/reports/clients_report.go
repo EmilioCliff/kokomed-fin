@@ -158,7 +158,7 @@ func (cr *clientReport) adminReportPDF() error {
 }
 
 func (cr *clientReport) clientReportPDF() error {
-	log.Println("Generating user report")
+	log.Println("Generating client report")
 	if err := cr.addLogo(); err != nil {
 		return err
 	}
