@@ -54,6 +54,55 @@ export interface userResponse {
 	createdAt: string;
 }
 
+export enum ReportType {
+	LOANS = 'loans',
+	USERS = 'users',
+	CLIENTS = 'clients',
+	PRODUCTS = 'products',
+	BRANCHES = 'branches',
+	PAYMENTS = 'payments',
+}
+
+export enum ReportTag {
+	LOANS = 'Loan Reports',
+	USERS = 'User Reports',
+	CLIENTS = 'Client Reports',
+	PRODUCTS = 'Product Reports',
+	BRANCHES = 'Branch Reports',
+	PAYMENTS = 'Payments Reports',
+}
+
+export type ReportFilter = {
+	reportName: string;
+	startDate?: string;
+	endDate?: string;
+	clientId?: string;
+	userId?: string;
+	loanId?: string;
+	format: string;
+};
+
+export type Report = {
+	id: string;
+	title: string;
+	description: string;
+	type: ReportType;
+	lastGenerated: string;
+	tag: ReportTag;
+	filters: ReportFilter;
+};
+
+export type LoanEvent = {
+	id: string;
+	clientName: string;
+	loanAmount: number;
+	date: string;
+	paymentDue?: number;
+	type: string;
+	allDay: boolean;
+	title: string;
+};
+
 export interface tokenData extends Omit<commonresponse, 'data'> {
 	accessToken: string;
 }
@@ -86,11 +135,16 @@ export interface getPaymentsType extends Omit<commonresponse, 'data'> {
 	data: Payment[];
 }
 
+export interface getLoanEventsType extends Omit<commonresponse, 'data'> {
+	data: LoanEvent[];
+}
+
 export interface getFormDataType extends Omit<commonresponse, 'data'> {
 	product?: commonDataResponse[];
 	client?: commonDataResponse[];
 	user?: commonDataResponse[];
 	branch?: commonDataResponse[];
+	loan?: commonDataResponse[];
 }
 
 export interface commonDataResponse {

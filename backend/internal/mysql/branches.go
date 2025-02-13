@@ -104,41 +104,74 @@ func (r *BranchRepository) GetBranchByID(ctx context.Context, id uint32) (reposi
 	}, nil
 }
 
-func (r *BranchRepository) GetReportBranchData(ctx context.Context, filters services.ReportFilters) ([]services.BranchReportData, error) {
+func (r *BranchRepository) GetReportBranchData(ctx context.Context, filters services.ReportFilters) ([]services.BranchReportData, services.BranchSummary, error) {
 	branches, err := r.queries.GetBranchReportData(ctx, generated.GetBranchReportDataParams{
-		FromDisbursedOn: sql.NullTime{
+		StartDate: sql.NullTime{
 			Valid: true,
-			Time: filters.StartDate,
+			Time:  filters.StartDate,
 		},
-		ToDisbursedOn: sql.NullTime{
+		EndDate: sql.NullTime{
 			Valid: true,
-			Time: filters.EndDate,
+			Time:  filters.EndDate,
 		},
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no branches data found")
+			return nil, services.BranchSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no branches data found")
 		}
-
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report branches data: %s", err.Error())
+		return nil, services.BranchSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report branches data: %s", err.Error())
 	}
 
 	rslt := make([]services.BranchReportData, len(branches))
 
+	var totalBranches int64
+	var totalClients int64
+	var totalUsers int64
+	var totalLoansIssued int64
+
+	var highestPerformingBranch string
+	var mostClientsBranch string
+	var highestDisbursed float64
+	var maxClients int64
+
 	for i, branch := range branches {
+		disbursedAmount := pkg.InterfaceFloat64(branch.TotalDisbursedAmount)
+		totalBranches++
+		totalClients += branch.TotalClients
+		totalUsers += branch.TotalUsers
+		totalLoansIssued += branch.TotalLoansIssued
+
+		if disbursedAmount > highestDisbursed {
+			highestDisbursed = disbursedAmount
+			highestPerformingBranch = branch.BranchName
+		}
+
+		if branch.TotalClients > maxClients {
+			maxClients = branch.TotalClients
+			mostClientsBranch = branch.BranchName
+		}
+
 		rslt[i] = services.BranchReportData{
-			BranchName: branch.BranchName,
-			TotalClients: branch.TotalClients,
-			TotalUsers: branch.TotalUsers,
-			LoansIssued: branch.TotalLoansIssued,
-			TotalDisbursed: pkg.InterfaceFloat64(branch.TotalDisbursedAmount),
-			TotalCollected: pkg.InterfaceFloat64(branch.TotalCollectedAmount),
-			TotalOutstanding: pkg.InterfaceFloat64(branch.TotalOutstandingAmount),
-			DefaultRate: pkg.InterfaceFloat64(branch.DefaultRate),
+			BranchName:        branch.BranchName,
+			TotalClients:      branch.TotalClients,
+			TotalUsers:        branch.TotalUsers,
+			LoansIssued:       branch.TotalLoansIssued,
+			TotalDisbursed:    disbursedAmount,
+			TotalCollected:    pkg.InterfaceFloat64(branch.TotalCollectedAmount),
+			TotalOutstanding:  pkg.InterfaceFloat64(branch.TotalOutstandingAmount),
+			DefaultRate:       pkg.InterfaceFloat64(branch.DefaultRate),
 		}
 	}
 
-	return rslt, nil
+	summary := services.BranchSummary{
+		TotalBranches:         totalBranches,
+		TotalClients:          totalClients,
+		TotalUsers:            totalUsers,
+		HighestPerformingBranch: highestPerformingBranch,
+		MostClientsBranch:     mostClientsBranch,
+	}
+
+	return rslt, summary, nil
 }
 
 func (r *BranchRepository) UpdateBranch(ctx context.Context, name string, id uint32) (repository.Branch, error) {

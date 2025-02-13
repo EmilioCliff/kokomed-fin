@@ -25,7 +25,7 @@ interface ProductFormProps {
 function ProductForm({ onFormOpen }: ProductFormProps) {
 	const { isLoading, data, error } = useQuery({
 		queryKey: ['loans/form'],
-		queryFn: () => getFormData(false, false, false, true),
+		queryFn: () => getFormData(false, false, false, true, false),
 		staleTime: 5 * 1000,
 	});
 

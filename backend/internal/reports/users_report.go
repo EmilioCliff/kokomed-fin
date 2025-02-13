@@ -1,7 +1,8 @@
 package reports
 
 import (
-	"log"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
@@ -12,13 +13,15 @@ type userReport struct {
 	*excelGenerator
 	*PDFGenerator
 	adminData []services.UserAdminsReportData
-	userData []services.UserUsersReportData
+	adminSummary services.UserAdminsSummary
+	userData services.UserUsersReportData
 	filters services.ReportFilters
 }
 
-func newUserReport(adminData []services.UserAdminsReportData, userData []services.UserUsersReportData, format string, filters services.ReportFilters) *userReport {
+func newUserReport(adminData []services.UserAdminsReportData, userData services.UserUsersReportData, adminSummary services.UserAdminsSummary, format string, filters services.ReportFilters) *userReport {
 	reportGenerator := &userReport{
 		adminData: adminData,
+		adminSummary: adminSummary,
 		userData: userData,
 		filters: filters,
 	}
@@ -28,10 +31,10 @@ func newUserReport(adminData []services.UserAdminsReportData, userData []service
 		if len(adminData) > 0 {
 			reportGenerator.excelGenerator = newExcelGenerator()
 		} else {
-			reportGenerator.PDFGenerator = newPDFGenerator()
+			reportGenerator.PDFGenerator = newPDFGenerator("L", "A4")
 		}
 	case "pdf":
-		reportGenerator.PDFGenerator = newPDFGenerator()
+		reportGenerator.PDFGenerator = newPDFGenerator("L", "A4")
 	}
 
 	return reportGenerator
@@ -104,14 +107,22 @@ func (ur *userReport) adminReportPDF() error {
 	ur.pdf.Cell(0, lineHt, "Summary:")
 	ur.pdf.Ln(lineHt)
 
-	center := ur.getCenterX()
-	ur.drawBox(marginX, ur.pdf.GetY(), center/2, lineHt*3, secondaryColor)
+	summary := map[string]string {
+		"TotalUsers": formatQuantity(ur.adminSummary.TotalUsers),
+		"TotalClients": formatQuantity(ur.adminSummary.TotalClients),
+		"TotalPayments": formatQuantity(ur.adminSummary.TotalPayments),
+		"HighestLoanApprovalUser": ur.adminSummary.HighestLoanApprovalUser,
+	}
 
+	ur.pdf.SetFontSize(12)
+	ur.writeSummary(summary)
+
+	ur.pdf.Ln(lineHt*2)
 	headers := []string{"Full Name", "Branch Name", "Role", "Clients Registered", "Payments Assigned", "Approved Loans", "Active Loans", "Completed Loans", "Default Rate"}
 	colWidths := []float64{35, 35, 25, 34, 34, 32, 30, 32, 30}
 
 	ur.pdf.SetFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2])
-    ur.pdf.SetFont("Arial", "B", mediumFont)
+    ur.pdf.SetFont(fontFamily, "B", mediumFont)
     ur.pdf.SetX(marginX)
 	ur.writeTableHeaders(headers, colWidths)
 	colAlignment := []string{"L", "L", "CM", "CM", "CM", "CM", "CM", "CM", "CM"}
@@ -143,44 +154,88 @@ func (ur *userReport) adminReportPDF() error {
 }
 
 func (ur *userReport) userReportPDF() error {
-	log.Println("Generating user report")
 	if err := ur.addLogo(); err != nil {
 		return err
 	}
 
-	ur.writeReportMetadata("uranches Report", time.Now().Format("2006-01-02"), ur.filters.StartDate.Format("2006-01-02"), ur.filters.EndDate.Format("2006-01-02"))
+	ur.writeReportMetadata(fmt.Sprintf("%s Report", ur.userData.Name), time.Now().Format("2006-01-02"), ur.filters.StartDate.Format("2006-01-02"), ur.filters.EndDate.Format("2006-01-02"))
 
 	ur.pdf.SetFont(fontFamily, "B", largeFont)
 	ur.pdf.Cell(0, lineHt, "Summary:")
 	ur.pdf.Ln(lineHt)
 
-	center := ur.getCenterX()
-	ur.drawBox(marginX, ur.pdf.GetY(), center/2, lineHt*3, secondaryColor)
+	summary := map[string]string {
+		"Name": ur.userData.Name,
+		"Role": ur.userData.Role,
+		"Branch": ur.userData.Branch,
+		"TotalClientsHandled": formatQuantity(ur.userData.TotalClientsHandled),
+		"LoansApproved": formatQuantity(ur.userData.LoansApproved),
+		"TotalLoanAmountManaged": formatMoney(ur.userData.TotalLoanAmountManaged),
+		"TotalCollectedAmount": formatMoney(ur.userData.TotalCollectedAmount),
+		"DefaultRate": fmt.Sprintf("%.2f%%", ur.userData.DefaultRate),
+		"AssignedPayments": formatQuantity(ur.userData.AssignedPayments),
+	}
 
-	headers := []string{"Name", "No Clients", "No Staff", "Loans Issued", "Disbursed Amount", "Collected Amount", "Outstanding Amount", "Default Rate"}
-	colWidths := []float64{35, 20, 20, 20, 25, 25, 25, 20}
+	ur.pdf.SetFontSize(12)
+	ur.writeSummary(summary)
+
+	ur.pdf.Ln(lineHt*2)
+
+	ur.pdf.SetFont(fontFamily, "B", largeFont)
+	ur.pdf.Cell(10, lineHt, "Assigned Loans")
+	ur.pdf.Ln(-1)
+	headers := []string{"LoanId", "ClientName", "Status", "LoanAmount", "RepayAmount", "PaidAmount", "DisbursedOn"}
+	colWidths := []float64{30, 35, 30, 35, 35, 35, 35}
 
 	ur.pdf.SetFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2])
-    ur.pdf.SetFont("Arial", "B", mediumFont)
+    ur.pdf.SetFont(fontFamily, "B", mediumFont)
     ur.pdf.SetX(marginX)
-	ur.writeTableHeaders(headers, colWidths)
-	colAlignment := []string{"L", "CM", "CM", "CM", "R", "R", "R", "CM"}
-
-	ur.pdf.SetFontStyle("")
-    ur.pdf.SetFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
-	for _, user := range ur.userData {
-		log.Println(user)
-		row := []interface{}{
-			// uranch.uranchName,
-			// uranch.TotalClients,
-			// uranch.TotalUsers,
-			// uranch.LoansIssued,
-			// formatMoney(uranch.TotalDisbursed),
-			// formatMoney(uranch.TotalCollected),
-			// formatMoney(uranch.TotalOutstanding),
-			// uranch.DefaultRate,
+	colAlignment := []string{"CM", "L", "CM", "R", "R", "R", "R"}
+	if len(ur.userData.AssignedLoans) > 0 {
+		ur.writeTableHeaders(headers, colWidths)
+	
+		ur.pdf.SetFontStyle("")
+		ur.pdf.SetFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
+		for _, loans := range ur.userData.AssignedLoans {
+			row := []interface{}{
+				fmt.Sprintf("LN%03d", loans.LoanId),
+				loans.ClientName,
+				loans.Status,
+				formatMoney(loans.LoanAmount),
+				formatMoney(loans.RepayAmount),
+				formatMoney(loans.PaidAmount),
+				loans.DisbursedOn,
+			}
+			ur.writeTableRow(row, colWidths, colAlignment)
 		}
-		ur.writeTableRow(row, colWidths, colAlignment)
+	}
+
+	if len(ur.userData.AssignedPaymentsList) > 0 {
+		ur.pdf.Ln(lineHt*4)
+		ur.pdf.SetFont(fontFamily, "B", largeFont)
+		ur.pdf.Cell(10, lineHt, "Assigned Payments")
+		ur.pdf.Ln(-1)
+		headers = []string{"TransactionNumber", "ClientName", "AmountPaid", "PaidDate"}
+		colWidths = []float64{40, 35, 35, 35}
+	
+		ur.pdf.SetFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2])
+		ur.pdf.SetFont(fontFamily, "B", mediumFont)
+		ur.pdf.SetX(marginX)
+		ur.writeTableHeaders(headers, colWidths)
+		colAlignment = []string{"CM", "L", "R", "R"}
+	
+		ur.pdf.SetFontStyle("")
+		ur.pdf.SetFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
+		for _, payment := range ur.userData.AssignedPaymentsList {
+			paidDate := strings.Split(payment.PaidDate, " ")[0]
+			row := []interface{}{
+				payment.TransactionNumber,
+				payment.ClientName,
+				formatMoney(payment.AmountPaid),
+				paidDate,
+			}
+			ur.writeTableRow(row, colWidths, colAlignment)
+		}
 	}
 
 	// var buffer bytes.Buffer
@@ -189,5 +244,5 @@ func (ur *userReport) userReportPDF() error {
 	// }
 	// buffer.Bytes()
 
-	return ur.pdf.OutputFileAndClose("uranches_report.pdf")
+	return ur.pdf.OutputFileAndClose(fmt.Sprintf("%s_report.pdf", ur.userData.Name))
 }

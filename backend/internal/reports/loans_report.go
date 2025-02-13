@@ -2,7 +2,7 @@ package reports
 
 import (
 	"fmt"
-	"log"
+	"strings"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
@@ -13,13 +13,15 @@ type loanReport struct {
 	*excelGenerator
 	*PDFGenerator
 	adminData []services.LoanReportData
+	adminSummary services.LoanSummary
 	userData services.LoanReportDataById
 	filters services.ReportFilters
 }
 
-func newLoanReport(adminData []services.LoanReportData, userData services.LoanReportDataById, format string, filters services.ReportFilters) *loanReport {
+func newLoanReport(adminData []services.LoanReportData, userData services.LoanReportDataById, summary services.LoanSummary, format string, filters services.ReportFilters) *loanReport {
 	reportGenerator := &loanReport{
 		adminData: adminData,
+		adminSummary: summary,
 		userData: userData,
 		filters: filters,
 	}
@@ -29,10 +31,14 @@ func newLoanReport(adminData []services.LoanReportData, userData services.LoanRe
 		if len(adminData) > 0 {
 			reportGenerator.excelGenerator = newExcelGenerator()
 		} else {
-			reportGenerator.PDFGenerator = newPDFGenerator()
+			reportGenerator.PDFGenerator = newPDFGenerator("L", "A4")
 		}
 	case "pdf":
-		reportGenerator.PDFGenerator = newPDFGenerator()
+		if len(adminData) > 0 {
+			reportGenerator.PDFGenerator = newPDFGenerator("L", "A3")
+		} else {
+			reportGenerator.PDFGenerator = newPDFGenerator("L", "A4")
+		}
 	}
 
 	return reportGenerator
@@ -83,10 +89,10 @@ func (lr *loanReport) adminReportExcel() error {
 			loan.PaidAmount,
 			loan.OutstandingAmount,
 			loan.Status,
-			formatTime(loan.DueDate),
+			loan.DueDate,
 			loan.TotalInstallments,
 			loan.PaidInstallments,
-			formatTime(loan.DisbursedDate),
+			loan.DisbursedDate,
 			loan.DefaultRisk,
 		}
 		lr.writeRow(rowIdx+2, row)
@@ -113,11 +119,24 @@ func (lr *loanReport) adminReportPDF() error {
 	lr.pdf.Cell(0, lineHt, "Summary:")
 	lr.pdf.Ln(lineHt)
 
-	center := lr.getCenterX()
-	lr.drawBox(marginX, lr.pdf.GetY(), center/2, lineHt*3, secondaryColor)
+	summary := map[string]string {
+		"TotalLoans": fmt.Sprintf("LN%03d", lr.adminSummary.TotalLoans),
+		"TotalActiveLoans": formatQuantity(lr.adminSummary.TotalActiveLoans),
+		"TotalCompletedLoans": formatQuantity(lr.adminSummary.TotalCompletedLoans),
+		"TotalDefaultedLoans": formatQuantity(lr.adminSummary.TotalDefaultedLoans),
+		"TotalDisbursedAmount": formatMoney(lr.adminSummary.TotalDisbursedAmount),
+		"TotalRepaidAmount": formatMoney(lr.adminSummary.TotalRepaidAmount),
+		"TotalOutstanding": formatMoney(lr.adminSummary.TotalOutstanding),
+		"MostIssuedLoanBranch": lr.adminSummary.MostIssuedLoanBranch,
+		"MostLoansOfficer": lr.adminSummary.MostLoansOfficer,
+	}
 
+	lr.pdf.SetFontSize(12)
+	lr.writeSummary(summary)
+
+	lr.pdf.Ln(lineHt*2)
 	headers := []string{"LoanID", "Client Name", "Branch Name", "Loan Officer", "Loan Amount", "Repay Amount", "Paid Amount", "Outstanding Amount", "Status", "Due Date", "No Installments", "Paid Installments", "Disbursed Date", "Default Risk(%)"}
-	colWidths := []float64{35, 35, 25, 34, 34, 32, 30, 32, 30, 30, 30, 30, 30, 30}
+	colWidths := []float64{25, 30, 30, 30, 25, 32, 30, 35, 30, 25, 30, 30, 30, 28}
 
 	lr.pdf.SetFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2])
     lr.pdf.SetFont("Arial", "B", mediumFont)
@@ -138,10 +157,10 @@ func (lr *loanReport) adminReportPDF() error {
 			formatMoney(loan.PaidAmount),
 			formatMoney(loan.OutstandingAmount),
 			loan.Status,
-			loan.DueDate.Format("2006/01/02"),
+			loan.DueDate,
 			loan.TotalInstallments,
 			loan.PaidInstallments,
-			loan.DisbursedDate.Format("2006/01/02"),
+			loan.DisbursedDate,
 			loan.DefaultRisk,
 		}
 		lr.writeTableRow(row, colWidths, colAlignment)
@@ -157,46 +176,70 @@ func (lr *loanReport) adminReportPDF() error {
 }
 
 func (lr *loanReport) loanReportPDF() error {
-	log.Println("Generating loanId report")
 	if err := lr.addLogo(); err != nil {
 		return err
 	}
 
-	lr.writeReportMetadata("Client Report", time.Now().Format("2006-01-02"), lr.filters.StartDate.Format("2006-01-02"), lr.filters.EndDate.Format("2006-01-02"))
+	lr.writeReportMetadata(fmt.Sprintf("Loan(LN%03d) Report", lr.userData.LoanID), time.Now().Format("2006-01-02"), lr.filters.StartDate.Format("2006-01-02"), lr.filters.EndDate.Format("2006-01-02"))
 
 	lr.pdf.SetFont(fontFamily, "B", largeFont)
 	lr.pdf.Cell(0, lineHt, "Summary:")
 	lr.pdf.Ln(lineHt)
 
-	center := lr.getCenterX()
-	lr.drawBox(marginX, lr.pdf.GetY(), center/2, lineHt*3, secondaryColor)
+	summary := map[string]string {
+		"LoanID": fmt.Sprintf("LN%03d", lr.userData.LoanID),
+		"ClientName": lr.userData.ClientName,
+		"LoanAmount": formatMoney(lr.userData.LoanAmount),
+		"RepayAmount": formatMoney(lr.userData.RepayAmount),
+		"PaidAmount": formatMoney(lr.userData.PaidAmount),
+		"Status": lr.userData.Status,
+		"TotalInstallments": formatQuantity(lr.userData.TotalInstallments),
+		"PaidInstallments": formatQuantity(lr.userData.PaidInstallments),
+		"RemainingInstallments": formatQuantity(lr.userData.RemainingInstallments),
+	}
 
-	headers := []string{"Name", "No Clients", "No Staff", "Loans Issued", "Disbursed Amount", "Collected Amount", "Outstanding Amount", "Default Rate"}
-	colWidths := []float64{35, 20, 20, 20, 25, 25, 25, 20}
+	lr.pdf.SetFontSize(12)
+	lr.writeSummary(summary)
 
-	lr.pdf.SetFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2])
-    lr.pdf.SetFont("Arial", "B", mediumFont)
-    lr.pdf.SetX(marginX)
-	lr.writeTableHeaders(headers, colWidths)
-	colAlignment := []string{"L", "CM", "CM", "CM", "R", "R", "R", "CM"}
-	log.Println(colAlignment)
+	lr.pdf.Ln(lineHt*2)
 
+	
+	if len(lr.userData.InstallmentDetails) > 0 {
+		lr.pdf.SetFont(fontFamily, "B", largeFont)
+		lr.pdf.Cell(10, lineHt, "Loan Installments")
+		lr.pdf.Ln(-1)
+		headers := []string{"InstallmentNumber", "InstallmentAmount", "RemainingAmount", "DueDate", "Paid", "PaidAt"}
+		colWidths := []float64{40, 35, 35, 35, 25, 30}
+	
+		lr.pdf.SetFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2])
+		lr.pdf.SetFont("Arial", "B", mediumFont)
+		lr.pdf.SetX(marginX)
+		lr.writeTableHeaders(headers, colWidths)
+		colAlignment := []string{"CM", "R", "R", "R", "CM", "R"}
+
+		lr.pdf.SetFontStyle("")
+		lr.pdf.SetFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
+		for _, installment := range lr.userData.InstallmentDetails {
+			paidDate := strings.Split(installment.PaidAt, " ")[0]
+			dueDate := strings.Split(installment.DueDate, " ")[0]
+			paid := "PAID"
+			if installment.Paid <= 0 {
+				paid = "UNPAID"
+			}
+			row := []interface{}{
+				installment.InstallmentNumber,
+				formatMoney(installment.InstallmentAmount),
+				formatMoney(installment.RemainingAmount),
+				dueDate,
+				paid,
+				paidDate,
+			}
+			lr.writeTableRow(row, colWidths, colAlignment)
+		}
+
+	}
 	lr.pdf.SetFontStyle("")
     lr.pdf.SetFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
-	// for _, user := range cr.userData {
-	// 	log.Println(user)
-	// 	row := []interface{}{
-			// uranch.uranchName,
-			// uranch.TotalClients,
-			// uranch.TotalUsers,
-			// uranch.LoansIssued,
-			// formatMoney(uranch.TotalDisbursed),
-			// formatMoney(uranch.TotalCollected),
-			// formatMoney(uranch.TotalOutstanding),
-			// uranch.DefaultRate,
-	// 	}
-	// 	cr.writeTableRow(row, colWidths, colAlignment)
-	// }
 
 	// var buffer bytes.Buffer
 	// if err := ur.pdf.Output(&buffer); err != nil {
@@ -204,5 +247,5 @@ func (lr *loanReport) loanReportPDF() error {
 	// }
 	// buffer.Bytes()
 
-	return lr.pdf.OutputFileAndClose("clients_report.pdf")
+	return lr.pdf.OutputFileAndClose(fmt.Sprintf("LN%0d_report.pdf", lr.userData.LoanID))
 }

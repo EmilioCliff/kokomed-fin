@@ -35,5 +35,5 @@ type ProductRepository interface {
 	CreateProduct(ctx context.Context, product *Product) (Product, error)
 	DeleteProduct(ctx context.Context, id uint32) error
 
-	GetReportProductData(ctx context.Context, filters services.ReportFilters) ([]services.ProductReportData, error)
+	GetReportProductData(ctx context.Context, filters services.ReportFilters) ([]services.ProductReportData, services.ProductSummary, error)
 }

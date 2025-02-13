@@ -67,6 +67,18 @@ type Category struct {
 	Statuses *string 	`json:"statuses"`
 }
 
+type LoanEvent struct {
+	ID       string  `json:"id"`
+	LoanID uint32 `json:"loanId"`
+	ClientName   string  `json:"clientName"`
+	LoanAmount   float64 `json:"loanAmount"`
+	Date      *string `json:"date"`   
+	PaymentDue   *float64 `json:"paymentDue,omitempty"` 
+	Type         string  `json:"type"` 
+	AllDay bool `json:"allDay"`
+	Title string `json:"title"`
+}
+
 type LoansRepository interface {
 	CreateLoan(ctx context.Context, loan *Loan) (Loan, error)
 	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) error
@@ -82,6 +94,8 @@ type LoansRepository interface {
 	GetInstallment(ctx context.Context, id uint32) (Installment, error)
 	UpdateInstallment(ctx context.Context, installment *UpdateInstallment) (Installment, error)
 
-	GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, error)
+	GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, services.LoanSummary, error)
 	GetReportLoanByIdData(ctx context.Context,id uint32) (services.LoanReportDataById, error)
+
+	GetLoanEvents(ctx context.Context) ([]LoanEvent, error)
 }

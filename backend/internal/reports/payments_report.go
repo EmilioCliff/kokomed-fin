@@ -1,6 +1,7 @@
 package reports
 
 import (
+	"bytes"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
@@ -11,12 +12,14 @@ type paymentReport struct {
 	*excelGenerator
 	*PDFGenerator
 	data []services.PaymentReportData
+	summary services.PaymentSummary
 	filters services.ReportFilters
 }
 
-func newPaymentReport(data []services.PaymentReportData, format string, filters services.ReportFilters) *paymentReport {
+func newPaymentReport(data []services.PaymentReportData, summary services.PaymentSummary, format string, filters services.ReportFilters) *paymentReport {
 	reportGenerator := &paymentReport{
 		data:           data,
+		summary: summary,
 		filters: filters,
 	}
 
@@ -24,13 +27,13 @@ func newPaymentReport(data []services.PaymentReportData, format string, filters 
 	case "excel":
 		reportGenerator.excelGenerator = newExcelGenerator()
 	case "pdf":
-		reportGenerator.PDFGenerator = newPDFGenerator()
+		reportGenerator.PDFGenerator = newPDFGenerator("L", "A4")
 	}
 
 	return reportGenerator
 }
 
-func (pr *paymentReport) generateExcel(sheetName string) (error) {
+func (pr *paymentReport) generateExcel(sheetName string) ([]byte, error) {
 	pr.createSheet(sheetName)
 
 	columns := []string{"Transaction Number", "Paying Name", "Amount", "Account Number", "Transaction Source", "Paid Date", "Assigned To", "Assigned By"}
@@ -55,19 +58,27 @@ func (pr *paymentReport) generateExcel(sheetName string) (error) {
 		pr.writeRow(rowIdx+2, row)
 	}
 
-	// buffer, err := pr.file.WriteToBuffer()
-	// buffer.Bytes(),
-
-	if err := pr.file.SaveAs("payments_report.xlsx"); err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
+	buffer, err := pr.file.WriteToBuffer()
+	if err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error writing to buffer excel: %v", err)
 	}
 
-	return pr.closeExcel()
+	if err := pr.closeExcel(); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error closing excel file: %v", err)
+	}
+	
+	return buffer.Bytes(), err
+
+	// if err := pr.file.SaveAs("payments_report.xlsx"); err != nil {
+	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
+	// }
+
+	// return pr.closeExcel()
 }
 
-func (pr *paymentReport) generatePDF() (error) {
+func (pr *paymentReport) generatePDF() ([]byte, error) {
 	if err := pr.addLogo(); err != nil {
-		return err
+		return nil, err
 	}
 
 	pr.writeReportMetadata("Payments Report", time.Now().Format("2006-01-02"), pr.filters.StartDate.Format("2006-01-02"), pr.filters.EndDate.Format("2006-01-02"))
@@ -76,9 +87,17 @@ func (pr *paymentReport) generatePDF() (error) {
 	pr.pdf.Cell(0, lineHt, "Summary:")
 	pr.pdf.Ln(lineHt)
 
-	center := pr.getCenterX()
-	pr.drawBox(marginX, pr.pdf.GetY(), center/2, lineHt*3, secondaryColor)
+	summary := map[string]string {
+		"TotalPayments": formatQuantity(pr.summary.TotalPayments), 
+		"TotalAmountReceived": formatMoney(pr.summary.TotalAmountReceived), 
+		"MostCommonSource": pr.summary.MostCommonSource, 
+		"MostAssignedStaff": pr.summary.MostAssignedStaff, 
+	}
 
+	pr.pdf.SetFontSize(12)
+	pr.writeSummary(summary)
+
+	pr.pdf.Ln(lineHt*2)
 	headers := []string{"Txn No", "Paying Name", "Amount", "Account No", "Txn Source", "Date Paid", "Assigned To", "Assigned By"}
 	colWidths := []float64{25, 25, 20, 25, 25, 35, 25, 20}
 
@@ -105,11 +124,14 @@ func (pr *paymentReport) generatePDF() (error) {
 		pr.writeTableRow(row, colWidths, colAlignment)
 	}
 
-	// var buffer bytes.Buffer
-	// if err := pr.pdf.Output(&buffer); err != nil {
-	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
-	// }
-	// buffer.Bytes()
+	var buffer bytes.Buffer
+	if err := pr.pdf.Output(&buffer); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
+	}
 
-	return pr.pdf.OutputFileAndClose("payments_report.pdf")
+	pr.closePDF()
+
+	return buffer.Bytes(), nil
+
+	// return pr.pdf.OutputFileAndClose("payments_report.pdf")
 }

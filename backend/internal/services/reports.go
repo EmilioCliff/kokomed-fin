@@ -2,9 +2,17 @@ package services
 
 import (
 	"context"
-	"database/sql"
 	"time"
 )
+
+type ReportService interface {
+	GenerateLoansReport(ctx context.Context, format string, filters ReportFilters) (error)
+	GeneratePaymentsReport(ctx context.Context, format string, filters ReportFilters) ([]byte, error)
+	GenerateBranchesReport(ctx context.Context, format string, filters ReportFilters) ([]byte, error)
+	GenerateUsersReport(ctx context.Context, format string, filters ReportFilters) (error)
+	GenerateClientsReport(ctx context.Context, format string, filters ReportFilters) (error)
+	GenerateProductsReport(ctx context.Context, format string, filters ReportFilters) ([]byte, error)
+}
 
 type ReportFilters struct {
 	StartDate time.Time 
@@ -31,14 +39,25 @@ type ClientAdminsReportData struct {
 	DefaultRate    float64
 }
 
+type ClientSummary struct {
+	TotalClients        int64  
+	NewClients          int64  
+	MostActiveClient    string 
+	MostLoansClient     string 
+	HighestPayingClient string 
+	TotalDisbursed      float64
+	TotalPaid           float64
+	TotalOwed           float64
+}
+
 type ClientClientsReportData struct {
 	Name          string                         `json:"name"`
 	PhoneNumber   string                         `json:"phone_number"`
-	IDNumber      sql.NullString                 `json:"id_number,omitempty"`
-	Dob           sql.NullTime                   `json:"dob,omitempty"`
-	BranchName    sql.NullString                 `json:"branch_name,omitempty"`
-	AssignedStaff sql.NullString                 `json:"assigned_staff,omitempty"`
-	Active        bool                           `json:"active"`
+	IDNumber      *string                 `json:"id_number,omitempty"`
+	Dob           *time.Time                   `json:"dob,omitempty"`
+	BranchName    string                 `json:"branch_name,omitempty"`
+	AssignedStaff string                 `json:"assigned_staff,omitempty"`
+	Active        string                           `json:"active"`
 	Loans         []ClientClientReportDataLoans  `json:"loans"`
 	Payments      []ClientClientReportDataPayments `json:"payments"`
 }
@@ -50,9 +69,8 @@ type ClientClientReportDataLoans struct {
 	RepayAmount    float64   `json:"repay_amount"`
 	PaidAmount     float64   `json:"paid_amount"`
 	DisbursedOn    string `json:"disbursed_on"`
-	TransactionFee uint16    `json:"transaction_fee"`
-	CreatedBy      string    `json:"created_by"`
-	AssignedBy     string    `json:"assigned_by"`
+	TransactionFee uint32    `json:"transaction_fee"`
+	ApprovedBy     string    `json:"approved_by"`
 }
 
 type ClientClientReportDataPayments struct {
@@ -66,49 +84,90 @@ type ClientClientReportDataPayments struct {
 }
 
 type UserAdminsReportData struct {
-	FullName string `json:"full_name"`
-	BranchName string `json:"branch_name"`
-	Roles string `json:"roles"`
-	ClientsRegistered int64 `json:"clients_registered"`
-	PaymentsAssigned int64 `json:"payments_assigned"`
-	ApprovedLoans int64 `json:"approved_loans"`
-	ActiveLoans int64 `json:"active_loans"`
-	CompletedLoans int64 `json:"completed_loans"`
-	DefaultRate float64 `json:"default_rate"`
+	FullName string 
+	BranchName string 
+	Roles string 
+	ClientsRegistered int64 
+	PaymentsAssigned int64 
+	ApprovedLoans int64 
+	ActiveLoans int64 
+	CompletedLoans int64 
+	DefaultRate float64 
+}
+
+type UserAdminsSummary struct {
+	TotalUsers         int64   
+	TotalClients       int64   
+	TotalPayments      int64   
+	HighestLoanApprovalUser  string  
 }
 
 type UserUsersReportData struct {
-	FullName string `json:"full_name"`
-	Roles string `json:"roles"`
-	BranchName string `json:"branch_name"`
-	TotalClientsHandled int64 `json:"total_clients_handled"`
-	TotalLoansApproved int64 `json:"total_loans_approved"`
-	TotalLoanAmountManaged float64 `json:"total_loan_amount_managed"`
-	TotalCollectedAmount float64 `json:"total_collected_amount"`
-	DefaultRate float64 `json:"default_rate"`
-	AssignedPayments int64 `json:"assigned_payments"`
+	Name                   string         `json:"name"`
+	Role                   string      `json:"role"`
+	Branch                 string `json:"branch"`
+	TotalClientsHandled    int64          `json:"total_clients_handled"`
+	LoansApproved          int64          `json:"loans_approved"`
+	TotalLoanAmountManaged float64    `json:"total_loan_amount_managed"`
+	TotalCollectedAmount   float64    `json:"total_collected_amount"`
+	DefaultRate            float64    `json:"default_rate"`
+	AssignedPayments       int64          `json:"assigned_payments"`
+	AssignedLoans          []UserUsersReportDataLoans    `json:"assigned_loans"`
+	AssignedPaymentsList   []UserUsersReportDataPayments    `json:"assigned_payments_list"`
+}
+
+type UserUsersReportDataLoans struct{
+	LoanId	uint32	`json:"loan_id"`
+	ClientName string	`json:"client_name"`
+	Status	string	`json:"status"`
+	LoanAmount float64	`json:"loan_amount"`
+	RepayAmount float64	`json:"repay_amount"`
+	PaidAmount float64	`json:"paid_amount"`
+	DisbursedOn string	`json:"disbursed_on"`
+}
+
+type UserUsersReportDataPayments struct{
+	TransactionNumber string	`json:"transaction_number"`
+	ClientName string	`json:"client_name"`
+	AmountPaid float64	`json:"amount_paid"`
+	PaidDate string	`json:"paid_date"`
 }
 
 type BranchReportData struct {
-	BranchName string `json:"branch_name"`
-	TotalClients int64 `json:"total_clients"`
-	TotalUsers int64 `json:"total_users"`
-	LoansIssued int64 `json:"loans_issued"`
-	TotalDisbursed float64 `json:"total_disbursed"`
-	TotalCollected float64 `json:"total_collected"`
-	TotalOutstanding float64 `json:"total_outstanding"`
-	DefaultRate float64 `json:"default_rate"`
+	BranchName string 
+	TotalClients int64 
+	TotalUsers int64 
+	LoansIssued int64 
+	TotalDisbursed float64 
+	TotalCollected float64 
+	TotalOutstanding float64 
+	DefaultRate float64 
+}
+
+type BranchSummary struct {
+    TotalBranches         int64   
+    HighestPerformingBranch string
+    MostClientsBranch     string 
+    TotalClients          int64   
+    TotalUsers            int64   
 }
 
 type PaymentReportData struct {
-	TransactionNumber string    `json:"transaction_number"`
-	PayingName        string    `json:"paying_name"`
-	Amount            float64   `json:"amount"`
-	AccountNumber     string    `json:"account_number"`
-	TransactionSource string    `json:"transaction_source"`
-	PaidDate          time.Time `json:"paid_date"`
-	AssignedTo	  string    `json:"assigned_to"`
-	AssignedBy string 			`json:"assigned_by"`
+	TransactionNumber string    
+	PayingName        string    
+	Amount            float64   
+	AccountNumber     string    
+	TransactionSource string    
+	PaidDate          time.Time 
+	AssignedTo	  string    
+	AssignedBy string 			
+}
+
+type PaymentSummary struct {
+	TotalPayments        int64   
+	TotalAmountReceived  float64 
+	MostCommonSource     string  
+	MostAssignedStaff    string  
 }
 
 type ProductReportData struct {
@@ -123,6 +182,13 @@ type ProductReportData struct {
 	DefaultRate float64 
 }
 
+type ProductSummary struct {
+	TotalProducts int64
+    MostPopularProduct string
+    MaxLoans int64
+	TotalActiveLoanAmount int64
+}
+
 type LoanReportData struct {
 	LoanID            uint32      
 	ClientName        string      
@@ -133,11 +199,23 @@ type LoanReportData struct {
 	PaidAmount        float64     
 	OutstandingAmount float64
 	Status            string 
-	DueDate           *time.Time
+	DueDate           string
 	TotalInstallments uint32      
 	PaidInstallments  int64       
-	DisbursedDate *time.Time
+	DisbursedDate string
 	DefaultRisk       float64
+}
+
+type LoanSummary struct {
+	TotalLoans            int64
+	TotalActiveLoans      int64
+	TotalCompletedLoans   int64
+	TotalDefaultedLoans   int64
+	TotalDisbursedAmount  float64
+	TotalRepaidAmount     float64
+	TotalOutstanding      float64
+	MostIssuedLoanBranch  string
+	MostLoansOfficer      string
 }
 
 type LoanReportDataById struct {
@@ -147,9 +225,9 @@ type LoanReportDataById struct {
 	RepayAmount           float64                               `json:"repay_amount"`
 	PaidAmount            float64                               `json:"paid_amount"`
 	Status                string                                `json:"status"`
-	TotalInstallments     uint32                                `json:"total_installments"`
+	TotalInstallments     int64                                `json:"total_installments"`
 	PaidInstallments      int64                                 `json:"paid_installments"`
-	RemainingInstallments uint32                                `json:"remaining_installments"`
+	RemainingInstallments int64                                `json:"remaining_installments"`
 	InstallmentDetails    []LoanReportDataByIdInstallmentDetails `json:"installment_details"`
 }
 
@@ -160,13 +238,4 @@ type LoanReportDataByIdInstallmentDetails struct {
 	DueDate           string `json:"due_date"`
 	Paid              uint32      `json:"paid"`
 	PaidAt            string `json:"paid_at"`
-}
-
-type ReportService interface {
-	GenerateLoansReport(ctx context.Context, format string, filters ReportFilters) (error)
-	GeneratePaymentsReport(ctx context.Context, format string, filters ReportFilters) (error)
-	GenerateBranchesReport(ctx context.Context, format string, filters ReportFilters) (error)
-	GenerateUsersReport(ctx context.Context, format string, filters ReportFilters) (error)
-	GenerateClientsReport(ctx context.Context, format string, filters ReportFilters) (error)
-	GenerateProductsReport(ctx context.Context, format string, filters ReportFilters) (error)
 }

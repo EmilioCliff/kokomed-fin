@@ -16,26 +16,68 @@ WHERE
     np.paid_date BETWEEN ? AND ?;
 
 -- name: GetBranchReportData :many
+WITH branch_metrics AS (
+    SELECT 
+        b.id,
+        b.name AS branch_name,
+        COUNT(DISTINCT c.id) AS total_clients,
+        COUNT(DISTINCT u.id) AS total_users
+    FROM branches b
+    LEFT JOIN clients c ON c.branch_id = b.id
+    LEFT JOIN users u ON u.branch_id = b.id
+    GROUP BY b.id, b.name
+),
+loan_metrics AS (
+    SELECT 
+        p.branch_id,
+        SUM(CASE 
+            WHEN l.disbursed_on BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") 
+            THEN p.loan_amount 
+            ELSE 0 
+        END) AS total_disbursed_amount,
+        SUM(CASE 
+            WHEN l.disbursed_on BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") 
+            THEN l.paid_amount 
+            ELSE 0 
+        END) AS total_collected_amount,
+        SUM(CASE 
+            WHEN l.disbursed_on BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") 
+            THEN (p.repay_amount - l.paid_amount)
+            ELSE 0 
+        END) AS total_outstanding_amount,
+        COUNT(DISTINCT CASE 
+            WHEN l.disbursed_on BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") 
+            THEN l.id 
+        END) AS total_loans_issued,
+        COUNT(DISTINCT CASE 
+            WHEN l.status = 'DEFAULTED' 
+            AND l.disbursed_on BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") 
+            THEN l.id 
+        END) AS defaulted_loans
+    FROM products p
+    JOIN loans l ON l.product_id = p.id 
+    WHERE l.status != 'INACTIVE'
+    GROUP BY p.branch_id
+)
 SELECT 
-    b.name AS branch_name,
-    COUNT(DISTINCT c.id) AS total_clients,
-    COUNT(DISTINCT u.id) AS total_users,
-    COUNT(DISTINCT l.id) AS total_loans_issued,
-    COALESCE(SUM(p.loan_amount), 0) AS total_disbursed_amount,
-    COALESCE(SUM(l.paid_amount), 0) AS total_collected_amount,
-    COALESCE(SUM(p.repay_amount - l.paid_amount), 0) AS total_outstanding_amount,
+    bm.branch_name,
+    bm.total_clients,
+    bm.total_users,
+    COALESCE(lm.total_loans_issued, 0) AS total_loans_issued,
+    COALESCE(lm.total_disbursed_amount, 0) AS total_disbursed_amount,
+    COALESCE(lm.total_collected_amount, 0) AS total_collected_amount,
+    COALESCE(lm.total_outstanding_amount, 0) AS total_outstanding_amount,
     COALESCE(
-        (COUNT(CASE WHEN l.status = 'DEFAULTED' THEN 1 END) * 100.0) / NULLIF(COUNT(l.id), 0), 
+        CASE 
+            WHEN lm.total_loans_issued > 0 
+            THEN (lm.defaulted_loans * 100.0) / lm.total_loans_issued 
+            ELSE 0 
+        END,
         0
     ) AS default_rate
-FROM branches b
-LEFT JOIN clients c ON c.branch_id = b.id
-LEFT JOIN users u ON u.branch_id = b.id
-LEFT JOIN loans l ON l.product_id IN (SELECT id FROM products WHERE branch_id = b.id) AND l.status != 'INACTIVE' AND l.disbursed_on  BETWEEN ? AND ?
-LEFT JOIN products p ON p.id = l.product_id
-
-GROUP BY b.id, b.name
-ORDER BY b.name;
+FROM branch_metrics bm
+LEFT JOIN loan_metrics lm ON lm.branch_id = bm.id
+ORDER BY bm.branch_name;
 
 -- name: GetUserAdminsReportData :many
 SELECT 
@@ -46,71 +88,142 @@ SELECT
         WHEN l.approved_by = u.id AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
     END) AS approved_loans,
     COUNT(DISTINCT CASE 
-        WHEN l.loan_officer = u.id AND l.status = 'ACTIVE' AND l.created_at BETWEEN sqlc.arg("active_start") AND sqlc.arg("active_end") THEN l.id 
+        WHEN l.loan_officer = u.id AND l.status = 'ACTIVE' AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
     END) AS active_loans,
+
     COUNT(DISTINCT CASE 
-        WHEN l.loan_officer = u.id AND l.status = 'COMPLETED' AND l.created_at BETWEEN sqlc.arg("completed_start") AND sqlc.arg("completed_end") THEN l.id 
+        WHEN l.loan_officer = u.id AND l.status = 'COMPLETED' AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
     END) AS completed_loans,
     COALESCE(
         (COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.status = 'DEFAULTED' AND l.created_at BETWEEN sqlc.arg("defaulted_start") AND sqlc.arg("defaulted_end") THEN l.id 
+            WHEN l.loan_officer = u.id AND l.status = 'DEFAULTED' AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
         END) * 100.0) / NULLIF(COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.created_at BETWEEN sqlc.arg("total_start") AND sqlc.arg("total_end") THEN l.id 
+            WHEN (l.loan_officer = u.id OR l.created_by = u.id OR l.approved_by = u.id OR l.disbursed_by = u.id OR l.updated_by = u.id) 
+            AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
         END), 0), 
         0
     ) AS default_rate,
     COUNT(DISTINCT CASE 
-        WHEN c.created_by = u.id AND c.created_at BETWEEN sqlc.arg("clients_start") AND sqlc.arg("clients_end") THEN c.id 
+        WHEN c.created_by = u.id AND c.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN c.id 
     END) AS clients_registered,
     COUNT(DISTINCT CASE 
-        WHEN LOWER(np.assigned_by) = LOWER(u.full_name) AND np.paid_date BETWEEN sqlc.arg("payments_start") AND sqlc.arg("payments_end") THEN np.id 
+        WHEN LOWER(np.assigned_by) = LOWER(u.full_name) AND np.paid_date BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN np.id 
     END) AS payments_assigned
+
 FROM users u
 LEFT JOIN branches b ON u.branch_id = b.id
-LEFT JOIN loans l ON l.loan_officer = u.id
+LEFT JOIN loans l ON 
+    l.loan_officer = u.id OR 
+    l.created_by = u.id OR 
+    l.approved_by = u.id OR 
+    l.disbursed_by = u.id OR 
+    l.updated_by = u.id
 LEFT JOIN clients c ON c.created_by = u.id
 LEFT JOIN non_posted np ON LOWER(np.assigned_by) = LOWER(u.full_name)
 GROUP BY u.id, u.full_name, u.role, b.name
 ORDER BY u.role DESC, u.full_name;
 
--- name: GetUserUsersReportData :many
+-- name: GetUserUsersReportData :one
 SELECT 
     u.full_name AS name,
     u.role,
     b.name AS branch,
+
     COUNT(DISTINCT CASE 
-        WHEN c.assigned_staff = u.id AND c.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN c.id 
+        WHEN c.assigned_staff = u.id 
+        AND c.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN c.id 
     END) AS total_clients_handled,
+
     COUNT(DISTINCT CASE 
-        WHEN l.loan_officer = u.id AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
+        WHEN l.approved_by = u.id 
+        AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
     END) AS loans_approved,
-    COALESCE(SUM(CASE 
-        WHEN l.loan_officer = u.id AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN p.repay_amount 
-    END), 0) AS total_loan_amount_managed,
-    COALESCE(SUM(CASE 
-        WHEN l.loan_officer = u.id AND l.paid_amount > 0 AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.paid_amount 
-    END), 0) AS total_collected_amount,
+
+    COALESCE((
+        SELECT SUM(p.repay_amount) 
+        FROM loans l
+        JOIN products p ON l.product_id = p.id
+        WHERE l.loan_officer = u.id AND l.status != 'INACTIVE'
+        AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date")
+    ), 0) AS total_loan_amount_managed,
+
+    COALESCE((
+        SELECT SUM(l.paid_amount) 
+        FROM loans l
+        WHERE l.loan_officer = u.id AND l.paid_amount > 0 
+        AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date")
+    ), 0) AS total_collected_amount,
+
     COALESCE(
         (COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.status = 'DEFAULTED' AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
-        END) * 100.0) / NULLIF(COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
-        END), 0), 
+            WHEN l.loan_officer = u.id 
+            AND l.status = 'DEFAULTED' 
+            AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
+        END) * 100.0) 
+        / NULLIF(
+            COUNT(DISTINCT CASE 
+                WHEN l.loan_officer = u.id AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN l.id 
+            END), 0
+        ), 
         0
     ) AS default_rate,
+
     COUNT(DISTINCT CASE 
-        WHEN LOWER(np.assigned_by) = LOWER(u.full_name) AND np.paid_date BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN np.id 
-    END) AS assigned_payments
+        WHEN LOWER(np.assigned_by) = LOWER(u.full_name) 
+        AND np.paid_date BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date") THEN np.id 
+    END) AS assigned_payments,
+
+    (
+        SELECT COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'loan_id', l.id,
+                    'status', l.status,
+                    'client_name', c.full_name,
+                    'loan_amount', p.loan_amount,
+                    'repay_amount', p.repay_amount,
+                    'paid_amount', l.paid_amount,
+                    'disbursed_on', l.disbursed_on
+                )
+            ), '[]'
+        )
+        FROM loans l
+        JOIN clients c ON l.client_id = c.id
+        JOIN products p ON l.product_id = p.id
+        WHERE l.loan_officer = u.id 
+    ) AS assigned_loans,
+
+    (
+        SELECT COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'transaction_number', np.transaction_number,
+                    'client_name', assigned_client.full_name,
+                    'amount_paid', np.amount,
+                    'paid_date', np.paid_date
+                )
+            ), '[]'
+        )
+        FROM non_posted np
+        LEFT JOIN clients assigned_client ON np.assign_to = assigned_client.id
+        WHERE LOWER(np.assigned_by) = LOWER(u.full_name)
+    ) AS assigned_payments_list
 
 FROM users u
 LEFT JOIN branches b ON u.branch_id = b.id
 LEFT JOIN clients c ON c.assigned_staff = u.id
-LEFT JOIN loans l ON l.loan_officer = u.id
+LEFT JOIN loans l ON 
+    l.loan_officer = u.id 
+    OR l.approved_by = u.id 
+    OR l.created_by = u.id 
+    OR l.disbursed_by = u.id 
+    OR l.updated_by = u.id
+
 LEFT JOIN products p ON l.product_id = p.id
 LEFT JOIN non_posted np ON LOWER(np.assigned_by) = LOWER(u.full_name)
-
+LEFT JOIN clients assigned_client ON np.assign_to = assigned_client.id
 WHERE u.id = sqlc.arg("id")
-GROUP BY u.id, u.full_name, b.name;
+GROUP BY u.id, u.full_name, u.role, b.name;
 
 -- name: GetClientAdminsReportData :many
 SELECT 
@@ -173,8 +286,6 @@ SELECT
     b.name AS branch_name,
     u.full_name AS assigned_staff,
     c.active,
-
-    -- ✅ Loan Details (Get all loans separately to prevent duplication)
     (
         SELECT COALESCE(
             JSON_ARRAYAGG(
@@ -186,20 +297,16 @@ SELECT
                     'paid_amount', l.paid_amount,
                     'disbursed_on', l.disbursed_on,
                     'transaction_fee', l.fee_paid,
-                    'created_by', created_by_user.full_name,
                     'approved_by', approved_by_user.full_name
                 )
             ), '[]'
         )
         FROM loans l
         JOIN products p ON l.product_id = p.id
-        LEFT JOIN users created_by_user ON l.created_by = created_by_user.id
         LEFT JOIN users approved_by_user ON l.approved_by = approved_by_user.id
         WHERE l.client_id = c.id
         AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date")
     ) AS loans,
-
-    -- ✅ Payment Details (Get all payments separately to prevent duplication)
     (
         SELECT COALESCE(
             JSON_ARRAYAGG(
@@ -208,7 +315,7 @@ SELECT
                     'transaction_source', np.transaction_source,
                     'account_number', np.account_number,
                     'paying_name', np.paying_name,
-                    'assigned_by', assigned_by_user.full_name,
+                    'assigned_by', np.assigned_by,
                     'amount_paid', np.amount,
                     'paid_date', np.paid_date
                 )
@@ -245,7 +352,7 @@ SELECT
 FROM products p
 LEFT JOIN loans l ON l.product_id = p.id 
     AND l.status != 'INACTIVE'  
-    AND l.created_at BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date")  
+    AND l.disbursed_on BETWEEN sqlc.arg("start_date") AND sqlc.arg("end_date")  
 LEFT JOIN branches b ON p.branch_id = b.id 
 
 GROUP BY p.loan_amount, b.name

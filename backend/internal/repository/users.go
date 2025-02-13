@@ -49,6 +49,6 @@ type UserRepository interface {
 	UpdateUserPassword(ctx context.Context, email string, password string) error
 	CheckUserExistance(ctx context.Context, email string) bool
 
-	GetReportUserAdminData(ctx context.Context, filters services.ReportFilters) ([]services.UserAdminsReportData, error)
-	GetReportUserUsersData(ctx context.Context,id uint32, filters services.ReportFilters) ([]services.UserUsersReportData, error)
+	GetReportUserAdminData(ctx context.Context, filters services.ReportFilters) ([]services.UserAdminsReportData, services.UserAdminsSummary, error)
+	GetReportUserUsersData(ctx context.Context,id uint32, filters services.ReportFilters) (services.UserUsersReportData, error)
 }

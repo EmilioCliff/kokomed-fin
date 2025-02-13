@@ -15,6 +15,9 @@ sqlc:
 run:
 	cd cmd/server && go run main.go
 
+build:
+	cd cmd/server && go build -o main .
+
 mock:
 	mockgen -package mockdb -destination ./internal/mysql/mockdb/mock.go github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated Querier
 

@@ -17,6 +17,7 @@ SELECT
     COUNT(DISTINCT CASE 
         WHEN l.loan_officer = u.id AND l.status = 'ACTIVE' AND l.created_at BETWEEN ? AND ? THEN l.id 
     END) AS active_loans,
+
     COUNT(DISTINCT CASE 
         WHEN l.loan_officer = u.id AND l.status = 'COMPLETED' AND l.created_at BETWEEN ? AND ? THEN l.id 
     END) AS completed_loans,
@@ -24,7 +25,8 @@ SELECT
         (COUNT(DISTINCT CASE 
             WHEN l.loan_officer = u.id AND l.status = 'DEFAULTED' AND l.created_at BETWEEN ? AND ? THEN l.id 
         END) * 100.0) / NULLIF(COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN l.id 
+            WHEN (l.loan_officer = u.id OR l.created_by = u.id OR l.approved_by = u.id OR l.disbursed_by = u.id OR l.updated_by = u.id) 
+            AND l.created_at BETWEEN ? AND ? THEN l.id 
         END), 0), 
         0
     ) AS default_rate,
@@ -34,9 +36,15 @@ SELECT
     COUNT(DISTINCT CASE 
         WHEN LOWER(np.assigned_by) = LOWER(u.full_name) AND np.paid_date BETWEEN ? AND ? THEN np.id 
     END) AS payments_assigned
+
 FROM users u
 LEFT JOIN branches b ON u.branch_id = b.id
-LEFT JOIN loans l ON l.loan_officer = u.id
+LEFT JOIN loans l ON 
+    l.loan_officer = u.id OR 
+    l.created_by = u.id OR 
+    l.approved_by = u.id OR 
+    l.disbursed_by = u.id OR 
+    l.updated_by = u.id
 LEFT JOIN clients c ON c.created_by = u.id
 LEFT JOIN non_posted np ON LOWER(np.assigned_by) = LOWER(u.full_name)
 GROUP BY u.id, u.full_name, u.role, b.name
@@ -44,20 +52,8 @@ ORDER BY u.role DESC, u.full_name
 `
 
 type GetUserAdminsReportDataParams struct {
-	StartDate      time.Time `json:"start_date"`
-	EndDate        time.Time `json:"end_date"`
-	ActiveStart    time.Time `json:"active_start"`
-	ActiveEnd      time.Time `json:"active_end"`
-	CompletedStart time.Time `json:"completed_start"`
-	CompletedEnd   time.Time `json:"completed_end"`
-	DefaultedStart time.Time `json:"defaulted_start"`
-	DefaultedEnd   time.Time `json:"defaulted_end"`
-	TotalStart     time.Time `json:"total_start"`
-	TotalEnd       time.Time `json:"total_end"`
-	ClientsStart   time.Time `json:"clients_start"`
-	ClientsEnd     time.Time `json:"clients_end"`
-	PaymentsStart  time.Time `json:"payments_start"`
-	PaymentsEnd    time.Time `json:"payments_end"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
 }
 
 type GetUserAdminsReportDataRow struct {
@@ -76,18 +72,18 @@ func (q *UserRepository) GetUserAdminsReportData(ctx context.Context, arg GetUse
 	rows, err := q.db.db.QueryContext(ctx, getUserAdminsReportData,
 		arg.StartDate,
 		arg.EndDate,
-		arg.ActiveStart,
-		arg.ActiveEnd,
-		arg.CompletedStart,
-		arg.CompletedEnd,
-		arg.DefaultedStart,
-		arg.DefaultedEnd,
-		arg.TotalStart,
-		arg.TotalEnd,
-		arg.ClientsStart,
-		arg.ClientsEnd,
-		arg.PaymentsStart,
-		arg.PaymentsEnd,
+		arg.StartDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
 	)
 	if err != nil {
 		return nil, err
@@ -125,39 +121,102 @@ SELECT
     u.full_name AS name,
     u.role,
     b.name AS branch,
+
     COUNT(DISTINCT CASE 
-        WHEN c.assigned_staff = u.id AND c.created_at BETWEEN ? AND ? THEN c.id 
+        WHEN c.assigned_staff = u.id 
+        AND c.created_at BETWEEN ? AND ? THEN c.id 
     END) AS total_clients_handled,
+
     COUNT(DISTINCT CASE 
-        WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN l.id 
+        WHEN l.approved_by = u.id 
+        AND l.created_at BETWEEN ? AND ? THEN l.id 
     END) AS loans_approved,
-    COALESCE(SUM(CASE 
-        WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN p.repay_amount 
-    END), 0) AS total_loan_amount_managed,
-    COALESCE(SUM(CASE 
-        WHEN l.loan_officer = u.id AND l.paid_amount > 0 AND l.created_at BETWEEN ? AND ? THEN l.paid_amount 
-    END), 0) AS total_collected_amount,
+
+    COALESCE((
+        SELECT SUM(p.repay_amount) 
+        FROM loans l
+        JOIN products p ON l.product_id = p.id
+        WHERE l.loan_officer = u.id AND l.status != 'INACTIVE'
+        AND l.created_at BETWEEN ? AND ?
+    ), 0) AS total_loan_amount_managed,
+
+    COALESCE((
+        SELECT SUM(l.paid_amount) 
+        FROM loans l
+        WHERE l.loan_officer = u.id AND l.paid_amount > 0 
+        AND l.created_at BETWEEN ? AND ?
+    ), 0) AS total_collected_amount,
+
     COALESCE(
         (COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.status = 'DEFAULTED' AND l.created_at BETWEEN ? AND ? THEN l.id 
-        END) * 100.0) / NULLIF(COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN l.id 
-        END), 0), 
+            WHEN l.loan_officer = u.id 
+            AND l.status = 'DEFAULTED' 
+            AND l.created_at BETWEEN ? AND ? THEN l.id 
+        END) * 100.0) 
+        / NULLIF(
+            COUNT(DISTINCT CASE 
+                WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN l.id 
+            END), 0
+        ), 
         0
     ) AS default_rate,
+
     COUNT(DISTINCT CASE 
-        WHEN LOWER(np.assigned_by) = LOWER(u.full_name) AND np.paid_date BETWEEN ? AND ? THEN np.id 
-    END) AS assigned_payments
+        WHEN LOWER(np.assigned_by) = LOWER(u.full_name) 
+        AND np.paid_date BETWEEN ? AND ? THEN np.id 
+    END) AS assigned_payments,
+
+    (
+        SELECT COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'loan_id', l.id,
+                    'status', l.status,
+                    'client_name', c.full_name,
+                    'loan_amount', p.loan_amount,
+                    'repay_amount', p.repay_amount,
+                    'paid_amount', l.paid_amount,
+                    'disbursed_on', l.disbursed_on
+                )
+            ), '[]'
+        )
+        FROM loans l
+        JOIN clients c ON l.client_id = c.id
+        JOIN products p ON l.product_id = p.id
+        WHERE l.loan_officer = u.id 
+    ) AS assigned_loans,
+
+    (
+        SELECT COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'transaction_number', np.transaction_number,
+                    'client_name', assigned_client.full_name,
+                    'amount_paid', np.amount,
+                    'paid_date', np.paid_date
+                )
+            ), '[]'
+        )
+        FROM non_posted np
+        LEFT JOIN clients assigned_client ON np.assign_to = assigned_client.id
+        WHERE LOWER(np.assigned_by) = LOWER(u.full_name)
+    ) AS assigned_payments_list
 
 FROM users u
 LEFT JOIN branches b ON u.branch_id = b.id
 LEFT JOIN clients c ON c.assigned_staff = u.id
-LEFT JOIN loans l ON l.loan_officer = u.id
+LEFT JOIN loans l ON 
+    l.loan_officer = u.id 
+    OR l.approved_by = u.id 
+    OR l.created_by = u.id 
+    OR l.disbursed_by = u.id 
+    OR l.updated_by = u.id
+
 LEFT JOIN products p ON l.product_id = p.id
 LEFT JOIN non_posted np ON LOWER(np.assigned_by) = LOWER(u.full_name)
-
+LEFT JOIN clients assigned_client ON np.assign_to = assigned_client.id
 WHERE u.id = ?
-GROUP BY u.id, u.full_name, b.name
+GROUP BY u.id, u.full_name, u.role, b.name
 `
 
 type GetUserUsersReportDataParams struct {
@@ -176,10 +235,12 @@ type GetUserUsersReportDataRow struct {
 	TotalCollectedAmount   interface{}    `json:"total_collected_amount"`
 	DefaultRate            interface{}    `json:"default_rate"`
 	AssignedPayments       int64          `json:"assigned_payments"`
+	AssignedLoans          interface{}    `json:"assigned_loans"`
+	AssignedPaymentsList   interface{}    `json:"assigned_payments_list"`
 }
 
-func (q *UserRepository) GetUserUsersReportData(ctx context.Context, arg GetUserUsersReportDataParams) ([]GetUserUsersReportDataRow, error) {
-	rows, err := q.db.db.QueryContext(ctx, getUserUsersReportData,
+func (q *UserRepository) GetUserUsersReportData(ctx context.Context, arg GetUserUsersReportDataParams) (GetUserUsersReportDataRow, error) {
+	row  := q.db.db.QueryRowContext(ctx, getUserUsersReportData,
 		arg.StartDate,
 		arg.EndDate,
 		arg.StartDate,
@@ -196,35 +257,21 @@ func (q *UserRepository) GetUserUsersReportData(ctx context.Context, arg GetUser
 		arg.EndDate,
 		arg.ID,
 	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetUserUsersReportDataRow{}
-	for rows.Next() {
-		var i GetUserUsersReportDataRow
-		if err := rows.Scan(
-			&i.Name,
-			&i.Role,
-			&i.Branch,
-			&i.TotalClientsHandled,
-			&i.LoansApproved,
-			&i.TotalLoanAmountManaged,
-			&i.TotalCollectedAmount,
-			&i.DefaultRate,
-			&i.AssignedPayments,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+	var i GetUserUsersReportDataRow
+	err := row.Scan(
+		&i.Name,
+		&i.Role,
+		&i.Branch,
+		&i.TotalClientsHandled,
+		&i.LoansApproved,
+		&i.TotalLoanAmountManaged,
+		&i.TotalCollectedAmount,
+		&i.DefaultRate,
+		&i.AssignedPayments,
+		&i.AssignedLoans,
+		&i.AssignedPaymentsList,
+	)
+	return i, err
 }
 
 const getClientAdminsReportData = `-- name: GetClientAdminsReportData :many
@@ -377,7 +424,6 @@ SELECT
     u.full_name AS assigned_staff,
     c.active,
 
-    -- ✅ Loan Details (Get all loans separately to prevent duplication)
     (
         SELECT COALESCE(
             JSON_ARRAYAGG(
@@ -389,20 +435,17 @@ SELECT
                     'paid_amount', l.paid_amount,
                     'disbursed_on', l.disbursed_on,
                     'transaction_fee', l.fee_paid,
-                    'created_by', created_by_user.full_name,
-                    'assigned_by', approved_by_user.full_name
+                    'approved_by', approved_by_user.full_name
                 )
             ), '[]'
         )
         FROM loans l
         JOIN products p ON l.product_id = p.id
-        LEFT JOIN users created_by_user ON l.created_by = created_by_user.id
         LEFT JOIN users approved_by_user ON l.approved_by = approved_by_user.id
         WHERE l.client_id = c.id
         AND l.created_at BETWEEN ? AND ?
     ) AS loans,
 
-    -- ✅ Payment Details (Get all payments separately to prevent duplication)
     (
         SELECT COALESCE(
             JSON_ARRAYAGG(
@@ -411,7 +454,7 @@ SELECT
                     'transaction_source', np.transaction_source,
                     'account_number', np.account_number,
                     'paying_name', np.paying_name,
-                    'assigned_by', assigned_by_user.full_name,
+                    'assigned_by', np.assigned_by,
                     'amount_paid', np.amount,
                     'paid_date', np.paid_date
                 )
@@ -491,7 +534,7 @@ SELECT
 FROM products p
 LEFT JOIN loans l ON l.product_id = p.id 
     AND l.status != 'INACTIVE'  
-    AND l.created_at BETWEEN ? AND ?  
+    AND l.disbursed_on BETWEEN ? AND ?  
 LEFT JOIN branches b ON p.branch_id = b.id 
 
 GROUP BY p.loan_amount, b.name
@@ -688,9 +731,9 @@ type GetLoanReportDataByIdRow struct {
 	RepayAmount           float64     `json:"repay_amount"`
 	PaidAmount            float64     `json:"paid_amount"`
 	Status                string 	  `json:"status"`
-	TotalInstallments     uint32      `json:"total_installments"`
+	TotalInstallments     int64      `json:"total_installments"`
 	PaidInstallments      int64       `json:"paid_installments"`
-	RemainingInstallments uint32      `json:"remaining_installments"`
+	RemainingInstallments int64     `json:"remaining_installments"`
 	InstallmentDetails    interface{} `json:"installment_details"`
 }
 
@@ -710,4 +753,66 @@ func (q *LoanRepository) GetLoanReportDataById(ctx context.Context, id uint32) (
 		&i.InstallmentDetails,
 	)
 	return i, err
+}
+
+const getLoanEvents = `-- name: GetLoanEvents :many
+SELECT 
+    l.id AS loan_id,
+    l.disbursed_on AS disbursed_date,
+    CASE 
+        WHEN l.status = 'ACTIVE' THEN l.due_date
+        ELSE NULL
+    END AS due_date,
+
+    c.full_name AS client_name,
+    p.loan_amount AS loan_amount,
+    CASE 
+        WHEN l.status = 'ACTIVE' THEN (p.repay_amount - l.paid_amount)
+        ELSE NULL
+    END AS payment_due
+
+FROM loans l
+JOIN clients c ON l.client_id = c.id
+JOIN products p ON l.product_id = p.id
+WHERE l.disbursed_on IS NOT NULL 
+ORDER BY l.disbursed_on DESC
+`
+
+type GetLoanEventsRow struct {
+	LoanID        uint32       `json:"loan_id"`
+	DisbursedDate sql.NullTime `json:"disbursed_date"`
+	DueDate       sql.NullTime       `json:"due_date"`
+	ClientName    string       `json:"client_name"`
+	LoanAmount    float64      `json:"loan_amount"`
+	PaymentDue    sql.NullFloat64       `json:"payment_due"`
+}
+
+func (q *LoanRepository) GetLoanEventsHelper(ctx context.Context) ([]GetLoanEventsRow, error) {
+	rows, err := q.db.db.QueryContext(ctx, getLoanEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetLoanEventsRow{}
+	for rows.Next() {
+		var i GetLoanEventsRow
+		if err := rows.Scan(
+			&i.LoanID,
+			&i.DisbursedDate,
+			&i.DueDate,
+			&i.ClientName,
+			&i.LoanAmount,
+			&i.PaymentDue,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

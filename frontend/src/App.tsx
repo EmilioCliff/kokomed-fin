@@ -14,6 +14,8 @@ import BranchesPage from './components/PAGES/branches/BranchesPage';
 import ProductsPage from './components/PAGES/products/ProductsPage';
 import { AuthContextWrapper } from './context/AuthContext';
 import { TableContextWrapper } from './context/TableContext';
+import { ReportsPage } from './components/PAGES/reports/ReportsPage';
+import LoanTimeline from './components/PAGES/loans/LoanTimeline';
 import { ToastContainer } from 'react-toastify';
 // import GetDataTest from "./pages/GetDataTest";
 
@@ -38,6 +40,10 @@ function App() {
 									element={<LoansPage />}
 								/>
 								<Route
+									path="loans/timeline"
+									element={<LoanTimeline />}
+								/>
+								<Route
 									path="customers/overview"
 									element={<CustomersPage />}
 								/>
@@ -56,6 +62,10 @@ function App() {
 								<Route
 									path="products/overview"
 									element={<ProductsPage />}
+								/>
+								<Route
+									path="reports"
+									element={<ReportsPage />}
 								/>
 								{/* <Route path='getdata' element={<GetDataTest />} /> */}
 								<Route

@@ -149,22 +149,32 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, id uint32) error 
 	return nil
 }
 
-func (r *ProductRepository) GetReportProductData(ctx context.Context, filters services.ReportFilters) ([]services.ProductReportData, error) {
+func (r *ProductRepository) GetReportProductData(ctx context.Context, filters services.ReportFilters) ([]services.ProductReportData, services.ProductSummary, error) {
 	products, err := r.GetProductReportData(ctx, GetProductReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate: filters.EndDate,
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no product found")
+			return nil, services.ProductSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no product found")
 		}
 
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report product data: %s", err.Error())
+		return nil, services.ProductSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report product data: %s", err.Error())
 	}
 
 	rslt := make([]services.ProductReportData, len(products))
 
+    var totalActiveLoanAmount int64
+    var mostPopularProduct string
+    var maxLoans int64
 	for i, product := range products {
+		totalActiveLoanAmount += product.ActiveLoans
+        
+        if product.TotalLoansIssued > maxLoans {
+            maxLoans = product.TotalLoansIssued
+            mostPopularProduct = product.ProductName
+        }
+
 		rslt[i] = services.ProductReportData{
 			ProductName: product.ProductName,
 			LoansIssued: product.TotalLoansIssued,
@@ -178,7 +188,14 @@ func (r *ProductRepository) GetReportProductData(ctx context.Context, filters se
 		}
 	}
 
-	return rslt, nil
+	summary := services.ProductSummary{
+		TotalProducts: int64(len(products)),
+		TotalActiveLoanAmount: totalActiveLoanAmount,
+		MostPopularProduct: mostPopularProduct,
+		MaxLoans: maxLoans,
+	}
+
+	return rslt, summary, nil
 }
 
 func convertGeneratedProducts(product generated.Product) repository.Product {

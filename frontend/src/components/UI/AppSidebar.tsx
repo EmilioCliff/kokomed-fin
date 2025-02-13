@@ -142,11 +142,7 @@ const items = [
 			},
 			{
 				title: 'Loans Timeline',
-				url: '#',
-			},
-			{
-				title: 'Reports',
-				url: '#',
+				url: '/loans/timeline',
 			},
 		],
 	},
@@ -163,10 +159,6 @@ const items = [
 				title: 'Payments Calendar',
 				url: '#',
 			},
-			{
-				title: 'Reports',
-				url: '#',
-			},
 		],
 	},
 	{
@@ -177,10 +169,6 @@ const items = [
 			{
 				title: 'Overview',
 				url: '/products/overview',
-			},
-			{
-				title: 'Reports',
-				url: '#',
 			},
 		],
 	},
@@ -193,10 +181,6 @@ const items = [
 				title: 'Overview',
 				url: '/customers/overview',
 			},
-			{
-				title: 'Reports',
-				url: '#',
-			},
 		],
 	},
 	{
@@ -207,10 +191,6 @@ const items = [
 			{
 				title: 'Overview',
 				url: '/users/overview',
-			},
-			{
-				title: 'Reports',
-				url: '#',
 			},
 		],
 	},
@@ -223,9 +203,16 @@ const items = [
 				title: 'Overview',
 				url: '/branches/overview',
 			},
+		],
+	},
+	{
+		title: 'Reports',
+		url: '#',
+		icon: Settings,
+		links: [
 			{
 				title: 'Reports',
-				url: '#',
+				url: '/reports',
 			},
 		],
 	},

@@ -6,6 +6,7 @@ const getFormData = async (
 	client: boolean,
 	user: boolean,
 	branch: boolean,
+	loan: boolean,
 ) => {
 	try {
 		let baseUrl = `/helper/formData?`;
@@ -24,6 +25,10 @@ const getFormData = async (
 
 		if (branch) {
 			baseUrl = baseUrl + '&branch=true';
+		}
+
+		if (loan) {
+			baseUrl = baseUrl + '&loan=true';
 		}
 
 		const response = await api

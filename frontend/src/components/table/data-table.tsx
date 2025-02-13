@@ -29,13 +29,6 @@ import { DataTableToolbar } from './data-table-toolbar';
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
-
-	// totalRows: number;
-	// currentPage: number;
-	// onPageChange: React.Dispatch<any>;
-	// onPageSizeChange: React.Dispatch<any>;
-
-	// setSelectedRow: React.Dispatch<any>;
 	searchableColumns?: {
 		id: string;
 		title: string;

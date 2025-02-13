@@ -201,6 +201,27 @@ func (r *HelperRepository) GetBranchData(ctx context.Context) ([]repository.Bran
 	return rsp, nil
 }
 
+func (r *HelperRepository) GetLoanData(ctx context.Context) ([]repository.LoanData,  error) {
+	loansId, err := r.queries.GetLoanData(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting branch list data")		
+	}
+
+	rsp := make([]repository.LoanData, len(loansId))
+	for idx, id := range loansId {
+		rsp[idx] = repository.LoanData{
+			ID: id,
+			Name: fmt.Sprintf("LN%03d", id),
+		}
+	}
+
+	return rsp, nil
+}
+
 func (r *HelperRepository) GetUserFullname(ctx context.Context, id uint32) (string, error) {
 	name, err := r.queries.HelperUserById(ctx, id)
 	if err != nil {

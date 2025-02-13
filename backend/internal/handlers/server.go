@@ -120,6 +120,8 @@ func (s *Server) setUpRoutes() {
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)
 	authRoute.GET("/helper/formData", s.getLoanFormData)
+	authRoute.GET("/helper/loanEvents", s.getLoanEvents)
+	// cachedRoutes.GET("/helper/loanEvents", s.getLoanEvents)
 
 	// reports routes
 	authRoute.POST("/report", s.generateReport)

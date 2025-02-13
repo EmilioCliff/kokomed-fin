@@ -284,41 +284,73 @@ func (r *ClientRepository) ListClientsByActiveStatus(ctx context.Context, active
 	return result, nil
 }
 
-func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters services.ReportFilters) ([]services.ClientAdminsReportData, error) {
+func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters services.ReportFilters) ([]services.ClientAdminsReportData, services.ClientSummary, error) {
 	clients, err := r.GetClientAdminsReportData(ctx, GetClientAdminsReportDataParams{
 		StartDate: filters.StartDate,
-		EndDate: filters.EndDate,
+		EndDate:   filters.EndDate,
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no client found")
+			return nil, services.ClientSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no client found")
 		}
 
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report client admin data: %s", err.Error())
+		return nil, services.ClientSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report client admin data: %s", err.Error())
 	}
 
 	rslt := make([]services.ClientAdminsReportData, len(clients))
 
+	var totalClients int64
+	var totalDisbursed, totalPaid, totalOwed float64
+	var mostLoansClient, highestPayingClient string
+	var maxLoansGiven, maxPaidAmount float64
+
 	for i, client := range clients {
+		totalPaidAmount := pkg.InterfaceFloat64(client.TotalPaid)
+		totalDisbursedAmount := pkg.InterfaceFloat64(client.TotalDisbursed)
+		totalOwedAmount := pkg.InterfaceFloat64(client.TotalOwed)
+
 		rslt[i] = services.ClientAdminsReportData{
-			Name: client.Name,
-			BranchName: client.BranchName.String,
-			TotalLoanGiven: client.TotalLoanGiven,
-			DefaultedLoans: client.DefaultedLoans,
-			ActiveLoans: client.ActiveLoans,
-			CompletedLoans: client.CompletedLoans,
-			InactiveLoans: client.InactiveLoans,
-			Overpayment: client.Overpayment,
-			PhoneNumber: client.PhoneNumber,
-			TotalPaid: pkg.InterfaceFloat64(client.TotalPaid),
-			TotalDisbursed: pkg.InterfaceFloat64(client.TotalDisbursed),
-			TotalOwed: pkg.InterfaceFloat64(client.TotalOwed),
-			RateScore: pkg.InterfaceFloat64(client.RateScore),
-			DefaultRate: pkg.InterfaceFloat64(client.DefaultRate),
+			Name:            client.Name,
+			BranchName:      client.BranchName.String,
+			TotalLoanGiven:  client.TotalLoanGiven,
+			DefaultedLoans:  client.DefaultedLoans,
+			ActiveLoans:     client.ActiveLoans,
+			CompletedLoans:  client.CompletedLoans,
+			InactiveLoans:   client.InactiveLoans,
+			Overpayment:     client.Overpayment,
+			PhoneNumber:     client.PhoneNumber,
+			TotalPaid:       totalPaidAmount,
+			TotalDisbursed:  totalDisbursedAmount,
+			TotalOwed:       totalOwedAmount,
+			RateScore:       pkg.InterfaceFloat64(client.RateScore),
+			DefaultRate:     pkg.InterfaceFloat64(client.DefaultRate),
+		}
+		totalClients++
+		totalDisbursed += totalDisbursedAmount
+		totalPaid += totalPaidAmount
+		totalOwed += totalOwedAmount
+
+		if float64(client.TotalLoanGiven) > maxLoansGiven {
+			maxLoansGiven = float64(client.TotalLoanGiven)
+			mostLoansClient = client.Name
+		}
+
+		if totalPaidAmount > maxPaidAmount {
+			maxPaidAmount = totalPaidAmount
+			highestPayingClient = client.Name
 		}
 	}
 
-	return rslt, nil
+	summary := services.ClientSummary{
+		TotalClients:        totalClients,
+		MostLoansClient:     mostLoansClient,
+		HighestPayingClient: highestPayingClient,
+		TotalDisbursed:      totalDisbursed,
+		TotalPaid:           totalPaid,
+		TotalOwed:           totalOwed,
+	}
+
+	return rslt, summary, nil
 }
 
 func (r *ClientRepository) GetReportClientClientsData(ctx context.Context,id uint32, filters services.ReportFilters) (services.ClientClientsReportData, error) {
@@ -398,15 +430,26 @@ func convertClientReportData(row GetClientClientsReportDataRow) (services.Client
 		}
 	}
 
-	return services.ClientClientsReportData{
+
+	rsp := services.ClientClientsReportData{
 		Name:          row.Name,
 		PhoneNumber:   row.PhoneNumber,
-		IDNumber:      row.IDNumber,
-		Dob:           row.Dob,
-		BranchName:    row.BranchName,
-		AssignedStaff: row.AssignedStaff,
-		Active:        row.Active,
+		IDNumber:      nil,
+		Dob:           nil,
+		BranchName:    row.BranchName.String,
+		AssignedStaff: row.AssignedStaff.String,
+		Active:        "active",
 		Loans:         loans,
 		Payments:      payments,
-	}, nil
+	}
+
+	if !row.Active { rsp.Active = "inactive"}
+	if row.Dob.Valid {
+		rsp.Dob = &row.Dob.Time
+	}
+	if row.IDNumber.Valid {
+		rsp.IDNumber = &row.IDNumber.String
+	}
+
+	return rsp, nil
 }

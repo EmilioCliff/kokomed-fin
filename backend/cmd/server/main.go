@@ -22,7 +22,8 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	config, err := pkg.LoadConfig("../../.envs/.local", "config", "yaml")
+	configPath := "/home/emilio-cliff/kokomed-fin/backend/.envs/.local"
+	config, err := pkg.LoadConfig(configPath, "config", "yaml")
 	if err != nil {
 		panic(err)
 	}

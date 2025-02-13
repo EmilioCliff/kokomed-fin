@@ -1,6 +1,5 @@
 import api from '@/API/api';
-import { getClientsType } from '@/lib/types';
-import { tableFilterType } from '@/lib/types';
+import { getClientsType, tableFilterType } from '@/lib/types';
 
 const getClients = async (
 	pageNumber: number,

@@ -206,6 +206,95 @@ func (q *Queries) GetLoan(ctx context.Context, id uint32) (Loan, error) {
 	return i, err
 }
 
+const getLoanData = `-- name: GetLoanData :many
+SELECT id FROM loans
+`
+
+func (q *Queries) GetLoanData(ctx context.Context) ([]uint32, error) {
+	rows, err := q.db.QueryContext(ctx, getLoanData)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uint32{}
+	for rows.Next() {
+		var id uint32
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getLoanEvents = `-- name: GetLoanEvents :many
+SELECT 
+    l.id AS loan_id,
+    l.disbursed_on AS disbursed_date,
+    CASE 
+        WHEN l.status = 'ACTIVE' THEN l.due_date
+        ELSE NULL
+    END AS due_date,
+
+    c.full_name AS client_name,
+    p.loan_amount AS loan_amount,
+    CASE 
+        WHEN l.status = 'ACTIVE' THEN (p.repay_amount - l.paid_amount)
+        ELSE NULL
+    END AS payment_due
+
+FROM loans l
+JOIN clients c ON l.client_id = c.id
+JOIN products p ON l.product_id = p.id
+WHERE l.disbursed_on IS NOT NULL 
+ORDER BY l.disbursed_on DESC
+`
+
+type GetLoanEventsRow struct {
+	LoanID        uint32       `json:"loan_id"`
+	DisbursedDate sql.NullTime `json:"disbursed_date"`
+	DueDate       string       `json:"due_date"`
+	ClientName    string       `json:"client_name"`
+	LoanAmount    float64      `json:"loan_amount"`
+	PaymentDue    string       `json:"payment_due"`
+}
+
+func (q *Queries) GetLoanEvents(ctx context.Context) ([]GetLoanEventsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLoanEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetLoanEventsRow{}
+	for rows.Next() {
+		var i GetLoanEventsRow
+		if err := rows.Scan(
+			&i.LoanID,
+			&i.DisbursedDate,
+			&i.DueDate,
+			&i.ClientName,
+			&i.LoanAmount,
+			&i.PaymentDue,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getLoanPaymentData = `-- name: GetLoanPaymentData :one
 SELECT 
     l.id AS loan_id,

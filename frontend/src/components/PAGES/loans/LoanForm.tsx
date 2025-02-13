@@ -38,7 +38,7 @@ export default function LoanForm({ onFormOpen }: LoanFormProps) {
 
 	const { isLoading, data, error } = useQuery({
 		queryKey: ['loans/form'],
-		queryFn: () => getFormData(true, true, true, false),
+		queryFn: () => getFormData(true, true, true, false, false),
 		staleTime: 5 * 1000,
 	});
 

@@ -41,6 +41,9 @@ SELECT * FROM loans WHERE id = ? LIMIT 1;
 -- name: GetClientActiveLoan :one
 SELECT id FROM loans WHERE client_id = ? AND status = ? LIMIT 1;
 
+-- name: GetLoanData :many
+SELECT id FROM loans;
+
 -- name: ListLoans :many
 SELECT 
     l.*, 
@@ -124,3 +127,25 @@ JOIN products p ON l.product_id = p.id
 JOIN clients c ON l.client_id = c.id
 WHERE l.id = ?
 LIMIT 1;
+
+-- name: GetLoanEvents :many
+SELECT 
+    l.id AS loan_id,
+    l.disbursed_on AS disbursed_date,
+    CASE 
+        WHEN l.status = 'ACTIVE' THEN l.due_date
+        ELSE NULL
+    END AS due_date,
+
+    c.full_name AS client_name,
+    p.loan_amount AS loan_amount,
+    CASE 
+        WHEN l.status = 'ACTIVE' THEN (p.repay_amount - l.paid_amount)
+        ELSE NULL
+    END AS payment_due
+
+FROM loans l
+JOIN clients c ON l.client_id = c.id
+JOIN products p ON l.product_id = p.id
+WHERE l.disbursed_on IS NOT NULL 
+ORDER BY l.disbursed_on DESC;

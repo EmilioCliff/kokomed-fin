@@ -18,5 +18,5 @@ type BranchRepository interface {
 	GetBranchByID(ctx context.Context, id uint32) (Branch, error)
 	UpdateBranch(ctx context.Context, name string, id uint32) (Branch, error)
 
-	GetReportBranchData(ctx context.Context, filters services.ReportFilters) ([]services.BranchReportData, error)
+	GetReportBranchData(ctx context.Context, filters services.ReportFilters) ([]services.BranchReportData, services.BranchSummary, error)
 }

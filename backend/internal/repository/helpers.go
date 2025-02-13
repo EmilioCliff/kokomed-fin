@@ -90,6 +90,11 @@ type BranchData struct {
 	Name string	`json:"name"`
 }
 
+type LoanData struct {
+	ID uint32 `json:"id"`
+	Name string `json:"name"`
+}
+
 type HelperRepository interface {
 	// helper for dashboard
 	GetDashboardData(ctx context.Context) (DashboardData, error)
@@ -99,6 +104,7 @@ type HelperRepository interface {
 	GetClientData(ctx context.Context) ([]ClientData, error)
 	GetLoanOfficerData(ctx context.Context) ([]LoanOfficerData, error)
 	GetBranchData(ctx context.Context) ([]BranchData,  error)
+	GetLoanData(ctx context.Context) ([]LoanData,  error)
 
 	// helpers for users
 	GetUserFullname(ctx context.Context, id uint32) (string, error)

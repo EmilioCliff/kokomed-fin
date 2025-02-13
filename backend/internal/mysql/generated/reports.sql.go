@@ -12,31 +12,73 @@ import (
 )
 
 const getBranchReportData = `-- name: GetBranchReportData :many
+WITH branch_metrics AS (
+    SELECT 
+        b.id,
+        b.name AS branch_name,
+        COUNT(DISTINCT c.id) AS total_clients,
+        COUNT(DISTINCT u.id) AS total_users
+    FROM branches b
+    LEFT JOIN clients c ON c.branch_id = b.id
+    LEFT JOIN users u ON u.branch_id = b.id
+    GROUP BY b.id, b.name
+),
+loan_metrics AS (
+    SELECT 
+        p.branch_id,
+        SUM(CASE 
+            WHEN l.disbursed_on BETWEEN ? AND ? 
+            THEN p.loan_amount 
+            ELSE 0 
+        END) AS total_disbursed_amount,
+        SUM(CASE 
+            WHEN l.disbursed_on BETWEEN ? AND ? 
+            THEN l.paid_amount 
+            ELSE 0 
+        END) AS total_collected_amount,
+        SUM(CASE 
+            WHEN l.disbursed_on BETWEEN ? AND ? 
+            THEN (p.repay_amount - l.paid_amount)
+            ELSE 0 
+        END) AS total_outstanding_amount,
+        COUNT(DISTINCT CASE 
+            WHEN l.disbursed_on BETWEEN ? AND ? 
+            THEN l.id 
+        END) AS total_loans_issued,
+        COUNT(DISTINCT CASE 
+            WHEN l.status = 'DEFAULTED' 
+            AND l.disbursed_on BETWEEN ? AND ? 
+            THEN l.id 
+        END) AS defaulted_loans
+    FROM products p
+    JOIN loans l ON l.product_id = p.id 
+    WHERE l.status != 'INACTIVE'
+    GROUP BY p.branch_id
+)
 SELECT 
-    b.name AS branch_name,
-    COUNT(DISTINCT c.id) AS total_clients,
-    COUNT(DISTINCT u.id) AS total_users,
-    COUNT(DISTINCT l.id) AS total_loans_issued,
-    COALESCE(SUM(p.loan_amount), 0) AS total_disbursed_amount,
-    COALESCE(SUM(l.paid_amount), 0) AS total_collected_amount,
-    COALESCE(SUM(p.repay_amount - l.paid_amount), 0) AS total_outstanding_amount,
+    bm.branch_name,
+    bm.total_clients,
+    bm.total_users,
+    COALESCE(lm.total_loans_issued, 0) AS total_loans_issued,
+    COALESCE(lm.total_disbursed_amount, 0) AS total_disbursed_amount,
+    COALESCE(lm.total_collected_amount, 0) AS total_collected_amount,
+    COALESCE(lm.total_outstanding_amount, 0) AS total_outstanding_amount,
     COALESCE(
-        (COUNT(CASE WHEN l.status = 'DEFAULTED' THEN 1 END) * 100.0) / NULLIF(COUNT(l.id), 0), 
+        CASE 
+            WHEN lm.total_loans_issued > 0 
+            THEN (lm.defaulted_loans * 100.0) / lm.total_loans_issued 
+            ELSE 0 
+        END,
         0
     ) AS default_rate
-FROM branches b
-LEFT JOIN clients c ON c.branch_id = b.id
-LEFT JOIN users u ON u.branch_id = b.id
-LEFT JOIN loans l ON l.product_id IN (SELECT id FROM products WHERE branch_id = b.id) AND l.status != 'INACTIVE' AND l.disbursed_on  BETWEEN ? AND ?
-LEFT JOIN products p ON p.id = l.product_id
-
-GROUP BY b.id, b.name
-ORDER BY b.name
+FROM branch_metrics bm
+LEFT JOIN loan_metrics lm ON lm.branch_id = bm.id
+ORDER BY bm.branch_name
 `
 
 type GetBranchReportDataParams struct {
-	FromDisbursedOn sql.NullTime `json:"from_disbursed_on"`
-	ToDisbursedOn   sql.NullTime `json:"to_disbursed_on"`
+	StartDate sql.NullTime `json:"start_date"`
+	EndDate   sql.NullTime `json:"end_date"`
 }
 
 type GetBranchReportDataRow struct {
@@ -51,7 +93,18 @@ type GetBranchReportDataRow struct {
 }
 
 func (q *Queries) GetBranchReportData(ctx context.Context, arg GetBranchReportDataParams) ([]GetBranchReportDataRow, error) {
-	rows, err := q.db.QueryContext(ctx, getBranchReportData, arg.FromDisbursedOn, arg.ToDisbursedOn)
+	rows, err := q.db.QueryContext(ctx, getBranchReportData,
+		arg.StartDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -375,8 +428,6 @@ SELECT
     b.name AS branch_name,
     u.full_name AS assigned_staff,
     c.active,
-
-    -- ✅ Loan Details (Get all loans separately to prevent duplication)
     (
         SELECT COALESCE(
             JSON_ARRAYAGG(
@@ -400,8 +451,6 @@ SELECT
         WHERE l.client_id = c.id
         AND l.created_at BETWEEN ? AND ?
     ) AS loans,
-
-    -- ✅ Payment Details (Get all payments separately to prevent duplication)
     (
         SELECT COALESCE(
             JSON_ARRAYAGG(
@@ -734,7 +783,7 @@ SELECT
 FROM products p
 LEFT JOIN loans l ON l.product_id = p.id 
     AND l.status != 'INACTIVE'  
-    AND l.created_at BETWEEN ? AND ?  
+    AND l.disbursed_on BETWEEN ? AND ?  
 LEFT JOIN branches b ON p.branch_id = b.id 
 
 GROUP BY p.loan_amount, b.name
@@ -742,8 +791,8 @@ ORDER BY total_loans_issued DESC
 `
 
 type GetProductReportDataParams struct {
-	StartDate time.Time `json:"start_date"`
-	EndDate   time.Time `json:"end_date"`
+	StartDate sql.NullTime `json:"start_date"`
+	EndDate   sql.NullTime `json:"end_date"`
 }
 
 type GetProductReportDataRow struct {
@@ -759,12 +808,7 @@ type GetProductReportDataRow struct {
 }
 
 func (q *Queries) GetProductReportData(ctx context.Context, arg GetProductReportDataParams) ([]GetProductReportDataRow, error) {
-	rows, err := q.db.QueryContext(ctx, getProductReportData,
-		arg.StartDate,
-		arg.StartDate,
-		arg.EndDate,
-		arg.EndDate,
-	)
+	rows, err := q.db.QueryContext(ctx, getProductReportData, arg.StartDate, arg.EndDate)
 	if err != nil {
 		return nil, err
 	}
@@ -807,6 +851,7 @@ SELECT
     COUNT(DISTINCT CASE 
         WHEN l.loan_officer = u.id AND l.status = 'ACTIVE' AND l.created_at BETWEEN ? AND ? THEN l.id 
     END) AS active_loans,
+
     COUNT(DISTINCT CASE 
         WHEN l.loan_officer = u.id AND l.status = 'COMPLETED' AND l.created_at BETWEEN ? AND ? THEN l.id 
     END) AS completed_loans,
@@ -814,7 +859,8 @@ SELECT
         (COUNT(DISTINCT CASE 
             WHEN l.loan_officer = u.id AND l.status = 'DEFAULTED' AND l.created_at BETWEEN ? AND ? THEN l.id 
         END) * 100.0) / NULLIF(COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN l.id 
+            WHEN (l.loan_officer = u.id OR l.created_by = u.id OR l.approved_by = u.id OR l.disbursed_by = u.id OR l.updated_by = u.id) 
+            AND l.created_at BETWEEN ? AND ? THEN l.id 
         END), 0), 
         0
     ) AS default_rate,
@@ -824,9 +870,15 @@ SELECT
     COUNT(DISTINCT CASE 
         WHEN LOWER(np.assigned_by) = LOWER(u.full_name) AND np.paid_date BETWEEN ? AND ? THEN np.id 
     END) AS payments_assigned
+
 FROM users u
 LEFT JOIN branches b ON u.branch_id = b.id
-LEFT JOIN loans l ON l.loan_officer = u.id
+LEFT JOIN loans l ON 
+    l.loan_officer = u.id OR 
+    l.created_by = u.id OR 
+    l.approved_by = u.id OR 
+    l.disbursed_by = u.id OR 
+    l.updated_by = u.id
 LEFT JOIN clients c ON c.created_by = u.id
 LEFT JOIN non_posted np ON LOWER(np.assigned_by) = LOWER(u.full_name)
 GROUP BY u.id, u.full_name, u.role, b.name
@@ -834,20 +886,8 @@ ORDER BY u.role DESC, u.full_name
 `
 
 type GetUserAdminsReportDataParams struct {
-	StartDate      time.Time `json:"start_date"`
-	EndDate        time.Time `json:"end_date"`
-	ActiveStart    time.Time `json:"active_start"`
-	ActiveEnd      time.Time `json:"active_end"`
-	CompletedStart time.Time `json:"completed_start"`
-	CompletedEnd   time.Time `json:"completed_end"`
-	DefaultedStart time.Time `json:"defaulted_start"`
-	DefaultedEnd   time.Time `json:"defaulted_end"`
-	TotalStart     time.Time `json:"total_start"`
-	TotalEnd       time.Time `json:"total_end"`
-	ClientsStart   time.Time `json:"clients_start"`
-	ClientsEnd     time.Time `json:"clients_end"`
-	PaymentsStart  time.Time `json:"payments_start"`
-	PaymentsEnd    time.Time `json:"payments_end"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
 }
 
 type GetUserAdminsReportDataRow struct {
@@ -870,38 +910,38 @@ func (q *Queries) GetUserAdminsReportData(ctx context.Context, arg GetUserAdmins
 		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
-		arg.ActiveStart,
-		arg.ActiveStart,
-		arg.ActiveStart,
-		arg.ActiveEnd,
-		arg.ActiveEnd,
-		arg.ActiveEnd,
-		arg.CompletedStart,
-		arg.CompletedStart,
-		arg.CompletedStart,
-		arg.CompletedEnd,
-		arg.CompletedEnd,
-		arg.CompletedEnd,
-		arg.DefaultedStart,
-		arg.DefaultedStart,
-		arg.DefaultedStart,
-		arg.DefaultedEnd,
-		arg.DefaultedEnd,
-		arg.DefaultedEnd,
-		arg.TotalStart,
-		arg.TotalStart,
-		arg.TotalStart,
-		arg.TotalEnd,
-		arg.TotalEnd,
-		arg.TotalEnd,
-		arg.ClientsStart,
-		arg.ClientsStart,
-		arg.ClientsStart,
-		arg.ClientsEnd,
-		arg.ClientsEnd,
-		arg.ClientsEnd,
-		arg.PaymentsStart,
-		arg.PaymentsEnd,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.EndDate,
 	)
 	if err != nil {
 		return nil, err
@@ -934,44 +974,107 @@ func (q *Queries) GetUserAdminsReportData(ctx context.Context, arg GetUserAdmins
 	return items, nil
 }
 
-const getUserUsersReportData = `-- name: GetUserUsersReportData :many
+const getUserUsersReportData = `-- name: GetUserUsersReportData :one
 SELECT 
     u.full_name AS name,
     u.role,
     b.name AS branch,
+
     COUNT(DISTINCT CASE 
-        WHEN c.assigned_staff = u.id AND c.created_at BETWEEN ? AND ? THEN c.id 
+        WHEN c.assigned_staff = u.id 
+        AND c.created_at BETWEEN ? AND ? THEN c.id 
     END) AS total_clients_handled,
+
     COUNT(DISTINCT CASE 
-        WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN l.id 
+        WHEN l.approved_by = u.id 
+        AND l.created_at BETWEEN ? AND ? THEN l.id 
     END) AS loans_approved,
-    COALESCE(SUM(CASE 
-        WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN p.repay_amount 
-    END), 0) AS total_loan_amount_managed,
-    COALESCE(SUM(CASE 
-        WHEN l.loan_officer = u.id AND l.paid_amount > 0 AND l.created_at BETWEEN ? AND ? THEN l.paid_amount 
-    END), 0) AS total_collected_amount,
+
+    COALESCE((
+        SELECT SUM(DISTINCT p.repay_amount) 
+        FROM loans l
+        JOIN products p ON l.product_id = p.id
+        WHERE l.loan_officer = u.id
+        AND l.created_at BETWEEN ? AND ?
+    ), 0) AS total_loan_amount_managed,
+
+    COALESCE((
+        SELECT SUM(DISTINCT l.paid_amount) 
+        FROM loans l
+        WHERE l.loan_officer = u.id AND l.paid_amount > 0 
+        AND l.created_at BETWEEN ? AND ?
+    ), 0) AS total_collected_amount,
+
     COALESCE(
         (COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.status = 'DEFAULTED' AND l.created_at BETWEEN ? AND ? THEN l.id 
-        END) * 100.0) / NULLIF(COUNT(DISTINCT CASE 
-            WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN l.id 
-        END), 0), 
+            WHEN l.loan_officer = u.id 
+            AND l.status = 'DEFAULTED' 
+            AND l.created_at BETWEEN ? AND ? THEN l.id 
+        END) * 100.0) 
+        / NULLIF(
+            COUNT(DISTINCT CASE 
+                WHEN l.loan_officer = u.id AND l.created_at BETWEEN ? AND ? THEN l.id 
+            END), 0
+        ), 
         0
     ) AS default_rate,
+
     COUNT(DISTINCT CASE 
-        WHEN LOWER(np.assigned_by) = LOWER(u.full_name) AND np.paid_date BETWEEN ? AND ? THEN np.id 
-    END) AS assigned_payments
+        WHEN LOWER(np.assigned_by) = LOWER(u.full_name) 
+        AND np.paid_date BETWEEN ? AND ? THEN np.id 
+    END) AS assigned_payments,
+
+    (
+        SELECT COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'loan_id', l.id,
+                    'status', l.status,
+                    'client_name', c.full_name,
+                    'loan_amount', p.loan_amount,
+                    'repay_amount', p.repay_amount,
+                    'paid_amount', l.paid_amount,
+                    'disbursed_on', l.disbursed_on
+                )
+            ), '[]'
+        )
+        FROM loans l
+        JOIN clients c ON l.client_id = c.id
+        JOIN products p ON l.product_id = p.id
+        WHERE l.loan_officer = u.id 
+    ) AS assigned_loans,
+
+    (
+        SELECT COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'transaction_number', np.transaction_number,
+                    'client_name', assigned_client.full_name,
+                    'amount_paid', np.amount,
+                    'paid_date', np.paid_date
+                )
+            ), '[]'
+        )
+        FROM non_posted np
+        LEFT JOIN clients assigned_client ON np.assign_to = assigned_client.id
+        WHERE LOWER(np.assigned_by) = LOWER(u.full_name)
+    ) AS assigned_payments_list
 
 FROM users u
 LEFT JOIN branches b ON u.branch_id = b.id
 LEFT JOIN clients c ON c.assigned_staff = u.id
-LEFT JOIN loans l ON l.loan_officer = u.id
+LEFT JOIN loans l ON 
+    l.loan_officer = u.id 
+    OR l.approved_by = u.id 
+    OR l.created_by = u.id 
+    OR l.disbursed_by = u.id 
+    OR l.updated_by = u.id
+
 LEFT JOIN products p ON l.product_id = p.id
 LEFT JOIN non_posted np ON LOWER(np.assigned_by) = LOWER(u.full_name)
-
+LEFT JOIN clients assigned_client ON np.assign_to = assigned_client.id
 WHERE u.id = ?
-GROUP BY u.id, u.full_name, b.name
+GROUP BY u.id, u.full_name, u.role, b.name
 `
 
 type GetUserUsersReportDataParams struct {
@@ -990,10 +1093,20 @@ type GetUserUsersReportDataRow struct {
 	TotalCollectedAmount   interface{}    `json:"total_collected_amount"`
 	DefaultRate            interface{}    `json:"default_rate"`
 	AssignedPayments       int64          `json:"assigned_payments"`
+	AssignedLoans          interface{}    `json:"assigned_loans"`
+	AssignedPaymentsList   interface{}    `json:"assigned_payments_list"`
 }
 
-func (q *Queries) GetUserUsersReportData(ctx context.Context, arg GetUserUsersReportDataParams) ([]GetUserUsersReportDataRow, error) {
-	rows, err := q.db.QueryContext(ctx, getUserUsersReportData,
+func (q *Queries) GetUserUsersReportData(ctx context.Context, arg GetUserUsersReportDataParams) (GetUserUsersReportDataRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserUsersReportData,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
 		arg.StartDate,
 		arg.StartDate,
 		arg.StartDate,
@@ -1002,10 +1115,10 @@ func (q *Queries) GetUserUsersReportData(ctx context.Context, arg GetUserUsersRe
 		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
-		arg.StartDate,
-		arg.StartDate,
-		arg.StartDate,
-		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
@@ -1014,10 +1127,10 @@ func (q *Queries) GetUserUsersReportData(ctx context.Context, arg GetUserUsersRe
 		arg.StartDate,
 		arg.StartDate,
 		arg.StartDate,
-		arg.EndDate,
-		arg.EndDate,
-		arg.EndDate,
-		arg.EndDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
 		arg.StartDate,
 		arg.StartDate,
 		arg.StartDate,
@@ -1026,10 +1139,10 @@ func (q *Queries) GetUserUsersReportData(ctx context.Context, arg GetUserUsersRe
 		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
-		arg.StartDate,
-		arg.StartDate,
-		arg.StartDate,
-		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
@@ -1038,41 +1151,117 @@ func (q *Queries) GetUserUsersReportData(ctx context.Context, arg GetUserUsersRe
 		arg.StartDate,
 		arg.StartDate,
 		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
 		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.EndDate,
+		arg.StartDate,
+		arg.StartDate,
+		arg.EndDate,
 		arg.EndDate,
 		arg.ID,
 	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetUserUsersReportDataRow{}
-	for rows.Next() {
-		var i GetUserUsersReportDataRow
-		if err := rows.Scan(
-			&i.Name,
-			&i.Role,
-			&i.Branch,
-			&i.TotalClientsHandled,
-			&i.LoansApproved,
-			&i.TotalLoanAmountManaged,
-			&i.TotalCollectedAmount,
-			&i.DefaultRate,
-			&i.AssignedPayments,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+	var i GetUserUsersReportDataRow
+	err := row.Scan(
+		&i.Name,
+		&i.Role,
+		&i.Branch,
+		&i.TotalClientsHandled,
+		&i.LoansApproved,
+		&i.TotalLoanAmountManaged,
+		&i.TotalCollectedAmount,
+		&i.DefaultRate,
+		&i.AssignedPayments,
+		&i.AssignedLoans,
+		&i.AssignedPaymentsList,
+	)
+	return i, err
 }

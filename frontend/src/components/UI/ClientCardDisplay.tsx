@@ -43,9 +43,6 @@ function ClientCardDisplay({ client }: ClientCardDisplayProps) {
 					{client.active ? 'Active' : 'Inactive'}
 				</Badge>
 			</CardDescription>
-			{/* <CardContent className='p-0 text-start'>
-						<p className='text-sm'>{client.fullName}</p>
-					</CardContent> */}
 		</Card>
 	);
 }

@@ -5,6 +5,8 @@ bin/
 *.so
 *.dylib
 
+tmp/
+
 # Configs
 config.yaml
 .production

@@ -2,6 +2,7 @@ package reports
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -23,13 +24,13 @@ type ReportServiceImpl struct {
 	store *mysql.MySQLRepo
 }
 
-func (r *ReportServiceImpl) GeneratePaymentsReport(ctx context.Context, format string, filters services.ReportFilters) (error){
-	data, err := r.store.NonPosted.GetReportPaymentData(ctx, filters)
+func (r *ReportServiceImpl) GeneratePaymentsReport(ctx context.Context, format string, filters services.ReportFilters) ([]byte, error){
+	data, summary, err := r.store.NonPosted.GetReportPaymentData(ctx, filters)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	report := newPaymentReport(data, format, filters)
+	report := newPaymentReport(data, summary, format, filters)
 
 	switch format {
 	case "excel":
@@ -37,17 +38,17 @@ func (r *ReportServiceImpl) GeneratePaymentsReport(ctx context.Context, format s
 	case "pdf":
 		return report.generatePDF()
 	default:
-		return pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
+		return nil, pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
 	}
 }
 
-func (r *ReportServiceImpl) GenerateBranchesReport(ctx context.Context, format string, filters services.ReportFilters) (error) {
-	data, err := r.store.Branches.GetReportBranchData(ctx, filters)
+func (r *ReportServiceImpl) GenerateBranchesReport(ctx context.Context, format string, filters services.ReportFilters) ([]byte, error) {
+	data, summary, err := r.store.Branches.GetReportBranchData(ctx, filters)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	report := newBranchReport(data, format, filters)
+	report := newBranchReport(data, summary, format, filters)
 
 	switch format {
 	case "excel":
@@ -55,7 +56,25 @@ func (r *ReportServiceImpl) GenerateBranchesReport(ctx context.Context, format s
 	case "pdf":
 		return report.generatePDF()
 	default:
-		return pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
+		return nil, pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
+	}
+}
+
+func (r *ReportServiceImpl) GenerateProductsReport(ctx context.Context, format string, filters services.ReportFilters) ([]byte, error) {
+	data, summary, err := r.store.Products.GetReportProductData(ctx, filters)
+	if err != nil {
+		return nil, err
+	}
+
+	report := newProductReport(data, summary, format, filters)
+
+	switch format {
+	case "excel":
+		return report.generateExcel("Sheet1")
+	case "pdf":
+		return report.generatePDF()
+	default:
+		return nil, pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
 	}
 }
 
@@ -70,15 +89,15 @@ func (r *ReportServiceImpl) GenerateUsersReport(ctx context.Context, format stri
 
 		log.Println(data)
 
-		report = newUserReport([]services.UserAdminsReportData{}, data, format, filters)
+		report = newUserReport([]services.UserAdminsReportData{}, data, services.UserAdminsSummary{}, format, filters)
 		format = "pdf"
 	} else {
-		data, err := r.store.Users.GetReportUserAdminData(ctx, filters)
+		data, summary, err := r.store.Users.GetReportUserAdminData(ctx, filters)
 		if err != nil {
 			return err
 		}
 
-		report = newUserReport(data, []services.UserUsersReportData{}, format, filters)
+		report = newUserReport(data, services.UserUsersReportData{}, summary, format, filters)
 	}
 
 	switch format {
@@ -102,34 +121,16 @@ func (r *ReportServiceImpl) GenerateClientsReport(ctx context.Context, format st
 
 		log.Println(data)
 
-		report = newClientReport([]services.ClientAdminsReportData{}, data, format, filters)
+		report = newClientReport([]services.ClientAdminsReportData{}, data, services.ClientSummary{}, format, filters)
 		format = "pdf"
 	} else {
-		data, err := r.store.Clients.GetReportClientAdminData(ctx, filters)
+		data, summary, err := r.store.Clients.GetReportClientAdminData(ctx, filters)
 		if err != nil {
 			return err
 		}
 
-		report = newClientReport(data, services.ClientClientsReportData{}, format, filters)
+		report = newClientReport(data, services.ClientClientsReportData{}, summary, format, filters)
 	}
-
-	switch format {
-	case "excel":
-		return report.generateExcel("Sheet1")
-	case "pdf":
-		return report.generatePDF()
-	default:
-		return pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
-	}
-}
-
-func (r *ReportServiceImpl) GenerateProductsReport(ctx context.Context, format string, filters services.ReportFilters) (error) {
-	data, err := r.store.Products.GetReportProductData(ctx, filters)
-	if err != nil {
-		return err
-	}
-
-	report := newProductReport(data, format, filters)
 
 	switch format {
 	case "excel":
@@ -152,15 +153,15 @@ func (r *ReportServiceImpl) GenerateLoansReport(ctx context.Context, format stri
 
 		log.Println(data)
 
-		report = newLoanReport([]services.LoanReportData{}, data, format, filters)
+		report = newLoanReport([]services.LoanReportData{}, data, services.LoanSummary{}, format, filters)
 		format = "pdf"
 	} else {
-		data, err := r.store.Loans.GetReportLoanData(ctx, filters)
+		data, summary, err := r.store.Loans.GetReportLoanData(ctx, filters)
 		if err != nil {
 			return err
 		}
 
-		report = newLoanReport(data, services.LoanReportDataById{}, format, filters)
+		report = newLoanReport(data, services.LoanReportDataById{}, summary, format, filters)
 	}
 
 	switch format {
@@ -175,7 +176,11 @@ func (r *ReportServiceImpl) GenerateLoansReport(ctx context.Context, format stri
 
 func formatMoney(amount float64) string {
 	p := message.NewPrinter(message.MatchLanguage("en"))
-	return p.Sprintf("%.2f", amount) // Ensures proper formatting
+	return p.Sprintf("%.2f", amount)
+}
+
+func formatQuantity(quantity int64) string {
+	return fmt.Sprintf("%d", quantity)
 }
 
 func formatTime(t *time.Time) string {

@@ -66,10 +66,35 @@ func (s *Server) getLoanFormData(ctx *gin.Context) {
 		}
 	}
 
+	var loans []repository.LoanData
+	loan := ctx.Query("loan")
+	if loan != "" {
+		loans, err = s.repo.Helpers.GetLoanData(ctx)
+		if err != nil {
+			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	
+			return
+		}
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"product":     products,
 		"client":      clients,
 		"user": users,
 		"branch": branches,
+		"loan": loans,
 })
+}
+
+func (s *Server) getLoanEvents(ctx *gin.Context) {
+	events, err := s.repo.Loans.GetLoanEvents(ctx)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": events,
+	})
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
@@ -283,42 +284,134 @@ func convertGeneratedLoan(loan generated.Loan) repository.Loan {
 	}
 }
 
-func (r *LoanRepository) GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, error) {
+
+func (r *LoanRepository) GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, services.LoanSummary, error) {
 	loans, err := r.GetLoansReportData(ctx, GetLoansReportDataParams{
 		StartDate: filters.StartDate,
-		EndDate: filters.EndDate,
+		EndDate:   filters.EndDate,
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
+			return nil, services.LoanSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
 		}
-
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report loan data: %s", err.Error())
+		return nil, services.LoanSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report loan data: %s", err.Error())
 	}
 
 	rslt := make([]services.LoanReportData, len(loans))
 
+	summary := services.LoanSummary{}
+	branchLoanCount := map[string]int64{}
+	officerLoanCount := map[string]int64{}
+
 	for i, loan := range loans {
+		dueDate := ""
+		disbursedDate := ""
+		if loan.DueDate.Valid {
+			dueDate = loan.DueDate.Time.Format("2006-01-02")
+		}
+		if loan.DisbursedDate.Valid {
+			disbursedDate = loan.DisbursedDate.Time.Format("2006-01-02")
+		}
+
 		rslt[i] = services.LoanReportData{
-			LoanID: loan.LoanID,
-			ClientName: loan.ClientName,
-			BranchName: loan.BranchName,
-			LoanOfficer: loan.LoanOfficer,
-			LoanAmount: loan.LoanAmount,
-			RepayAmount: loan.RepayAmount,
-			PaidAmount: loan.PaidAmount,
-			OutstandingAmount: pkg.InterfaceFloat64(loan.OutstandingAmount),
-			Status: loan.Status,
+			LoanID:            loan.LoanID,
+			ClientName:        loan.ClientName,
+			BranchName:        loan.BranchName,
+			LoanOfficer:       loan.LoanOfficer,
+			LoanAmount:        loan.LoanAmount,
+			RepayAmount:       loan.RepayAmount,
+			PaidAmount:        loan.PaidAmount,
+			OutstandingAmount: loan.RepayAmount - loan.PaidAmount,
+			Status:            loan.Status,
 			TotalInstallments: loan.TotalInstallments,
-			PaidInstallments: loan.PaidInstallments,
-			DueDate: pkg.TimePtr(loan.DueDate.Time),
-			DisbursedDate: pkg.TimePtr(loan.DisbursedDate.Time),
+			PaidInstallments:  loan.PaidInstallments,
+			DueDate:           dueDate,
+			DisbursedDate:     disbursedDate,
 			DefaultRisk: pkg.InterfaceFloat64(loan.DefaultRisk),
+		}
+
+		summary.TotalLoans++
+		summary.TotalDisbursedAmount += loan.LoanAmount
+		summary.TotalRepaidAmount += loan.PaidAmount
+		summary.TotalOutstanding += loan.RepayAmount - loan.PaidAmount
+
+		switch loan.Status {
+		case "ACTIVE":
+			summary.TotalActiveLoans++
+		case "COMPLETED":
+			summary.TotalCompletedLoans++
+		case "DEFAULTED":
+			summary.TotalDefaultedLoans++
+		}
+
+		branchLoanCount[loan.BranchName]++
+		officerLoanCount[loan.LoanOfficer]++
+	}
+
+	var maxBranchLoans, maxOfficerLoans int64
+	for branch, count := range branchLoanCount {
+		if count > maxBranchLoans {
+			maxBranchLoans = count
+			summary.MostIssuedLoanBranch = branch
+		}
+	}
+	for officer, count := range officerLoanCount {
+		if count > maxOfficerLoans {
+			maxOfficerLoans = count
+			summary.MostLoansOfficer = officer
 		}
 	}
 
-	return rslt, nil
+	return rslt, summary, nil
 }
+
+
+
+// func (r *LoanRepository) GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, services.LoanSummary, error) {
+// 	loans, err := r.GetLoansReportData(ctx, GetLoansReportDataParams{
+// 		StartDate: filters.StartDate,
+// 		EndDate: filters.EndDate,
+// 	})
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			return nil, services.LoanSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
+// 		}
+
+// 		return nil, services.LoanSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report loan data: %s", err.Error())
+// 	}
+
+// 	rslt := make([]services.LoanReportData, len(loans))
+
+// 	summary := services.LoanSummary{}
+// 	for i, loan := range loans {
+// 		dueDate := ""
+// 		disbursedDate := ""
+// 		if loan.DueDate.Valid {
+// 			dueDate = loan.DueDate.Time.Format("2006-02-01")
+// 		}
+// 		if loan.DisbursedDate.Valid {
+// 			disbursedDate = loan.DueDate.Time.Format("2006-02-01")
+// 		}
+// 		rslt[i] = services.LoanReportData{
+// 			LoanID: loan.LoanID,
+// 			ClientName: loan.ClientName,
+// 			BranchName: loan.BranchName,
+// 			LoanOfficer: loan.LoanOfficer,
+// 			LoanAmount: loan.LoanAmount,
+// 			RepayAmount: loan.RepayAmount,
+// 			PaidAmount: loan.PaidAmount,
+// 			OutstandingAmount: pkg.InterfaceFloat64(loan.OutstandingAmount),
+// 			Status: loan.Status,
+// 			TotalInstallments: loan.TotalInstallments,
+// 			PaidInstallments: loan.PaidInstallments,
+// 			DueDate: dueDate,
+// 			DisbursedDate: disbursedDate,
+// 			DefaultRisk: pkg.InterfaceFloat64(loan.DefaultRisk),
+// 		}
+// 	}
+
+// 	return rslt, summary, nil
+// }
 
 func (r *LoanRepository) GetReportLoanByIdData(ctx context.Context,id uint32) (services.LoanReportDataById, error) {
 	loan, err := r.GetLoanReportDataById(ctx, id)
@@ -331,6 +424,63 @@ func (r *LoanRepository) GetReportLoanByIdData(ctx context.Context,id uint32) (s
 	}
 
 	return convertLoanReportDataById(loan)
+}
+
+func (r *LoanRepository) GetLoanEvents(ctx context.Context) ([]repository.LoanEvent, error) {
+	events, err := r.GetLoanEventsHelper(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return []repository.LoanEvent{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
+		}
+		return []repository.LoanEvent{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan events: %s", err.Error())
+	}
+
+	rslt := []repository.LoanEvent{}
+	for _, event := range events {
+		var disbursedDate *string
+		if event.DisbursedDate.Valid {
+			d := event.DisbursedDate.Time.Format("2006-01-02")
+			disbursedDate = &d
+		}
+
+		var dueDate *string
+		if event.DueDate.Valid{
+			d := event.DueDate.Time.Format("2006-01-02")
+			dueDate = &d
+		}
+
+		var paymentDue *float64
+		if event.PaymentDue.Valid {
+			paymentDue = &event.PaymentDue.Float64
+		}
+
+		rslt = append(rslt, repository.LoanEvent{
+			ID: fmt.Sprintf("LN%03d", event.LoanID),
+			LoanID:      event.LoanID,
+			ClientName:  event.ClientName,
+			LoanAmount:  event.LoanAmount,
+			Date: disbursedDate,
+			Type:        "disbursed",
+			Title: "Loan Disbursed",
+			AllDay: false,
+		})
+
+		if dueDate != nil {
+			rslt = append(rslt, repository.LoanEvent{
+				ID: fmt.Sprintf("LN%03d", event.LoanID),
+				LoanID:      event.LoanID,
+				ClientName:  event.ClientName,
+				LoanAmount:  event.LoanAmount,
+				Date:     dueDate,
+				PaymentDue:  paymentDue,
+				Type:        "due",
+				Title: "Payment Due",
+				AllDay: false,
+			})
+		}
+	}
+
+	return rslt, nil
 }
 
 func convertGeneratedInstallment(installment generated.Installment) repository.Installment {

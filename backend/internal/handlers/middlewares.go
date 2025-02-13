@@ -131,7 +131,8 @@ func CORSmiddleware() gin.HandlerFunc {
 		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true") 
-		ctx.Writer.Header().Set("Access-Control-Max-Age", "86400")          
+		ctx.Writer.Header().Set("Access-Control-Max-Age", "86400") 
+		ctx.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")       
 
 		// Handle preflight (OPTIONS) requests
 		if ctx.Request.Method == http.MethodOptions {

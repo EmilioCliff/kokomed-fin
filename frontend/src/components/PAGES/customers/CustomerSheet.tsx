@@ -46,7 +46,7 @@ function CustomerSheet() {
 
 	const { data } = useQuery({
 		queryKey: ['loans/form'],
-		queryFn: () => getFormData(false, false, false, true),
+		queryFn: () => getFormData(false, false, false, true, false),
 		staleTime: 5 * 1000,
 	});
 

@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -222,80 +223,75 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.Update
 	return r.GetUserByID(ctx, user.ID)
 }
 
-func (r *UserRepository) GetReportUserAdminData(ctx context.Context, filters services.ReportFilters) ([]services.UserAdminsReportData, error) {
+func (r *UserRepository) GetReportUserAdminData(ctx context.Context, filters services.ReportFilters) ([]services.UserAdminsReportData, services.UserAdminsSummary, error) {
 	users, err := r.GetUserAdminsReportData(ctx, GetUserAdminsReportDataParams{
 		StartDate: filters.StartDate,
-		EndDate: filters.EndDate,
-		ActiveStart: filters.StartDate,
-		ActiveEnd: filters.EndDate,
-		CompletedStart: filters.StartDate,
-		CompletedEnd: filters.EndDate,
-		DefaultedStart: filters.StartDate,
-		DefaultedEnd: filters.EndDate,
-		TotalStart: filters.StartDate,
-		TotalEnd: filters.EndDate,
-		ClientsStart: filters.StartDate,
-		ClientsEnd: filters.EndDate,
-		PaymentsStart: filters.StartDate,
-		PaymentsEnd: filters.EndDate,
+		EndDate:   filters.EndDate,
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
+			return nil, services.UserAdminsSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
-
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
+		return nil, services.UserAdminsSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
 	}
 
 	rslt := make([]services.UserAdminsReportData, len(users))
+	var totalClients int64
+	var totalPayments int64
+	var totalApprovedLoans int64
+	var highestLoanApprovalUser string
+	var maxLoansApproved int64
 
 	for i, user := range users {
+		approvedLoans := user.ApprovedLoans
+
 		rslt[i] = services.UserAdminsReportData{
-			FullName: user.Name,
-			Roles: string(user.Role),
-			BranchName: user.BranchName.String,
-			ApprovedLoans: user.ApprovedLoans,
-			ActiveLoans: user.ActiveLoans,
-			CompletedLoans: user.CompletedLoans,
-			DefaultRate: pkg.InterfaceFloat64(user.DefaultRate),
+			FullName:          user.Name,
+			Roles:             string(user.Role),
+			BranchName:        user.BranchName.String,
+			ApprovedLoans:     approvedLoans,
+			ActiveLoans:       user.ActiveLoans,
+			CompletedLoans:    user.CompletedLoans,
+			DefaultRate:       pkg.InterfaceFloat64(user.DefaultRate),
 			ClientsRegistered: user.ClientsRegistered,
-			PaymentsAssigned: user.PaymentsAssigned,
+			PaymentsAssigned:  user.PaymentsAssigned,
+		}
+
+		totalClients += user.ClientsRegistered
+		totalPayments += user.PaymentsAssigned
+		totalApprovedLoans += approvedLoans
+
+		if approvedLoans > maxLoansApproved {
+			maxLoansApproved = approvedLoans
+			highestLoanApprovalUser = user.Name
 		}
 	}
 
-	return rslt, nil
+	summary := services.UserAdminsSummary{
+		TotalUsers:              int64(len(users)),
+		TotalClients:            totalClients,
+		TotalPayments:           totalPayments,
+		HighestLoanApprovalUser: highestLoanApprovalUser,
+	}
+
+	return rslt, summary, nil
 }
-func (r *UserRepository) GetReportUserUsersData(ctx context.Context, id uint32, filters services.ReportFilters) ([]services.UserUsersReportData, error) {
-	users, err := r.GetUserUsersReportData(ctx, GetUserUsersReportDataParams{
+
+func (r *UserRepository) GetReportUserUsersData(ctx context.Context, id uint32, filters services.ReportFilters) (services.UserUsersReportData, error) {
+	user, err := r.GetUserUsersReportData(ctx, GetUserUsersReportDataParams{
 		StartDate: filters.StartDate,
-		EndDate: filters.EndDate,
-		ID: id,
+		EndDate:   filters.EndDate,
+		ID:        id,
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
+			return services.UserUsersReportData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
-
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
+		return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
 	}
 
-	rslt := make([]services.UserUsersReportData, len(users))
 
-	for i, user := range users {
-		rslt[i] = services.UserUsersReportData{
-			FullName: user.Name,
-			Roles: string(user.Role),
-			BranchName: user.Branch.String,
-			TotalClientsHandled: user.TotalClientsHandled,
-			TotalLoansApproved: user.LoansApproved,
-			TotalLoanAmountManaged: pkg.InterfaceFloat64(user.TotalLoanAmountManaged),
-			TotalCollectedAmount: pkg.InterfaceFloat64(user.TotalCollectedAmount),
-			DefaultRate: pkg.InterfaceFloat64(user.DefaultRate),
-			AssignedPayments: user.AssignedPayments,
-		}
-	}
-
-	return rslt, nil
+	return convertUserReportData(user)
 }
 
 func convertGeneratedUser(user generated.User) repository.User {
@@ -313,4 +309,46 @@ func convertGeneratedUser(user generated.User) repository.User {
 		UpdatedBy:       uint32(user.UpdatedBy),
 		CreatedBy:       uint32(user.CreatedBy),
 	}
+}
+
+func convertUserReportData(row GetUserUsersReportDataRow) (services.UserUsersReportData, error) {
+	var assignedLoans []services.UserUsersReportDataLoans
+	if row.AssignedLoans != nil {
+		loansByte, ok := row.AssignedLoans.([]byte)
+		if !ok {
+			return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert assigned loans to bytes")
+		}
+
+		err := json.Unmarshal(loansByte, &assignedLoans)
+		if err != nil {
+			return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling assigned loans: %v", err)
+		}
+	}
+
+	var assignedPayments []services.UserUsersReportDataPayments
+	if row.AssignedPaymentsList != nil {
+		paymentsByte, ok := row.AssignedPaymentsList.([]byte)
+		if !ok {
+			return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert assigned payments to bytes")
+		}
+
+		err := json.Unmarshal(paymentsByte, &assignedPayments)
+		if err != nil {
+			return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling assigned payments: %v", err)
+		}
+	}
+
+	return services.UserUsersReportData{
+		Name:                   row.Name,
+		Role:                   row.Role,
+		Branch:                 row.Branch.String,
+		TotalClientsHandled:    row.TotalClientsHandled,
+		LoansApproved:          row.LoansApproved,
+		TotalLoanAmountManaged: pkg.InterfaceFloat64(row.TotalLoanAmountManaged),
+		TotalCollectedAmount:   pkg.InterfaceFloat64(row.TotalCollectedAmount),
+		DefaultRate:            pkg.InterfaceFloat64(row.DefaultRate),
+		AssignedPayments:       row.AssignedPayments,
+		AssignedLoans:          assignedLoans,
+		AssignedPaymentsList:   assignedPayments,
+	}, nil
 }

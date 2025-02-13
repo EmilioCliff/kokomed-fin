@@ -1,6 +1,7 @@
 package reports
 
 import (
+	"bytes"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
@@ -11,12 +12,14 @@ type productReport struct {
 	*excelGenerator
 	*PDFGenerator
 	data []services.ProductReportData
+	summary services.ProductSummary
 	filters services.ReportFilters
 }
 
-func newProductReport(data []services.ProductReportData, format string, filters services.ReportFilters) *productReport {
+func newProductReport(data []services.ProductReportData, summary services.ProductSummary, format string, filters services.ReportFilters) *productReport {
 	reportGenerator := &productReport{
 		data:           data,
+		summary: summary,
 		filters: filters,
 	}
 
@@ -24,13 +27,13 @@ func newProductReport(data []services.ProductReportData, format string, filters 
 	case "excel":
 		reportGenerator.excelGenerator = newExcelGenerator()
 	case "pdf":
-		reportGenerator.PDFGenerator = newPDFGenerator()
+		reportGenerator.PDFGenerator = newPDFGenerator("L", "A4")
 	}
 
 	return reportGenerator
 }
 
-func (pr *productReport) generateExcel(sheetName string) (error) {
+func (pr *productReport) generateExcel(sheetName string) ([]byte, error) {
 	pr.createSheet(sheetName)
 
 	columns := []string{"Product Name", "Loans Issued", "Active Loans", "Completed Loans", "Defaulted Loans", "Amount Disbursed", "Amount Repaid", "Outstanding Amount", "Default Rate(%)"}
@@ -61,32 +64,48 @@ func (pr *productReport) generateExcel(sheetName string) (error) {
 		pr.writeRow(rowIdx+2, row)
 	}
 
-	// buffer, err := br.file.WriteToBuffer()
+	buffer, err := pr.file.WriteToBuffer()
+	if err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error writing to buffer excel: %v", err)
+	}
+
+	if err := pr.closeExcel(); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error closing excel file: %v", err)
+	}
+
 	// buffer.Bytes(),
 
-	if err := pr.file.SaveAs("products_report.xlsx"); err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
-	}
+	// if err := pr.file.SaveAs("products_report.xlsx"); err != nil {
+	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
+	// }
 
-	return pr.closeExcel()
+	return buffer.Bytes(), nil
 }
 
-func (pr *productReport) generatePDF() (error) {
+func (pr *productReport) generatePDF() ([]byte, error) {
 	if err := pr.addLogo(); err != nil {
-		return err
+		return nil, err
 	}
 
-	pr.writeReportMetadata("Branches Report", time.Now().Format("2006-01-02"), pr.filters.StartDate.Format("2006-01-02"), pr.filters.EndDate.Format("2006-01-02"))
+	pr.writeReportMetadata("Products Report", time.Now().Format("2006-01-02"), pr.filters.StartDate.Format("2006-01-02"), pr.filters.EndDate.Format("2006-01-02"))
 
 	pr.pdf.SetFont(fontFamily, "B", largeFont)
 	pr.pdf.Cell(0, lineHt, "Summary:")
 	pr.pdf.Ln(lineHt)
 
-	center := pr.getCenterX()
-	pr.drawBox(marginX, pr.pdf.GetY(), center/2, lineHt*3, secondaryColor)
+	summary := map[string]string{
+		"TotalProducts": formatQuantity(pr.summary.TotalProducts),
+		"MostPopularProduct": pr.summary.MostPopularProduct,
+		"MaxLoans": formatQuantity(pr.summary.MaxLoans),
+		"TotalActiveLoanAmount": formatQuantity(pr.summary.TotalActiveLoanAmount),
+	}
 
+	pr.pdf.SetFontSize(12)
+	pr.writeSummary(summary)
+
+	pr.pdf.Ln(lineHt*2)
 	headers := []string{"Product Name", "Loans Issued", "Active Loans", "Completed Loans", "Defaulted Loans", "Amount Disbursed", "Amount Repaid", "Outstanding Amount", "Default Rate(%)"}
-	colWidths := []float64{35, 20, 20, 20, 25, 25, 25, 20, 20}
+	colWidths := []float64{45, 25, 25, 32, 32, 34, 30, 37, 30}
 
 	pr.pdf.SetFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2])
     pr.pdf.SetFont("Arial", "B", mediumFont)
@@ -111,11 +130,12 @@ func (pr *productReport) generatePDF() (error) {
 		pr.writeTableRow(row, colWidths, colAlignment)
 	}
 
-	// var buffer bytes.Buffer
-	// if err := br.pdf.Output(&buffer); err != nil {
-	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
-	// }
+	var buffer bytes.Buffer
+	if err := pr.pdf.Output(&buffer); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
+	}
 	// buffer.Bytes()
+	// pr.pdf.OutputFileAndClose("products_report.pdf")
 
-	return pr.pdf.OutputFileAndClose("products_report.pdf")
+	return buffer.Bytes(), nil
 }
