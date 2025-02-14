@@ -38,7 +38,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 	callbackData := services.MpesaCallbackData{
 		TransactionID: req["TransID"].(string),
 		AccountNumber: req["BillRefNumber"].(string),
-		PhoneNumber:   req["MSISDN"].(string),
+		PhoneNumber:   "***",							// safaricom hidden number
 		PayingName:    req["FirstName"].(string),
 		Amount:        amountFlt,
 		AssignedBy:    "APP",
