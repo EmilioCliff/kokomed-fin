@@ -34,6 +34,7 @@ func (r *NonPostedRepository) CreateNonPosted(ctx context.Context, nonPosted *re
 		PayingName:        nonPosted.PayingName,
 		Amount:            nonPosted.Amount,
 		PaidDate:          nonPosted.PaidDate,
+		AssignedBy: 	   nonPosted.AssignedBy,
 	}
 
 	if nonPosted.AssignedTo != nil {
@@ -258,37 +259,6 @@ func (r *NonPostedRepository) GetReportPaymentData(ctx context.Context, filters 
 
 	return rslt, summary, nil
 }
-
-// func (r *NonPostedRepository) GetReportPaymentData(ctx context.Context, filters services.ReportFilters) ([]services.PaymentReportData, services.PaymentSummary, error) {
-// 	nonPosteds, err := r.queries.GetPaymentReportData(ctx, generated.GetPaymentReportDataParams{
-// 		FromPaidDate: filters.StartDate,
-// 		ToPaidDate:   filters.EndDate,
-// 	})
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, services.PaymentSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no non posted found")
-// 		}
-
-// 		return nil, services.PaymentSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report payment data: %s", err.Error())
-// 	}
-
-// 	rslt := make([]services.PaymentReportData, len(nonPosteds))
-// 	summary := services.PaymentSummary{}
-// 	for i, nonPosted := range nonPosteds {
-// 		rslt[i] = services.PaymentReportData{
-// 			TransactionSource: string(nonPosted.TransactionSource),
-// 			TransactionNumber: nonPosted.TransactionNumber,
-// 			AccountNumber:     nonPosted.AccountNumber,
-// 			PayingName:        nonPosted.PayingName,
-// 			Amount:            nonPosted.Amount,
-// 			PaidDate:          nonPosted.PaidDate,
-// 			AssignedTo: nonPosted.AssignedName,
-// 			AssignedBy: nonPosted.AssignedBy,
-// 		}
-// 	}
-
-// 	return rslt, summary, nil
-// }
 
 func convertGenerateNonPosted(nonPosted generated.NonPosted) repository.NonPosted {
 	var assignedTo *uint32

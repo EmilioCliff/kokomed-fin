@@ -11,8 +11,8 @@ type MpesaCallbackData struct {
 	PhoneNumber   string  `json:"phone_number"`
 	PayingName    string  `json:"paying_name"`
 	Amount        float64 `json:"amount"`
+	AssignedBy	  string `json:"assigned_by"`
 	AssignedTo    *uint32 `json:"assigned_to"`
-	AssignedBy	*string `json:"assigned_by"`
 }
 
 type ManualPaymentData struct {

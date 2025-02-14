@@ -98,7 +98,7 @@ type CreateNonPostedParams struct {
 	Amount            float64                    `json:"amount"`
 	PaidDate          time.Time                  `json:"paid_date"`
 	AssignTo          sql.NullInt32              `json:"assign_to"`
-	AssignedBy        sql.NullString             `json:"assigned_by"`
+	AssignedBy        string                     `json:"assigned_by"`
 }
 
 func (q *Queries) CreateNonPosted(ctx context.Context, arg CreateNonPostedParams) (sql.Result, error) {

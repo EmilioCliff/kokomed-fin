@@ -36,8 +36,8 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 		PayingName:        callbackData.PayingName,
 		Amount:            callbackData.Amount,
 		AssignedTo:        callbackData.AssignedTo,
+		AssignedBy: 	   callbackData.AssignedBy,
 		PaidDate:          time.Now(),
-		AssignedBy: callbackData.AssignedBy,
 	}
 
 	loanID := uint32(0)
@@ -75,6 +75,7 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 				PayingName:        params.PayingName,
 				Amount:            params.Amount,
 				PaidDate:          params.PaidDate,
+				AssignedBy: 	   params.AssignedBy,
 			}
 
 			if params.AssignedTo != nil {
@@ -84,18 +85,10 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 				}
 			}
 
-			if params.AssignedBy != nil {
-				nonPostedParams.AssignedBy = sql.NullString{
-					Valid: true,
-					String: *params.AssignedBy,
-				}
-			}
-
 			_, err := q.CreateNonPosted(ctx, nonPostedParams)
 			if err != nil {
 				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create non posted: %s", err.Error())
 			}
-
 			// update loan
 			err = helperUpdateLoan(ctx, q, loan)
 
@@ -105,6 +98,7 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 			return 0, err
 		}
 	} else {
+	log.Println(params)
 		_, err := p.mySQL.NonPosted.CreateNonPosted(ctx, params)
 		if err != nil {
 			return 0, err

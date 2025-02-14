@@ -41,6 +41,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 		PhoneNumber:   req["MSISDN"].(string),
 		PayingName:    req["FirstName"].(string),
 		Amount:        amountFlt,
+		AssignedBy:    "APP",
 	}
 
 	if app, ok := req["App"].(string); ok && app != "" {
@@ -59,7 +60,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 		// 	return
 		// }
 
-		callbackData.AssignedBy = pkg.StringPtr("emiliocliff@gmail.com")
+		callbackData.AssignedBy = "emiliocliff@gmail.com"
 	} else {
 		callbackData.TransactionSource = "MPESA"
 	}

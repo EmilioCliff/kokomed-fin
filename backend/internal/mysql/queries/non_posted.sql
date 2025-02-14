@@ -9,7 +9,7 @@ VALUES (
     sqlc.arg("amount"),
     sqlc.arg("paid_date"),
     sqlc.narg("assign_to"),
-    sqlc.narg("assigned_by")
+    sqlc.arg("assigned_by")
 );
 
 -- name: ListAllNonPosted :many
