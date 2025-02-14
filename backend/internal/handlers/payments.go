@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
@@ -13,8 +14,10 @@ import (
 func (s *Server) paymentCallback(ctx *gin.Context) {
 	var rq any
 	if err := ctx.ShouldBindJSON(&rq); err != nil {
-		log.Println("failed to bind json: ", err)
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusOK, gin.H{
+			"ResultCode": 400,
+			"ResultDesc": "Rejected",
+		})
 
 		return
 	}
@@ -30,19 +33,27 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 	// 	return
 	// }
 
+	amountFlt, err := strconv.ParseFloat(req["TransAmount"].(string), 64)
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusOK, gin.H{
+			"ResultCode": 400,
+			"ResultDesc": "Rejected",
+		})
+
+		return
+	}
+
 	callbackData := services.MpesaCallbackData{
 		TransactionID: req["TransID"].(string),
 		AccountNumber: req["BillRefNumber"].(string),
 		PhoneNumber:   req["MSISDN"].(string),
 		PayingName:    req["FirstName"].(string),
-		Amount:        req["TransAmount"].(float64),
+		Amount:        amountFlt,
 	}
 
-	// add a variable if it exist it means its coming from creating payment from app
-	// before intergrating to darajaAPI only
 	if req["App"] != "" {
 		callbackData.TransactionSource = "INTERNAL"
-
 		// payload, ok := ctx.Get(authorizationPayloadKey)
 		// if !ok {
 		// 	ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
@@ -56,20 +67,22 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 
 		// 	return
 		// }
+
+		callbackData.AssignedBy = pkg.StringPtr("emiliocliff@gmail.com")
 	} else {
 		callbackData.TransactionSource = "MPESA"
 	}
 
 	clientID, err := s.repo.Clients.GetClientIDByPhoneNumber(ctx, callbackData.AccountNumber)
 	if err != nil {
-		// if account number is wrong(non-existing) continue
 		if pkg.ErrorCode(err) != pkg.NOT_FOUND_ERROR {
 			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
+			
 			return
 		}
 	}
-
+	
+	// if account number is wrong(non-existing) continue
 	if clientID != 0 {
 		callbackData.AssignedTo = pkg.Uint32Ptr(clientID)
 	}
@@ -139,4 +152,39 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 	s.cache.DelAll(ctx, "non-posted/all:limit=*")
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func (s *Server) getMPESAAccesToken(ctx *gin.Context) {
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
+
+	if payloadData.Email != "emiliocliff@gmail.com" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"status": "not authorized"})
+
+		return
+	}
+
+	accessToken, err := pkg.GenerateAccessToken(s.config.MPESA_CONSUMER_KEY, s.config.MPESA_CONSUMER_SECRET)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"token": accessToken})
+}
+
+func (s *Server) validationCallback(ctx *gin.Context) {
+	// No validation for my darajaApp
 }

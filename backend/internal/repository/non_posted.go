@@ -18,6 +18,7 @@ type NonPosted struct {
 	Amount            float64   `json:"amount"`
 	PaidDate          time.Time `json:"paid_date"`
 	AssignedTo        *uint32   `json:"assigned_to"`
+	AssignedBy 		  *string	`json:"assigned_by"`
 }
 
 type NonPostedCategory struct {

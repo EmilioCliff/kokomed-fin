@@ -7,6 +7,8 @@ import {
 	LogOut,
 	Globe,
 	HelpCircle,
+	Menu,
+	ChevronLeft,
 } from 'lucide-react';
 import { Link } from 'react-router';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -19,10 +21,25 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
+import { useState, useEffect } from 'react';
+import ThemeToggle from './ThemeToogle';
 
 function Navbar() {
 	const { toggleSidebar, open } = useSidebar();
 	const { logout, decoded } = useAuth();
+	const [darkMode, setDarkMode] = useState(() => {
+		return localStorage.getItem('theme') === 'dark';
+	});
+
+	useEffect(() => {
+		if (darkMode) {
+			document.documentElement.classList.add('dark');
+			localStorage.setItem('theme', 'dark');
+		} else {
+			document.documentElement.classList.remove('dark');
+			localStorage.setItem('theme', 'light');
+		}
+	}, [darkMode]);
 
 	return (
 		<>
@@ -48,57 +65,62 @@ function Navbar() {
 					</Link>
 				</div>
 				<div className="border-r-2 py-6 px-4 border-indigo-200/20">
-					<Calendar
-						className="hover:cursor-pointer"
-						onClick={toggleSidebar}
-					/>
+					{open ? (
+						<ChevronLeft
+							className="hover:cursor-pointer"
+							onClick={toggleSidebar}
+						/>
+					) : (
+						<Menu
+							className="hover:cursor-pointer"
+							onClick={toggleSidebar}
+						/>
+					)}
 				</div>
+				<div className="ml-auto flex items-center">
+					<ThemeToggle />
 
-				<p className="">Header 2</p>
-
-				<div className="ml-auto mr-4">
-					<DropdownMenu>
-						<DropdownMenuTrigger
-							asChild
-							className="bg-transparent border-none p-0 hover:bg-transparent cursor-default"
-						>
-							<div className="flex flex-row border-l-2 py-4 pl-2 border-grey gap-2 align-center hover:cursor-pointer">
-								<Avatar>
-									<AvatarImage src="https://github.com/shadcn.png" />
-									<AvatarFallback>CN</AvatarFallback>
-								</Avatar>
-								<p className="my-auto">
-									{decoded?.email
-										?.split('@')[0]
-										?.split('.')[0]
-										.toUpperCase()}
-								</p>
-								<ChevronDown size={20} className="my-auto" />
-							</div>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							<DropdownMenuItem>
-								<Pencil /> Edit Profile
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<User /> View Profile
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem>
-								<HelpCircle /> Help
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<Globe /> Forum
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<Settings /> Settings
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem onClick={logout} className="">
-								<LogOut /> Logout
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<div className="mr-4">
+						<DropdownMenu>
+							<DropdownMenuTrigger
+								asChild
+								className="bg-transparent border-none p-0 hover:bg-transparent cursor-default "
+							>
+								<div className="flex flex-row border-l-2 py-4 pl-2 border-grey gap-2 align-center hover:cursor-pointer">
+									<Avatar>
+										<AvatarImage src="https://github.com/shadcn.png" />
+										<AvatarFallback>CN</AvatarFallback>
+									</Avatar>
+									<p className="my-auto">
+										{decoded?.email
+											?.split('@')[0]
+											?.split('.')[0]
+											.toUpperCase()}
+									</p>
+									<ChevronDown
+										size={20}
+										className="my-auto"
+									/>
+								</div>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent>
+								<DropdownMenuItem>
+									<Pencil /> Edit Profile
+								</DropdownMenuItem>
+								<DropdownMenuItem>
+									<User /> View Profile
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem>
+									<Settings /> Settings
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onClick={logout} className="">
+									<LogOut /> Logout
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
 				</div>
 			</header>
 		</>

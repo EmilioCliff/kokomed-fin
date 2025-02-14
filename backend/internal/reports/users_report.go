@@ -1,6 +1,7 @@
 package reports
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -40,7 +41,7 @@ func newUserReport(adminData []services.UserAdminsReportData, userData services.
 	return reportGenerator
 }
 
-func (ur *userReport) generateExcel(sheetName string) (error) {
+func (ur *userReport) generateExcel(sheetName string) ([]byte,error) {
 	ur.createSheet(sheetName)
 
 	if len(ur.adminData) > 0 {
@@ -50,7 +51,7 @@ func (ur *userReport) generateExcel(sheetName string) (error) {
 	}
 }
 
-func (ur *userReport) generatePDF() (error) {
+func (ur *userReport) generatePDF() ([]byte,error) {
 	if len(ur.adminData) > 0 {
 		return ur.adminReportPDF()
 	} else {
@@ -58,7 +59,7 @@ func (ur *userReport) generatePDF() (error) {
 	}
 }
 
-func (ur *userReport) adminReportExcel() error {
+func (ur *userReport) adminReportExcel() ([]byte, error) {
 	columns := []string{"Fullname", "Branch Name", "Role", "Clients Registered", "Payments Assigned", "Approved Loans", "Active Clients Loans", "Completed Clients Loans", "Default Rate(%)"}
 
 	ur.file.SetColWidth(ur.currentSheet, "A", "I", 20)
@@ -86,19 +87,25 @@ func (ur *userReport) adminReportExcel() error {
 		ur.writeRow(rowIdx+2, row)
 	}
 
-	// buffer, err := ur.file.WriteToBuffer()
+	buffer, err := ur.file.WriteToBuffer()
+	if err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
+	}
 	// buffer.Bytes(),
 
-	if err := ur.file.SaveAs("users_admin_report.xlsx"); err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
+	// if err := ur.file.SaveAs("users_admin_report.xlsx"); err != nil {
+	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
+	// }
+	if err := ur.closeExcel(); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to close excel file: %v", err)
 	}
 
-	return ur.closeExcel()
+	return buffer.Bytes(), nil
 }
 
-func (ur *userReport) adminReportPDF() error {
+func (ur *userReport) adminReportPDF() ([]byte, error) {
 	if err := ur.addLogo(); err != nil {
-		return err
+		return nil, err
 	}
 
 	ur.writeReportMetadata("Admin User's Report", time.Now().Format("2006-01-02"), ur.filters.StartDate.Format("2006-01-02"), ur.filters.EndDate.Format("2006-01-02"))
@@ -144,18 +151,20 @@ func (ur *userReport) adminReportPDF() error {
 		ur.writeTableRow(row, colWidths, colAlignment)
 	}
 
-	// var buffer bytes.Buffer
-	// if err := ur.pdf.Output(&buffer); err != nil {
-	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
-	// }
+	var buffer bytes.Buffer
+	if err := ur.pdf.Output(&buffer); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
+	}
 	// buffer.Bytes()
+	// ur.pdf.OutputFileAndClose("user_admin_report.pdf")
+	ur.closePDF()
 
-	return ur.pdf.OutputFileAndClose("user_admin_report.pdf")
+	return buffer.Bytes(), nil
 }
 
-func (ur *userReport) userReportPDF() error {
+func (ur *userReport) userReportPDF() ([]byte, error) {
 	if err := ur.addLogo(); err != nil {
-		return err
+		return nil, err
 	}
 
 	ur.writeReportMetadata(fmt.Sprintf("%s Report", ur.userData.Name), time.Now().Format("2006-01-02"), ur.filters.StartDate.Format("2006-01-02"), ur.filters.EndDate.Format("2006-01-02"))
@@ -238,11 +247,14 @@ func (ur *userReport) userReportPDF() error {
 		}
 	}
 
-	// var buffer bytes.Buffer
-	// if err := ur.pdf.Output(&buffer); err != nil {
-	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
-	// }
-	// buffer.Bytes()
+	var buffer bytes.Buffer
+	if err := ur.pdf.Output(&buffer); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
+	}
 
-	return ur.pdf.OutputFileAndClose(fmt.Sprintf("%s_report.pdf", ur.userData.Name))
+	ur.closePDF()
+	// buffer.Bytes()
+	// ur.pdf.OutputFileAndClose(fmt.Sprintf("%s_report.pdf", ur.userData.Name))
+
+	return buffer.Bytes(), nil
 }

@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -23,115 +23,77 @@ type downloadReportsRequest struct {
 
 func (s *Server) generateReport(ctx *gin.Context) {
 	var req downloadReportsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err.Error())))
+		return
+	}
+
 	var err error
-	if err = ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
-
-		return
-	}
-
-	filters := services.ReportFilters{
-		UserId: nil,
-		ClientId: nil,
-		LoanId: nil,
-	}
-
+	filters := services.ReportFilters{}
 	if req.StartDate != "" {
-		filters.StartDate, err = time.Parse("2006-01-02", req.StartDate)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid date format")))
-	
+		if filters.StartDate, err = time.Parse("2006-01-02", req.StartDate); err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid start date format")))
 			return
 		}
 	}
-
 	if req.EndDate != "" {
-		filters.EndDate, err = time.Parse("2006-01-02", req.EndDate)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid date format")))
-	
+		if filters.EndDate, err = time.Parse("2006-01-02", req.EndDate); err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid end date format")))
 			return
 		}
 	}
 
-	var contentType string
-	var fileExt string
 	format := ctx.Query("format")
-	if format == "excel" {
-		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-		fileExt = "xlsx"
-	} else if format == "pdf" {
-		contentType = "application/pdf"
-		fileExt = "pdf"
-	} else {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "valid format is required (pdf or excel)")))
+	fileExt := "pdf" 
 
-		return
-	}
-
-	fileName := "report" 
-
+	baseName := req.ReportName + "_report"
 	if req.UserId != 0 {
 		filters.UserId = pkg.Uint32Ptr(req.UserId)
-		fileName = fmt.Sprintf("user_%d", req.UserId)
+		baseName = fmt.Sprintf("user_%d", req.UserId)
 	} else if req.ClientId != 0 {
 		filters.ClientId = pkg.Uint32Ptr(req.ClientId)
-		fileName = fmt.Sprintf("client_%d", req.ClientId)
+		baseName = fmt.Sprintf("client_%d", req.ClientId)
 	} else if req.LoanId != 0 {
 		filters.LoanId = pkg.Uint32Ptr(req.LoanId)
-		fileName = fmt.Sprintf("loan_LN%03d", req.LoanId)
-	}
-
-	var reportErr error
-	var responseBytes []byte
-	switch req.ReportName{
-		case "payment":
-			responseBytes, reportErr = s.report.GeneratePaymentsReport(ctx, format, filters)
-			fileName = "payment"
-			
-		case "branch":
-			responseBytes, reportErr = s.report.GenerateBranchesReport(ctx, format, filters)
-			fileName = "branch"
-
-		case "user":
-			reportErr = s.report.GenerateUsersReport(ctx, format, filters)
-		
-		case "client":
-			reportErr = s.report.GenerateClientsReport(ctx, format, filters)
-
-		case "product":
-			responseBytes, reportErr = s.report.GenerateProductsReport(ctx, format, filters)
-			fileName = "product"
-
-		case "loan":
-			reportErr = s.report.GenerateLoansReport(ctx, format, filters)
-
-		default:
-			ctx.JSON(http.StatusBadRequest, pkg.Errorf(pkg.INVALID_ERROR, "invalid report name"))
-
+		baseName = fmt.Sprintf("loan_LN%03d", req.LoanId)
+	} else {
+		if format == "excel" {
+			fileExt = "xlsx"
+		} else if format != "pdf" {
+			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "valid format is required (pdf or excel)")))
 			return
+		}
 	}
-	if reportErr != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(reportErr), errorResponse(reportErr))
 
+	fileName := fmt.Sprintf("%s_%s.%s", baseName, time.Now().Format("2006-01-02"), fileExt)
+
+	reportGenerators := map[string]func(context.Context, string, services.ReportFilters) ([]byte, error){
+		"payment": s.report.GeneratePaymentsReport,
+		"branch":  s.report.GenerateBranchesReport,
+		"user":    s.report.GenerateUsersReport,
+		"client":  s.report.GenerateClientsReport,
+		"product": s.report.GenerateProductsReport,
+		"loan":    s.report.GenerateLoansReport,
+	}
+
+	generateReport, exists := reportGenerators[req.ReportName]
+	if !exists {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid report name")))
 		return
 	}
 
-	log.Println(contentType)
-	log.Println(fileExt)
-	log.Println(fileName)
-	log.Println(responseBytes)
+	responseBytes, reportErr := generateReport(ctx, format, filters)
+	if reportErr != nil || len(responseBytes) == 0 {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(pkg.Errorf(pkg.INTERNAL_ERROR, "report generation failed")))
+		return
+	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": "report generated successfully"})
+	contentType := map[string]string{
+		"pdf":  "application/pdf",
+		"xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	}[fileExt]
 
-	// if len(responseBytes) == 0 {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(pkg.Errorf(pkg.INTERNAL_ERROR, "report generation failed")))
-
-	// 	return
-	// }
-
-	// ctx.Header("Content-Type", contentType)
-	// ctx.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s_%s.%s"`, fileName, time.Now().Format("2006-01-02"), fileExt))
-
-	// ctx.Data(http.StatusOK, contentType, responseBytes)
+	ctx.Header("Content-Type", contentType)
+	ctx.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, fileName))
+	ctx.Data(http.StatusOK, contentType, responseBytes)
 }

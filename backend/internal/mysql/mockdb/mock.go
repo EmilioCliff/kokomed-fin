@@ -428,6 +428,21 @@ func (mr *MockQuerierMockRecorder) GetBranch(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBranch", reflect.TypeOf((*MockQuerier)(nil).GetBranch), ctx, id)
 }
 
+// GetBranchReportData mocks base method.
+func (m *MockQuerier) GetBranchReportData(ctx context.Context, arg generated.GetBranchReportDataParams) ([]generated.GetBranchReportDataRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBranchReportData", ctx, arg)
+	ret0, _ := ret[0].([]generated.GetBranchReportDataRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBranchReportData indicates an expected call of GetBranchReportData.
+func (mr *MockQuerierMockRecorder) GetBranchReportData(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBranchReportData", reflect.TypeOf((*MockQuerier)(nil).GetBranchReportData), ctx, arg)
+}
+
 // GetClient mocks base method.
 func (m *MockQuerier) GetClient(ctx context.Context, id uint32) (generated.Client, error) {
 	m.ctrl.T.Helper()
@@ -456,6 +471,36 @@ func (m *MockQuerier) GetClientActiveLoan(ctx context.Context, arg generated.Get
 func (mr *MockQuerierMockRecorder) GetClientActiveLoan(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientActiveLoan", reflect.TypeOf((*MockQuerier)(nil).GetClientActiveLoan), ctx, arg)
+}
+
+// GetClientAdminsReportData mocks base method.
+func (m *MockQuerier) GetClientAdminsReportData(ctx context.Context, arg generated.GetClientAdminsReportDataParams) ([]generated.GetClientAdminsReportDataRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetClientAdminsReportData", ctx, arg)
+	ret0, _ := ret[0].([]generated.GetClientAdminsReportDataRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetClientAdminsReportData indicates an expected call of GetClientAdminsReportData.
+func (mr *MockQuerierMockRecorder) GetClientAdminsReportData(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientAdminsReportData", reflect.TypeOf((*MockQuerier)(nil).GetClientAdminsReportData), ctx, arg)
+}
+
+// GetClientClientsReportData mocks base method.
+func (m *MockQuerier) GetClientClientsReportData(ctx context.Context, arg generated.GetClientClientsReportDataParams) (generated.GetClientClientsReportDataRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetClientClientsReportData", ctx, arg)
+	ret0, _ := ret[0].(generated.GetClientClientsReportDataRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetClientClientsReportData indicates an expected call of GetClientClientsReportData.
+func (mr *MockQuerierMockRecorder) GetClientClientsReportData(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientClientsReportData", reflect.TypeOf((*MockQuerier)(nil).GetClientClientsReportData), ctx, arg)
 }
 
 // GetClientIDByPhoneNumber mocks base method.
@@ -518,6 +563,36 @@ func (mr *MockQuerierMockRecorder) GetLoan(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoan", reflect.TypeOf((*MockQuerier)(nil).GetLoan), ctx, id)
 }
 
+// GetLoanData mocks base method.
+func (m *MockQuerier) GetLoanData(ctx context.Context) ([]uint32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLoanData", ctx)
+	ret0, _ := ret[0].([]uint32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLoanData indicates an expected call of GetLoanData.
+func (mr *MockQuerierMockRecorder) GetLoanData(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoanData", reflect.TypeOf((*MockQuerier)(nil).GetLoanData), ctx)
+}
+
+// GetLoanEvents mocks base method.
+func (m *MockQuerier) GetLoanEvents(ctx context.Context) ([]generated.GetLoanEventsRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLoanEvents", ctx)
+	ret0, _ := ret[0].([]generated.GetLoanEventsRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLoanEvents indicates an expected call of GetLoanEvents.
+func (mr *MockQuerierMockRecorder) GetLoanEvents(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoanEvents", reflect.TypeOf((*MockQuerier)(nil).GetLoanEvents), ctx)
+}
+
 // GetLoanPaymentData mocks base method.
 func (m *MockQuerier) GetLoanPaymentData(ctx context.Context, id uint32) (generated.GetLoanPaymentDataRow, error) {
 	m.ctrl.T.Helper()
@@ -533,6 +608,36 @@ func (mr *MockQuerierMockRecorder) GetLoanPaymentData(ctx, id any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoanPaymentData", reflect.TypeOf((*MockQuerier)(nil).GetLoanPaymentData), ctx, id)
 }
 
+// GetLoanReportDataById mocks base method.
+func (m *MockQuerier) GetLoanReportDataById(ctx context.Context, id uint32) (generated.GetLoanReportDataByIdRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLoanReportDataById", ctx, id)
+	ret0, _ := ret[0].(generated.GetLoanReportDataByIdRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLoanReportDataById indicates an expected call of GetLoanReportDataById.
+func (mr *MockQuerierMockRecorder) GetLoanReportDataById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoanReportDataById", reflect.TypeOf((*MockQuerier)(nil).GetLoanReportDataById), ctx, id)
+}
+
+// GetLoansReportData mocks base method.
+func (m *MockQuerier) GetLoansReportData(ctx context.Context, arg generated.GetLoansReportDataParams) ([]generated.GetLoansReportDataRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLoansReportData", ctx, arg)
+	ret0, _ := ret[0].([]generated.GetLoansReportDataRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLoansReportData indicates an expected call of GetLoansReportData.
+func (mr *MockQuerierMockRecorder) GetLoansReportData(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoansReportData", reflect.TypeOf((*MockQuerier)(nil).GetLoansReportData), ctx, arg)
+}
+
 // GetNonPosted mocks base method.
 func (m *MockQuerier) GetNonPosted(ctx context.Context, id uint32) (generated.NonPosted, error) {
 	m.ctrl.T.Helper()
@@ -546,6 +651,21 @@ func (m *MockQuerier) GetNonPosted(ctx context.Context, id uint32) (generated.No
 func (mr *MockQuerierMockRecorder) GetNonPosted(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNonPosted", reflect.TypeOf((*MockQuerier)(nil).GetNonPosted), ctx, id)
+}
+
+// GetPaymentReportData mocks base method.
+func (m *MockQuerier) GetPaymentReportData(ctx context.Context, arg generated.GetPaymentReportDataParams) ([]generated.GetPaymentReportDataRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPaymentReportData", ctx, arg)
+	ret0, _ := ret[0].([]generated.GetPaymentReportDataRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPaymentReportData indicates an expected call of GetPaymentReportData.
+func (mr *MockQuerierMockRecorder) GetPaymentReportData(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentReportData", reflect.TypeOf((*MockQuerier)(nil).GetPaymentReportData), ctx, arg)
 }
 
 // GetProduct mocks base method.
@@ -578,6 +698,21 @@ func (mr *MockQuerierMockRecorder) GetProductRepayAmount(ctx, id any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductRepayAmount", reflect.TypeOf((*MockQuerier)(nil).GetProductRepayAmount), ctx, id)
 }
 
+// GetProductReportData mocks base method.
+func (m *MockQuerier) GetProductReportData(ctx context.Context, arg generated.GetProductReportDataParams) ([]generated.GetProductReportDataRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductReportData", ctx, arg)
+	ret0, _ := ret[0].([]generated.GetProductReportDataRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductReportData indicates an expected call of GetProductReportData.
+func (mr *MockQuerierMockRecorder) GetProductReportData(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductReportData", reflect.TypeOf((*MockQuerier)(nil).GetProductReportData), ctx, arg)
+}
+
 // GetUser mocks base method.
 func (m *MockQuerier) GetUser(ctx context.Context, id uint32) (generated.User, error) {
 	m.ctrl.T.Helper()
@@ -593,6 +728,21 @@ func (mr *MockQuerierMockRecorder) GetUser(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockQuerier)(nil).GetUser), ctx, id)
 }
 
+// GetUserAdminsReportData mocks base method.
+func (m *MockQuerier) GetUserAdminsReportData(ctx context.Context, arg generated.GetUserAdminsReportDataParams) ([]generated.GetUserAdminsReportDataRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserAdminsReportData", ctx, arg)
+	ret0, _ := ret[0].([]generated.GetUserAdminsReportDataRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserAdminsReportData indicates an expected call of GetUserAdminsReportData.
+func (mr *MockQuerierMockRecorder) GetUserAdminsReportData(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserAdminsReportData", reflect.TypeOf((*MockQuerier)(nil).GetUserAdminsReportData), ctx, arg)
+}
+
 // GetUserByEmail mocks base method.
 func (m *MockQuerier) GetUserByEmail(ctx context.Context, email string) (generated.User, error) {
 	m.ctrl.T.Helper()
@@ -606,6 +756,21 @@ func (m *MockQuerier) GetUserByEmail(ctx context.Context, email string) (generat
 func (mr *MockQuerierMockRecorder) GetUserByEmail(ctx, email any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockQuerier)(nil).GetUserByEmail), ctx, email)
+}
+
+// GetUserUsersReportData mocks base method.
+func (m *MockQuerier) GetUserUsersReportData(ctx context.Context, arg generated.GetUserUsersReportDataParams) (generated.GetUserUsersReportDataRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserUsersReportData", ctx, arg)
+	ret0, _ := ret[0].(generated.GetUserUsersReportDataRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserUsersReportData indicates an expected call of GetUserUsersReportData.
+func (mr *MockQuerierMockRecorder) GetUserUsersReportData(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserUsersReportData", reflect.TypeOf((*MockQuerier)(nil).GetUserUsersReportData), ctx, arg)
 }
 
 // HelperClient mocks base method.
@@ -651,6 +816,21 @@ func (m *MockQuerier) HelperUser(ctx context.Context) ([]generated.HelperUserRow
 func (mr *MockQuerierMockRecorder) HelperUser(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HelperUser", reflect.TypeOf((*MockQuerier)(nil).HelperUser), ctx)
+}
+
+// HelperUserById mocks base method.
+func (m *MockQuerier) HelperUserById(ctx context.Context, id uint32) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HelperUserById", ctx, id)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HelperUserById indicates an expected call of HelperUserById.
+func (mr *MockQuerierMockRecorder) HelperUserById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HelperUserById", reflect.TypeOf((*MockQuerier)(nil).HelperUserById), ctx, id)
 }
 
 // ListAllNonPosted mocks base method.

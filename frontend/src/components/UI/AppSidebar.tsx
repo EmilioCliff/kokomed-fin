@@ -1,10 +1,12 @@
 import {
-	Calendar,
-	Home,
-	Inbox,
-	Search,
-	Settings,
 	ChevronRight,
+	Landmark,
+	CreditCard,
+	Package,
+	Users,
+	User,
+	Building,
+	FileBarChart,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import {
@@ -134,7 +136,7 @@ const items = [
 	{
 		title: 'Loans Module',
 		url: '#',
-		icon: Home,
+		icon: Landmark,
 		links: [
 			{
 				title: 'Overview',
@@ -149,7 +151,7 @@ const items = [
 	{
 		title: 'Payments Module',
 		url: '#',
-		icon: Calendar,
+		icon: CreditCard,
 		links: [
 			{
 				title: 'Overview',
@@ -164,7 +166,7 @@ const items = [
 	{
 		title: 'Products Module',
 		url: '#',
-		icon: Calendar,
+		icon: Package,
 		links: [
 			{
 				title: 'Overview',
@@ -175,7 +177,7 @@ const items = [
 	{
 		title: 'Customers Module',
 		url: '#',
-		icon: Inbox,
+		icon: Users,
 		links: [
 			{
 				title: 'Overview',
@@ -186,7 +188,7 @@ const items = [
 	{
 		title: 'Users Module',
 		url: '#',
-		icon: Search,
+		icon: User,
 		links: [
 			{
 				title: 'Overview',
@@ -197,7 +199,7 @@ const items = [
 	{
 		title: 'Branches',
 		url: '#',
-		icon: Settings,
+		icon: Building,
 		links: [
 			{
 				title: 'Overview',
@@ -208,7 +210,7 @@ const items = [
 	{
 		title: 'Reports',
 		url: '#',
-		icon: Settings,
+		icon: FileBarChart,
 		links: [
 			{
 				title: 'Reports',

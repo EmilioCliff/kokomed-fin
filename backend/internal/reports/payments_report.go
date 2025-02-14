@@ -27,7 +27,7 @@ func newPaymentReport(data []services.PaymentReportData, summary services.Paymen
 	case "excel":
 		reportGenerator.excelGenerator = newExcelGenerator()
 	case "pdf":
-		reportGenerator.PDFGenerator = newPDFGenerator("L", "A4")
+		reportGenerator.PDFGenerator = newPDFGenerator("P", "A4")
 	}
 
 	return reportGenerator

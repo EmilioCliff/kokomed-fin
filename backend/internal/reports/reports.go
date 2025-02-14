@@ -78,13 +78,13 @@ func (r *ReportServiceImpl) GenerateProductsReport(ctx context.Context, format s
 	}
 }
 
-func (r *ReportServiceImpl) GenerateUsersReport(ctx context.Context, format string, filters services.ReportFilters) (error) {
+func (r *ReportServiceImpl) GenerateUsersReport(ctx context.Context, format string, filters services.ReportFilters) ([]byte,error) {
 	var report *userReport
 
 	if filters.UserId != nil {
 		data, err := r.store.Users.GetReportUserUsersData(ctx, *filters.UserId, filters)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		log.Println(data)
@@ -94,7 +94,7 @@ func (r *ReportServiceImpl) GenerateUsersReport(ctx context.Context, format stri
 	} else {
 		data, summary, err := r.store.Users.GetReportUserAdminData(ctx, filters)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		report = newUserReport(data, services.UserUsersReportData{}, summary, format, filters)
@@ -106,17 +106,17 @@ func (r *ReportServiceImpl) GenerateUsersReport(ctx context.Context, format stri
 	case "pdf":
 		return report.generatePDF()
 	default:
-		return pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
+		return nil, pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
 	}
 }
 
-func (r *ReportServiceImpl) GenerateClientsReport(ctx context.Context, format string, filters services.ReportFilters) (error) {
+func (r *ReportServiceImpl) GenerateClientsReport(ctx context.Context, format string, filters services.ReportFilters) ([]byte,error) {
 	var report *clientReport
 
 	if filters.ClientId != nil {
 		data, err := r.store.Clients.GetReportClientClientsData(ctx, *filters.ClientId, filters)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		log.Println(data)
@@ -126,7 +126,7 @@ func (r *ReportServiceImpl) GenerateClientsReport(ctx context.Context, format st
 	} else {
 		data, summary, err := r.store.Clients.GetReportClientAdminData(ctx, filters)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		report = newClientReport(data, services.ClientClientsReportData{}, summary, format, filters)
@@ -138,17 +138,17 @@ func (r *ReportServiceImpl) GenerateClientsReport(ctx context.Context, format st
 	case "pdf":
 		return report.generatePDF()
 	default:
-		return pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
+		return nil, pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
 	}
 }
 
-func (r *ReportServiceImpl) GenerateLoansReport(ctx context.Context, format string, filters services.ReportFilters) (error) {
+func (r *ReportServiceImpl) GenerateLoansReport(ctx context.Context, format string, filters services.ReportFilters) ([]byte,error) {
 	var report *loanReport
 
 	if filters.LoanId != nil {
 		data, err := r.store.Loans.GetReportLoanByIdData(ctx, *filters.LoanId)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		log.Println(data)
@@ -158,7 +158,7 @@ func (r *ReportServiceImpl) GenerateLoansReport(ctx context.Context, format stri
 	} else {
 		data, summary, err := r.store.Loans.GetReportLoanData(ctx, filters)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		report = newLoanReport(data, services.LoanReportDataById{}, summary, format, filters)
@@ -170,7 +170,7 @@ func (r *ReportServiceImpl) GenerateLoansReport(ctx context.Context, format stri
 	case "pdf":
 		return report.generatePDF()
 	default:
-		return pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
+		return nil, pkg.Errorf(pkg.INVALID_ERROR, "unsupported format")
 	}
 }
 

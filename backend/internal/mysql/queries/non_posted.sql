@@ -1,5 +1,5 @@
 -- name: CreateNonPosted :execresult
-INSERT INTO non_posted (transaction_source, transaction_number, account_number, phone_number, paying_name, amount, paid_date, assign_to) 
+INSERT INTO non_posted (transaction_source, transaction_number, account_number, phone_number, paying_name, amount, paid_date, assign_to, assigned_by) 
 VALUES (
     sqlc.arg("transaction_source"),
     sqlc.arg("transaction_number"),
@@ -8,7 +8,8 @@ VALUES (
     sqlc.arg("paying_name"),
     sqlc.arg("amount"),
     sqlc.arg("paid_date"),
-    sqlc.narg("assign_to")
+    sqlc.narg("assign_to"),
+    sqlc.narg("assigned_by")
 );
 
 -- name: ListAllNonPosted :many

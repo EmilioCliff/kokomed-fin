@@ -1,6 +1,7 @@
 package reports
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -44,7 +45,7 @@ func newLoanReport(adminData []services.LoanReportData, userData services.LoanRe
 	return reportGenerator
 }
 
-func (lr *loanReport) generateExcel(sheetName string) (error) {
+func (lr *loanReport) generateExcel(sheetName string) ([]byte, error) {
 	lr.createSheet(sheetName)
 
 	if len(lr.adminData) > 0 {
@@ -54,7 +55,7 @@ func (lr *loanReport) generateExcel(sheetName string) (error) {
 	}
 }
 
-func (lr *loanReport) generatePDF() (error) {
+func (lr *loanReport) generatePDF() ([]byte, error) {
 	if len(lr.adminData) > 0 {
 		return lr.adminReportPDF()
 	} else {
@@ -62,7 +63,7 @@ func (lr *loanReport) generatePDF() (error) {
 	}
 }
 
-func (lr *loanReport) adminReportExcel() error {
+func (lr *loanReport) adminReportExcel() ([]byte, error) {
 	columns := []string{"Loan ID", "Client Name", "Branch Name", "Loan Officer", "Loan Amount", "Repay Amount", "Paid Amount", "Outstanding Amount", "Status", "Due Date", "No Installments", "Paid Installments", "Disbursed Date", "Default Risk(%)"}
 
 	lr.file.SetColWidth(lr.currentSheet, "A", "N", 20)
@@ -98,19 +99,26 @@ func (lr *loanReport) adminReportExcel() error {
 		lr.writeRow(rowIdx+2, row)
 	}
 
-	// buffer, err := ur.file.WriteToBuffer()
-	// buffer.Bytes(),
-
-	if err := lr.file.SaveAs("loans_report.xlsx"); err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
+	buffer, err := lr.file.WriteToBuffer()
+	if err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
 	}
 
-	return lr.closeExcel()
+	if err := lr.closeExcel(); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to close excel file: %v", err)
+	}
+	// buffer.Bytes(),
+
+	// if err := lr.file.SaveAs("loans_report.xlsx"); err != nil {
+	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
+	// }
+
+	return buffer.Bytes(), nil
 }
 
-func (lr *loanReport) adminReportPDF() error {
+func (lr *loanReport) adminReportPDF() ([]byte, error) {
 	if err := lr.addLogo(); err != nil {
-		return err
+		return nil, err
 	}
 
 	lr.writeReportMetadata("Admin Clients Report", time.Now().Format("2006-01-02"), lr.filters.StartDate.Format("2006-01-02"), lr.filters.EndDate.Format("2006-01-02"))
@@ -166,18 +174,22 @@ func (lr *loanReport) adminReportPDF() error {
 		lr.writeTableRow(row, colWidths, colAlignment)
 	}
 
-	// var buffer bytes.Buffer
-	// if err := ur.pdf.Output(&buffer); err != nil {
-	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
-	// }
+	var buffer bytes.Buffer
+	if err := lr.pdf.Output(&buffer); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
+	}
+
+	lr.closePDF()
 	// buffer.Bytes()
 
-	return lr.pdf.OutputFileAndClose("loans_report.pdf")
+	// lr.pdf.OutputFileAndClose("loans_report.pdf")
+
+	return buffer.Bytes(), nil
 }
 
-func (lr *loanReport) loanReportPDF() error {
+func (lr *loanReport) loanReportPDF() ([]byte, error) {
 	if err := lr.addLogo(); err != nil {
-		return err
+		return nil, err
 	}
 
 	lr.writeReportMetadata(fmt.Sprintf("Loan(LN%03d) Report", lr.userData.LoanID), time.Now().Format("2006-01-02"), lr.filters.StartDate.Format("2006-01-02"), lr.filters.EndDate.Format("2006-01-02"))
@@ -241,11 +253,14 @@ func (lr *loanReport) loanReportPDF() error {
 	lr.pdf.SetFontStyle("")
     lr.pdf.SetFillColor(primaryColor[0], primaryColor[1], primaryColor[2])
 
-	// var buffer bytes.Buffer
-	// if err := ur.pdf.Output(&buffer); err != nil {
-	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
-	// }
+	var buffer bytes.Buffer
+	if err := lr.pdf.Output(&buffer); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
+	}
+	lr.closePDF()
 	// buffer.Bytes()
 
-	return lr.pdf.OutputFileAndClose(fmt.Sprintf("LN%0d_report.pdf", lr.userData.LoanID))
+	// lr.pdf.OutputFileAndClose(fmt.Sprintf("LN%0d_report.pdf", lr.userData.LoanID))
+
+	return buffer.Bytes(), nil
 }

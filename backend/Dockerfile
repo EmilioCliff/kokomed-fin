@@ -14,6 +14,7 @@ FROM alpine:3.19
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrate ./migrate
 COPY --from=builder /app/internal/mysql/migrations /app/migrations
+COPY --from=builder /app/afya_credit.png .
 
 EXPOSE 3030
 

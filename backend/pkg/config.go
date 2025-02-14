@@ -27,6 +27,10 @@ type Config struct {
 	EMAIL_SENDER_ADDRESS	string	`mapstructure:"EMAIL_SENDER_ADDRESS"`
 	REDIS_ADDRESS	string	`mapstructure:"REDIS_ADDRESS"`
 	REDIS_PASSWORD	string	`mapstructure:"REDIS_PASSWORD"`
+	MPESA_CONSUMER_KEY string `mapstructure:"MPESA_CONSUMER_KEY"`
+	MPESA_CONSUMER_SECRET string `mapstructure:"MPESA_CONSUMER_SECRET"`
+	MPESA_SHORT_CODE string `mapstructure:"MPESA_SHORT_CODE"`
+	MPESA_PASSKEY string `mapstructure:"MPESA_PASSKEY"`
 }
 
 // Loads app configuration from .env file.

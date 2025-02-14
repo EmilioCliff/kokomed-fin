@@ -439,14 +439,12 @@ SELECT
                     'paid_amount', l.paid_amount,
                     'disbursed_on', l.disbursed_on,
                     'transaction_fee', l.fee_paid,
-                    'created_by', created_by_user.full_name,
                     'approved_by', approved_by_user.full_name
                 )
             ), '[]'
         )
         FROM loans l
         JOIN products p ON l.product_id = p.id
-        LEFT JOIN users created_by_user ON l.created_by = created_by_user.id
         LEFT JOIN users approved_by_user ON l.approved_by = approved_by_user.id
         WHERE l.client_id = c.id
         AND l.created_at BETWEEN ? AND ?
@@ -459,7 +457,7 @@ SELECT
                     'transaction_source', np.transaction_source,
                     'account_number', np.account_number,
                     'paying_name', np.paying_name,
-                    'assigned_by', assigned_by_user.full_name,
+                    'assigned_by', np.assigned_by,
                     'amount_paid', np.amount,
                     'paid_date', np.paid_date
                 )
@@ -505,8 +503,6 @@ func (q *Queries) GetClientClientsReportData(ctx context.Context, arg GetClientC
 		arg.StartDate,
 		arg.StartDate,
 		arg.StartDate,
-		arg.StartDate,
-		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
 		arg.EndDate,
@@ -991,15 +987,15 @@ SELECT
     END) AS loans_approved,
 
     COALESCE((
-        SELECT SUM(DISTINCT p.repay_amount) 
+        SELECT SUM(p.repay_amount) 
         FROM loans l
         JOIN products p ON l.product_id = p.id
-        WHERE l.loan_officer = u.id
+        WHERE l.loan_officer = u.id AND l.status != 'INACTIVE'
         AND l.created_at BETWEEN ? AND ?
     ), 0) AS total_loan_amount_managed,
 
     COALESCE((
-        SELECT SUM(DISTINCT l.paid_amount) 
+        SELECT SUM(l.paid_amount) 
         FROM loans l
         WHERE l.loan_officer = u.id AND l.paid_amount > 0 
         AND l.created_at BETWEEN ? AND ?

@@ -6,11 +6,11 @@ import (
 )
 
 type ReportService interface {
-	GenerateLoansReport(ctx context.Context, format string, filters ReportFilters) (error)
+	GenerateLoansReport(ctx context.Context, format string, filters ReportFilters) ([]byte,error)
 	GeneratePaymentsReport(ctx context.Context, format string, filters ReportFilters) ([]byte, error)
 	GenerateBranchesReport(ctx context.Context, format string, filters ReportFilters) ([]byte, error)
-	GenerateUsersReport(ctx context.Context, format string, filters ReportFilters) (error)
-	GenerateClientsReport(ctx context.Context, format string, filters ReportFilters) (error)
+	GenerateUsersReport(ctx context.Context, format string, filters ReportFilters) ([]byte,error)
+	GenerateClientsReport(ctx context.Context, format string, filters ReportFilters) ([]byte,error)
 	GenerateProductsReport(ctx context.Context, format string, filters ReportFilters) ([]byte, error)
 }
 

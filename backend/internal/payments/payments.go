@@ -37,6 +37,7 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 		Amount:            callbackData.Amount,
 		AssignedTo:        callbackData.AssignedTo,
 		PaidDate:          time.Now(),
+		AssignedBy: callbackData.AssignedBy,
 	}
 
 	loanID := uint32(0)
@@ -80,6 +81,13 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 				nonPostedParams.AssignTo = sql.NullInt32{
 					Valid: true,
 					Int32: int32(*params.AssignedTo),
+				}
+			}
+
+			if params.AssignedBy != nil {
+				nonPostedParams.AssignedBy = sql.NullString{
+					Valid: true,
+					String: *params.AssignedBy,
 				}
 			}
 

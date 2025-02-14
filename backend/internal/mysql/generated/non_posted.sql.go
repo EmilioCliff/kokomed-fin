@@ -75,8 +75,9 @@ func (q *Queries) CountNonPostedByCategory(ctx context.Context, arg CountNonPost
 }
 
 const createNonPosted = `-- name: CreateNonPosted :execresult
-INSERT INTO non_posted (transaction_source, transaction_number, account_number, phone_number, paying_name, amount, paid_date, assign_to) 
+INSERT INTO non_posted (transaction_source, transaction_number, account_number, phone_number, paying_name, amount, paid_date, assign_to, assigned_by) 
 VALUES (
+    ?,
     ?,
     ?,
     ?,
@@ -97,6 +98,7 @@ type CreateNonPostedParams struct {
 	Amount            float64                    `json:"amount"`
 	PaidDate          time.Time                  `json:"paid_date"`
 	AssignTo          sql.NullInt32              `json:"assign_to"`
+	AssignedBy        sql.NullString             `json:"assigned_by"`
 }
 
 func (q *Queries) CreateNonPosted(ctx context.Context, arg CreateNonPostedParams) (sql.Result, error) {
@@ -109,6 +111,7 @@ func (q *Queries) CreateNonPosted(ctx context.Context, arg CreateNonPostedParams
 		arg.Amount,
 		arg.PaidDate,
 		arg.AssignTo,
+		arg.AssignedBy,
 	)
 }
 

@@ -66,6 +66,11 @@ func (br *branchReport) generateExcel(sheetName string) ([]byte, error) {
 	if err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate Excel report")
 	}
+
+	if err := br.closeExcel(); err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to close excel file: %v", err)
+	}
+
 	// buffer.Bytes(),
 
 	// if err := br.file.SaveAs("branches_report.xlsx"); err != nil {
@@ -128,6 +133,8 @@ func (br *branchReport) generatePDF() ([]byte, error) {
 	if err := br.pdf.Output(&buffer); err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
 	}
+
+	br.closePDF()
 	// buffer.Bytes()
 	// br.pdf.OutputFileAndClose("branches_report.pdf")
 

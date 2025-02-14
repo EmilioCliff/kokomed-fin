@@ -112,6 +112,7 @@ func (s *Server) setUpRoutes() {
 
 	// payments routes
 	v1.POST("/payment/callback", s.paymentCallback)
+	v1.POST("/payment/validation", s.validationCallback)
 	authRoute.PATCH("/payment/:id/assign", s.paymentByAdmin)
 
 	// payment of from credit to repay some loan(overpayment to pay loan)
@@ -121,6 +122,7 @@ func (s *Server) setUpRoutes() {
 	authRoute.GET("/helper/dashboard", s.getDashboardData)
 	authRoute.GET("/helper/formData", s.getLoanFormData)
 	authRoute.GET("/helper/loanEvents", s.getLoanEvents)
+	authRoute.GET("/mpesa/token", s.getMPESAAccesToken)
 	// cachedRoutes.GET("/helper/loanEvents", s.getLoanEvents)
 
 	// reports routes

@@ -134,6 +134,8 @@ func (pr *productReport) generatePDF() ([]byte, error) {
 	if err := pr.pdf.Output(&buffer); err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate PDF report")
 	}
+
+	pr.closePDF()
 	// buffer.Bytes()
 	// pr.pdf.OutputFileAndClose("products_report.pdf")
 
