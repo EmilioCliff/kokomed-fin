@@ -62,8 +62,8 @@ export default function VirtualizeddSelect({
 							className={cn(
 								'px-4 py-2 cursor-pointer hover:bg-gray-100',
 								index % 2
-									? 'bg-[hsl(240,5.9%,10%)] dark:bg-[hsl(240,3.7%,15.9%)]'
-									: 'bg-[hsl(0,0%,3.9%)] dark:bg-[hsl(0,0%,6%)]',
+									? 'bg-gray-50 dark:bg-[hsl(240,3.7%,15.9%)]'
+									: 'bg-white dark:bg-[hsl(0,0%,6%)]',
 							)}
 							onClick={() => {
 								setSelectedOption(filteredOptions[index].name);
