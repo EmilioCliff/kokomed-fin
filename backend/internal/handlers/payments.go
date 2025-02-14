@@ -24,15 +24,6 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 
 	req, _ := rq.(map[string]interface{})
 
-	// amount := req["TransAmount"].(float64)
-
-	// amount, err := strconv.ParseFloat(string(mm), 64)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-	// 	return
-	// }
-
 	amountFlt, err := strconv.ParseFloat(req["TransAmount"].(string), 64)
 	if err != nil {
 		log.Println(err)
@@ -52,7 +43,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 		Amount:        amountFlt,
 	}
 
-	if req["App"] != "" {
+	if app, ok := req["App"].(string); ok && app != "" {
 		callbackData.TransactionSource = "INTERNAL"
 		// payload, ok := ctx.Get(authorizationPayloadKey)
 		// if !ok {
