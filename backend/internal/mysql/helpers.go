@@ -153,7 +153,7 @@ func (r *HelperRepository) GetClientData(ctx context.Context) ([]repository.Clie
 	for idx, client := range clients {
 		rsp[idx] = repository.ClientData{
 			ID: client.ID,
-			Name: client.FullName,
+			Name: fmt.Sprintf("%s - %s", client.FullName, client.PhoneNumber),
 		}
 	}
 

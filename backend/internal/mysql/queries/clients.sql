@@ -65,7 +65,7 @@ SELECT * FROM clients WHERE branch_id = ? LIMIT ? OFFSET ?;
 SELECT * FROM clients WHERE active = ? LIMIT ? OFFSET ?;
 
 -- name: HelperClient :many
-SELECT id, full_name FROM clients;
+SELECT id, full_name, phone_number FROM clients;
 
 -- name: ListClientsByCategory :many
 SELECT 

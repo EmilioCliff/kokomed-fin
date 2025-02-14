@@ -11,7 +11,7 @@ func GenerateAccessToken(consumerKey string, consumerSecret string) (string, err
 	authString := consumerKey + ":" + consumerSecret
 	encodedAuthString := base64.StdEncoding.EncodeToString([]byte(authString))
 
-	url := "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+	url := "https://api.safaricom.co.ke/oauth/v2/generate?grant_type=client_credentials"
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

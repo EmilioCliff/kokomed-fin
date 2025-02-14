@@ -54,7 +54,7 @@ function BranchesPage() {
 							Add New Branch
 						</Button>
 					</DialogTrigger>
-					<DialogContent className="max-w-screen-lg ">
+					<DialogContent className="max-w-screen-lg max-h-screen overflow-y-auto">
 						<DialogHeader>
 							<DialogTitle>Add New Branch</DialogTitle>
 							<DialogDescription>

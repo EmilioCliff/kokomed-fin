@@ -146,12 +146,13 @@ func (q *Queries) GetClientOverpayment(ctx context.Context, id uint32) (float64,
 }
 
 const helperClient = `-- name: HelperClient :many
-SELECT id, full_name FROM clients
+SELECT id, full_name, phone_number FROM clients
 `
 
 type HelperClientRow struct {
-	ID       uint32 `json:"id"`
-	FullName string `json:"full_name"`
+	ID          uint32 `json:"id"`
+	FullName    string `json:"full_name"`
+	PhoneNumber string `json:"phone_number"`
 }
 
 func (q *Queries) HelperClient(ctx context.Context) ([]HelperClientRow, error) {
@@ -163,7 +164,7 @@ func (q *Queries) HelperClient(ctx context.Context) ([]HelperClientRow, error) {
 	items := []HelperClientRow{}
 	for rows.Next() {
 		var i HelperClientRow
-		if err := rows.Scan(&i.ID, &i.FullName); err != nil {
+		if err := rows.Scan(&i.ID, &i.FullName, &i.PhoneNumber); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
