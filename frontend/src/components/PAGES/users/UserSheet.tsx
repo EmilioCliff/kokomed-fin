@@ -72,7 +72,7 @@ function UserSheet() {
 			<Input
 				readOnly
 				placeholder={`LN${String(value).padStart(3, '0')}`}
-				className="bg-gray-100 text-gray-500"
+				className="readonly-input"
 			/>
 		),
 		role: (value) => {
@@ -106,7 +106,7 @@ function UserSheet() {
 				<Input
 					readOnly
 					placeholder={value.toString()}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -122,7 +122,7 @@ function UserSheet() {
 				<Input
 					readOnly
 					placeholder={value.toString()}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -131,7 +131,7 @@ function UserSheet() {
 				<Input
 					readOnly
 					placeholder={format(value, 'PPP')}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -187,7 +187,7 @@ function UserSheet() {
 										<Input
 											readOnly
 											placeholder={value.toString()}
-											className="bg-gray-100 text-gray-500"
+											className="readonly-input"
 										/>
 									) : (
 										JSON.stringify(value)

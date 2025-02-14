@@ -17,7 +17,7 @@ function ProductSheet() {
 			<Input
 				readOnly
 				placeholder={`P${String(value).padStart(3, '0')}`}
-				className="bg-gray-100 text-gray-500"
+				className="readonly-input"
 			/>
 		),
 	};
@@ -67,7 +67,7 @@ function ProductSheet() {
 										<Input
 											readOnly
 											placeholder={value.toString()}
-											className="bg-gray-100 text-gray-500"
+											className="readonly-input"
 										/>
 									) : (
 										JSON.stringify(value)

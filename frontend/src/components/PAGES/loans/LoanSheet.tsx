@@ -82,7 +82,7 @@ function LoanSheet() {
 			<Input
 				readOnly
 				placeholder={`LN${String(value).padStart(3, '0')}`}
-				className="bg-gray-100 text-gray-500"
+				className="readonly-input"
 			/>
 		),
 		product: (value) => <ProductCardDisplay product={value} />,
@@ -96,7 +96,7 @@ function LoanSheet() {
 					<Input
 						readOnly
 						placeholder="-"
-						className="bg-gray-100 text-gray-500"
+						className="readonly-input"
 					/>
 				);
 			}
@@ -185,7 +185,7 @@ function LoanSheet() {
 				<Input
 					readOnly
 					placeholder={value.toString()}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -206,11 +206,7 @@ function LoanSheet() {
 					</SelectContent>
 				</Select>
 			) : (
-				<Input
-					readOnly
-					placeholder="YES"
-					className="bg-gray-100 text-gray-500"
-				/>
+				<Input readOnly placeholder="YES" className="readonly-input" />
 			);
 		},
 		dueDate: (value) => {
@@ -222,7 +218,7 @@ function LoanSheet() {
 				<Input
 					readOnly
 					placeholder={value === '-' ? value : format(value, 'PPP')}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -235,7 +231,7 @@ function LoanSheet() {
 				<Input
 					readOnly
 					placeholder={value === '-' ? value : format(value, 'PPP')}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -244,7 +240,7 @@ function LoanSheet() {
 				<Input
 					readOnly
 					placeholder={format(value, 'PPP')}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -302,7 +298,7 @@ function LoanSheet() {
 										<Input
 											readOnly
 											placeholder={value.toString()}
-											className="bg-gray-100 text-gray-500"
+											className="readonly-input"
 										/>
 									) : (
 										JSON.stringify(value)

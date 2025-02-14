@@ -16,7 +16,7 @@ function BranchSheet() {
 			<Input
 				readOnly
 				placeholder={`B${String(value).padStart(3, '0')}`}
-				className="bg-gray-100 text-gray-500"
+				className="readonly-input"
 			/>
 		),
 	};
@@ -65,7 +65,7 @@ function BranchSheet() {
 										<Input
 											readOnly
 											placeholder={value.toString()}
-											className="bg-gray-100 text-gray-500"
+											className="readonly-input"
 										/>
 									) : (
 										JSON.stringify(value)

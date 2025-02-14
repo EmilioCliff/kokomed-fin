@@ -62,7 +62,7 @@ function PaymentSheet() {
 			<Input
 				readOnly
 				placeholder={`P${String(value).padStart(3, '0')}`}
-				className="bg-gray-100 text-gray-500"
+				className="readonly-input"
 			/>
 		),
 		assignedTo: (value) => {
@@ -76,11 +76,7 @@ function PaymentSheet() {
 					onChange={(id) => setClientId(id)}
 				/>
 			) : (
-				<Input
-					readOnly
-					placeholder="N/A"
-					className="bg-gray-100 text-gray-500"
-				/>
+				<Input readOnly placeholder="N/A" className="readonly-input" />
 			);
 		},
 		amount: (value) => {
@@ -88,7 +84,7 @@ function PaymentSheet() {
 				<Input
 					readOnly
 					placeholder={value.toLocaleString()}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -97,7 +93,7 @@ function PaymentSheet() {
 				<Input
 					readOnly
 					placeholder={value ? 'YES' : 'NO'}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -106,7 +102,7 @@ function PaymentSheet() {
 				<Input
 					readOnly
 					placeholder={format(value, 'PPP')}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -158,7 +154,7 @@ function PaymentSheet() {
 										<Input
 											readOnly
 											placeholder={value.toString()}
-											className="bg-gray-100 text-gray-500"
+											className="readonly-input"
 										/>
 									) : (
 										JSON.stringify(value)

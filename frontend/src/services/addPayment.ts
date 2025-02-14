@@ -5,7 +5,14 @@ import { commonresponse } from '@/lib/types';
 const addPayment = async (data: PaymentFormType) => {
 	try {
 		const response = await api
-			.post<commonresponse>('/payment/callback', data)
+			.post<commonresponse>('/payment/callback', {
+				TransAmount: String(data.TransAmount),
+				TransID: data.TransID,
+				BillRefNumber: data.BillRefNumber,
+				MSISDN: data.MSISDN,
+				FirstName: data.FirstName,
+				App: data.App,
+			})
 			.then((resp) => resp.data);
 
 		if (response.message) {

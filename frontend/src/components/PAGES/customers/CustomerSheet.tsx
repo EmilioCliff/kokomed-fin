@@ -84,7 +84,7 @@ function CustomerSheet() {
 			<Input
 				readOnly
 				placeholder={`CM${String(value).padStart(3, '0')}`}
-				className="bg-gray-100 text-gray-500"
+				className="readonly-input"
 			/>
 		),
 		idNumber: (value) => {
@@ -92,7 +92,7 @@ function CustomerSheet() {
 				<Input
 					readOnly
 					placeholder={value}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			) : (
 				<Input
@@ -101,7 +101,7 @@ function CustomerSheet() {
 					value={idNumber!}
 					placeholder="Enter ID Number"
 					onChange={(e) => setIdNumber(e.target.value)}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -164,7 +164,7 @@ function CustomerSheet() {
 				<Input
 					readOnly
 					placeholder={value.toString()}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -200,7 +200,7 @@ function CustomerSheet() {
 				<Input
 					readOnly
 					placeholder={format(value, 'PPP')}
-					className="bg-gray-100 text-gray-500"
+					className="readonly-input"
 				/>
 			);
 		},
@@ -255,7 +255,7 @@ function CustomerSheet() {
 										<Input
 											readOnly
 											placeholder={value.toString()}
-											className="bg-gray-100 text-gray-500"
+											className="readonly-input"
 										/>
 									) : (
 										JSON.stringify(value)
