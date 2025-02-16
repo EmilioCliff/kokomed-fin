@@ -136,7 +136,6 @@ export function ReportForm({ report, onClose }: ReportFormProps) {
 									handleDateChange('startDate', date)
 								}
 								disabled={(date) =>
-									date > new Date() ||
 									date < new Date('1900-01-01')
 								}
 								initialFocus
@@ -174,7 +173,6 @@ export function ReportForm({ report, onClose }: ReportFormProps) {
 									handleDateChange('endDate', date)
 								}
 								disabled={(date) =>
-									date > new Date() ||
 									date < new Date('1900-01-01')
 								}
 								initialFocus
