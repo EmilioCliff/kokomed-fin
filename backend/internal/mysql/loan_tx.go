@@ -89,21 +89,21 @@ func (r *LoanRepository) CreateLoan(ctx context.Context, loan *repository.Loan) 
 	return *loan, nil
 }
 
-func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *repository.DisburseLoan) error {
+func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *repository.DisburseLoan) (uint32, error) {
 	loan, err := r.GetLoanByID(ctx, disburseLoan.ID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	hasActiveLoan, err := r.queries.CheckActiveLoanForClient(ctx, loan.ClientID)
 	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to check if client has an active loan: %s", err.Error())
+		return 0, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to check if client has an active loan: %s", err.Error())
 	}
 
 	if disburseLoan.DisbursedOn != nil {
 		log.Println("Checking if has active loan")
 		if hasActiveLoan {
-			return pkg.Errorf(pkg.ALREADY_EXISTS_ERROR, "client already has an active loan")
+			return 0, pkg.Errorf(pkg.ALREADY_EXISTS_ERROR, "client already has an active loan")
 		}
 	}
 
@@ -162,10 +162,10 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 		return nil
 	})
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return loan.ClientID, nil
 }
 
 func helperCreateInstallation(ctx context.Context, q *generated.Queries, loanID, productID, totalInstallment, intallmentPeriod uint32) error {

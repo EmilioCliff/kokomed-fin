@@ -209,7 +209,6 @@ func (s *Server) structureProduct(p *repository.Product, ctx *gin.Context) (prod
 
 	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
 	if exists {
-		log.Println("Cached Hit: ", cacheKey)
 		return dataCached, nil
 	}
 

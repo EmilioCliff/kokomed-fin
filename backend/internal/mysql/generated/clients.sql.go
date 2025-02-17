@@ -327,7 +327,7 @@ SELECT
     c.branch_id, c.assigned_staff, c.overpayment, c.updated_by, 
     c.updated_at, c.created_at, c.created_by, 
     b.name AS branch_name,
-    COALESCE(SUM(DISTINCT COALESCE(p.loan_amount, 0) - COALESCE(l.paid_amount, 0)), 0) AS dueAmount
+    COALESCE(SUM(DISTINCT COALESCE(p.repay_amount, 0) - COALESCE(l.paid_amount, 0)), 0) AS dueAmount
 FROM clients c
 JOIN branches b ON c.branch_id = b.id
 LEFT JOIN loans l ON c.id = l.client_id AND l.status = 'ACTIVE'

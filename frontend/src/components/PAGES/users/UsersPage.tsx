@@ -53,31 +53,36 @@ function UsersPage() {
 		<div className="px-4">
 			<div className="flex justify-between items-center mb-4">
 				<h1 className="text-3xl font-bold">Users</h1>
-				<Dialog
-					open={formOpen}
-					onOpenChange={() => {
-						if (!formOpen && decoded?.role !== role.ADMIN) {
-							toast.error('only admins can add users');
-							return;
-						}
-						setFormOpen(!formOpen);
-					}}
-				>
-					<DialogTrigger asChild>
-						<Button className="text-xs py-1 font-bold" size="sm">
-							Add New User
-						</Button>
-					</DialogTrigger>
-					<DialogContent className="max-w-screen-lg max-h-[90vh] overflow-y-auto">
-						<DialogHeader>
-							<DialogTitle>Add New User</DialogTitle>
-							<DialogDescription>
-								Enter the details for the new user.
-							</DialogDescription>
-						</DialogHeader>
-						<UserForm onFormOpen={setFormOpen} />
-					</DialogContent>
-				</Dialog>
+				{decoded?.role === role.ADMIN && (
+					<Dialog
+						open={formOpen}
+						onOpenChange={() => {
+							if (!formOpen && decoded?.role !== role.ADMIN) {
+								toast.error('only admins can add users');
+								return;
+							}
+							setFormOpen(!formOpen);
+						}}
+					>
+						<DialogTrigger asChild>
+							<Button
+								className="text-xs py-1 font-bold"
+								size="sm"
+							>
+								Add New User
+							</Button>
+						</DialogTrigger>
+						<DialogContent className="max-w-screen-lg max-h-[90vh] overflow-y-auto">
+							<DialogHeader>
+								<DialogTitle>Add New User</DialogTitle>
+								<DialogDescription>
+									Enter the details for the new user.
+								</DialogDescription>
+							</DialogHeader>
+							<UserForm onFormOpen={setFormOpen} />
+						</DialogContent>
+					</Dialog>
+				)}
 			</div>
 			<DataTable
 				data={data?.data || []}

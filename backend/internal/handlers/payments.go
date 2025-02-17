@@ -77,6 +77,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 	// if account number is wrong(non-existing) continue
 	if clientID != 0 {
 		callbackData.AssignedTo = pkg.Uint32Ptr(clientID)
+		s.cache.Del(ctx, fmt.Sprintf("client:%v", clientID))
 	}
 
 	loanId, err := s.payments.ProcessCallback(ctx, &callbackData); 
@@ -88,6 +89,9 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 
 	s.cache.Del(ctx, fmt.Sprintf("loan:%d", loanId))
 	s.cache.DelAll(ctx, "non-posted/all:limit=*")
+
+	s.cache.DelAll(ctx, "loan:limit=*")
+	s.cache.DelAll(ctx, "client:limit=*")
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"ResultCode": 0,
@@ -140,8 +144,13 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 	}
 
 	s.cache.Del(ctx, fmt.Sprintf("loan:%d", loanId))
+	s.cache.DelAll(ctx, "loan:limit=*")
+
 	s.cache.Del(ctx, fmt.Sprintf("non-posted:%d", id))
 	s.cache.DelAll(ctx, "non-posted/all:limit=*")
+
+	s.cache.Del(ctx, fmt.Sprintf("client:%v", req.ClientID))
+	s.cache.DelAll(ctx, "client:limit=*")
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

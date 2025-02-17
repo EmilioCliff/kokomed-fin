@@ -18,11 +18,14 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/table/data-table';
 import { paymentColumns } from './payment';
 import { paymentSources } from '@/data/loan';
+import { useAuth } from '@/hooks/useAuth';
+import { role } from '@/lib/types';
 
 function PaymentsPage() {
 	const [formOpen, setFormOpen] = useState(false);
 	const { pageIndex, pageSize, filter, search, updateTableContext } =
 		useTable();
+	const { decoded } = useAuth();
 
 	const debouncedInput = useDebounce({ value: search, delay: 500 });
 
@@ -49,22 +52,28 @@ function PaymentsPage() {
 		<div className="px-4">
 			<div className="flex justify-between items-center mb-4">
 				<h1 className="text-3xl font-bold">Payments</h1>
-				<Dialog open={formOpen} onOpenChange={setFormOpen}>
-					<DialogTrigger asChild>
-						<Button className="text-xs py-1 font-bold" size="sm">
-							Add New Payment
-						</Button>
-					</DialogTrigger>
-					<DialogContent className="max-w-screen-lg max-h-screen overflow-y-auto">
-						<DialogHeader>
-							<DialogTitle>Add New Payment</DialogTitle>
-							<DialogDescription>
-								Submiting this form creates a Clients Payment
-							</DialogDescription>
-						</DialogHeader>
-						<PaymentForm onFormOpen={setFormOpen} />
-					</DialogContent>
-				</Dialog>
+				{decoded?.role === role.ADMIN && (
+					<Dialog open={formOpen} onOpenChange={setFormOpen}>
+						<DialogTrigger asChild>
+							<Button
+								className="text-xs py-1 font-bold"
+								size="sm"
+							>
+								Add New Payment
+							</Button>
+						</DialogTrigger>
+						<DialogContent className="max-w-screen-lg max-h-screen overflow-y-auto">
+							<DialogHeader>
+								<DialogTitle>Add New Payment</DialogTitle>
+								<DialogDescription>
+									Submiting this form creates a Clients
+									Payment
+								</DialogDescription>
+							</DialogHeader>
+							<PaymentForm onFormOpen={setFormOpen} />
+						</DialogContent>
+					</Dialog>
+				)}
 			</div>
 			<DataTable
 				data={data?.data || []}

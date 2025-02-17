@@ -156,6 +156,9 @@ func (s *Server) createLoan(ctx *gin.Context) {
 	}
 
 	s.cache.DelAll(ctx, "loan:limit=*")
+	
+	s.cache.DelAll(ctx, "client:limit=*")
+	s.cache.Del(ctx, fmt.Sprintf("client:%v", req.ClientID))
 
 	ctx.JSON(http.StatusOK, rsp)
 }
@@ -221,7 +224,7 @@ func (s *Server) disburseLoan(ctx *gin.Context) {
 		params.FeePaid = &req.FeePaid
 	}
 
-	err = s.repo.Loans.DisburseLoan(ctx, &params)
+	clientId, err := s.repo.Loans.DisburseLoan(ctx, &params)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -230,6 +233,9 @@ func (s *Server) disburseLoan(ctx *gin.Context) {
 
 	s.cache.Del(ctx, fmt.Sprintf("loan:%d", id))
 	s.cache.DelAll(ctx, "loan:limit=*")
+	
+	s.cache.Del(ctx, fmt.Sprintf("client:%v", clientId))
+	s.cache.DelAll(ctx, "client:limit=*")
 
 	ctx.JSON(http.StatusOK, gin.H{"success": "Loan disbursed successfully"})
 }
@@ -384,7 +390,6 @@ func (s *Server) structureLoan(loan *repository.Loan, ctx *gin.Context) (loanRes
 
 	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
 	if exists {
-		log.Println("Cached Hit: ", cacheKey)
 		return dataCached, nil
 	}
 

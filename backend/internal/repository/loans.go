@@ -81,7 +81,7 @@ type LoanEvent struct {
 
 type LoansRepository interface {
 	CreateLoan(ctx context.Context, loan *Loan) (Loan, error)
-	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) error
+	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) (uint32, error)
 	TransferLoan(ctx context.Context, officerId uint32, loanId uint32, adminId uint32) error
 	GetLoanByID(ctx context.Context, id uint32) (Loan, error)
 	GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error)

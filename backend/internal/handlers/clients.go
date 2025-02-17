@@ -387,7 +387,6 @@ func (s *Server) structureClient(c *repository.Client, ctx *gin.Context) (client
 
 	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
 	if exists {
-		log.Println("Cached Hit: ", cacheKey)
 		return dataCached, nil
 	}
 
