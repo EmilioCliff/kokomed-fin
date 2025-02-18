@@ -45,3 +45,29 @@ export const loanFormSchema = z.object({
 });
 
 export type LoanFormType = z.infer<typeof loanFormSchema>;
+
+export const expectedPaymentsSchema = z.object({
+	loanId: z.number(),
+	branchName: z.string(),
+	clientName: z.string(),
+	loanOfficerName: z.string(),
+	loanAmount: z.number(),
+	repayAmount: z.number(),
+	totalUnpaid: z.number(),
+	dueDate: z.string(),
+});
+
+export type ExpectedPayment = z.infer<typeof expectedPaymentsSchema>;
+
+export const installmentSchema = z.object({
+	id: z.number(),
+	loanId: z.number(),
+	installmentNo: z.number(),
+	amount: z.number(),
+	remainingAmount: z.number(),
+	paid: z.boolean(),
+	paidAt: z.string(),
+	dueDate: z.string(),
+});
+
+export type Installment = z.infer<typeof installmentSchema>;

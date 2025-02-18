@@ -28,6 +28,7 @@ import {
 	CollapsibleContent,
 } from '../ui/collapsible';
 import { useTable } from '@/hooks/useTable';
+import { title } from 'process';
 
 function AppSidebar() {
 	const { resetTableState } = useTable();
@@ -141,6 +142,10 @@ const items = [
 			{
 				title: 'Overview',
 				url: '/loans/overview',
+			},
+			{
+				title: 'Expected Payments',
+				url: '/loans/expected-payments',
 			},
 			{
 				title: 'Loans Timeline',

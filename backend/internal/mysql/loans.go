@@ -150,6 +150,63 @@ func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Cat
 	return result, pkg.CreatePaginationMetadata(uint32(totalLoans), pgData.PageSize, pgData.CurrentPage), nil
 }
 
+func (r *LoanRepository) GetExpectedPayments(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.ExpectedPayment, pkg.PaginationMetadata, error) {
+	params := generated.ListExpectedPaymentsParams{
+		Column1: "",
+		FullName:   "", 
+		FullName_2: "", 
+		Limit:    int32(pgData.PageSize),
+		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+	}
+
+	params2 := generated.CountExpectedPaymentsParams{
+		Column1: "",
+		FullName:   "", 
+		FullName_2: "", 
+	}
+
+	if category.Search != nil {
+		searchValue := "%" + *category.Search + "%"
+		params.Column1 = "has_search"
+		params.FullName = searchValue
+		params.FullName_2 = searchValue
+
+		params2.Column1 = "has_search"
+		params2.FullName = searchValue
+		params2.FullName_2 = searchValue
+	}
+
+	expectedPayments, err := r.queries.ListExpectedPayments(ctx, params)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no unexpected payments found")
+		}
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get unexpected payments: %s", err.Error())
+	}
+
+	totalPayments, err := r.queries.CountExpectedPayments(ctx, params2)
+	if err != nil {
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total unexpected payments: %s", err.Error())
+	}
+
+	result := make([]repository.ExpectedPayment, len(expectedPayments))
+
+	for i, payment := range expectedPayments {
+		result[i] = repository.ExpectedPayment{
+			LoanId: payment.LoanID,
+			BranchName: payment.BranchName,
+			ClientName: payment.ClientName,
+			LoanOfficerName: payment.LoanOfficerName,
+			LoanAmount: payment.LoanAmount,
+			RepayAmount: payment.RepayAmount,
+			TotalUnpaid: pkg.InterfaceFloat64(payment.TotalUnpaid),
+			DueDate: payment.DueDate.Time.Format("2006-02-01"),
+		}
+	}
+
+	return result, pkg.CreatePaginationMetadata(uint32(totalPayments), pgData.PageSize, pgData.CurrentPage), nil
+}
+
 func (r *LoanRepository) DeleteLoan(ctx context.Context, id uint32) error {
 	err := r.queries.DeleteLoan(ctx, id)
 	if err != nil {
@@ -163,12 +220,8 @@ func (r *LoanRepository) DeleteLoan(ctx context.Context, id uint32) error {
 	return nil
 }
 
-func (r *LoanRepository) GetLoanInstallments(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]repository.Installment, error) {
-	installments, err := r.queries.ListInstallmentsByLoan(ctx, generated.ListInstallmentsByLoanParams{
-		LoanID: id,
-		Limit: int32(pgData.PageSize),
-		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
-	})
+func (r *LoanRepository) GetLoanInstallments(ctx context.Context, id uint32) ([]repository.Installment, error) {
+	installments, err := r.queries.ListInstallmentsByLoan(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans installments found")
@@ -491,8 +544,8 @@ func convertGeneratedInstallment(installment generated.Installment) repository.I
 		Amount:          installment.AmountDue,
 		RemainingAmount: installment.RemainingAmount,
 		Paid:            installment.Paid,
-		PaidAt:          installment.PaidAt.Time,
-		DueDate:         installment.DueDate,
+		PaidAt:          installment.PaidAt.Time.Format("2006-02-01"),
+		DueDate:         installment.DueDate.Format("2006-02-01"),
 	}
 }
 

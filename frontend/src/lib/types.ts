@@ -1,5 +1,9 @@
 import { ReactNode } from 'react';
-import { Loan } from '@/components/PAGES/loans/schema';
+import {
+	Loan,
+	ExpectedPayment,
+	Installment,
+} from '@/components/PAGES/loans/schema';
 import { User } from '@/components/PAGES/users/schema';
 import { Product } from '@/components/PAGES/products/schema';
 import { Branch } from '@/components/PAGES/branches/schema';
@@ -121,6 +125,14 @@ export interface getClientsType extends Omit<commonresponse, 'data'> {
 
 export interface getLoansType extends Omit<commonresponse, 'data'> {
 	data: Loan[];
+}
+
+export interface getExpectedPaymentsType extends Omit<commonresponse, 'data'> {
+	data: ExpectedPayment[];
+}
+
+export interface getLoanInstallmentsType extends Omit<commonresponse, 'data'> {
+	data: Installment[];
 }
 
 export interface getProductsType extends Omit<commonresponse, 'data'> {

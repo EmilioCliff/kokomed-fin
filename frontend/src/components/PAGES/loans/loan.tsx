@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Loan } from './schema';
+import { Loan, ExpectedPayment } from './schema';
 import { format } from 'date-fns';
 import DataTableColumnHeader from '@/components/table/data-table-column-header';
 import { Badge } from '@/components/ui/badge';
@@ -145,6 +145,106 @@ export const loanColumns: ColumnDef<Loan>[] = [
 			<div className="">
 				{Number(row.getValue('paidAmount')).toLocaleString()}
 			</div>
+		),
+		enableSorting: true,
+	},
+];
+
+export const expectedPaymentColumns: ColumnDef<ExpectedPayment>[] = [
+	{
+		accessorKey: 'loanId',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Loan ID" />
+		),
+		cell: ({ row }) => (
+			<div className="text-center">{`LN${String(
+				row.getValue('loanId'),
+			).padStart(3, '0')}`}</div>
+		),
+		enableSorting: true,
+		enableHiding: true,
+	},
+	{
+		id: 'branchName',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Branch Name" />
+		),
+		cell: ({ row }) => <div>{row.original.branchName}</div>,
+		enableHiding: true,
+	},
+	{
+		id: 'clientName',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Client Name" />
+		),
+		cell: ({ row }) => <div>{row.original.clientName}</div>,
+		filterFn: (row, filterValue) => {
+			const fullName = row.original.clientName.toLowerCase();
+			const loanOfficerName = row.original.loanOfficerName.toLowerCase();
+			return (
+				fullName.includes(filterValue.toLowerCase()) ||
+				loanOfficerName.includes(filterValue.toLowerCase())
+			);
+		},
+		enableSorting: true,
+	},
+	{
+		id: 'loanOfficerName',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Loan Officer" />
+		),
+		cell: ({ row }) => <div>{row.original.loanOfficerName}</div>,
+		filterFn: (row, filterValue) => {
+			const fullName = row.original.clientName.toLowerCase();
+			const loanOfficerName = row.original.loanOfficerName.toLowerCase();
+			return (
+				fullName.includes(filterValue.toLowerCase()) ||
+				loanOfficerName.includes(filterValue.toLowerCase())
+			);
+		},
+		enableSorting: true,
+	},
+	{
+		accessorKey: 'loanAmount',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Loan Amount" />
+		),
+		cell: ({ row }) => (
+			<div>{Number(row.original.loanAmount).toLocaleString()}</div>
+		),
+		enableSorting: true,
+	},
+	{
+		accessorKey: 'repayAmount',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Repay Amount" />
+		),
+		cell: ({ row }) => (
+			<div className="">
+				{Number(row.original.repayAmount).toLocaleString()}
+			</div>
+		),
+		enableSorting: true,
+	},
+	{
+		accessorKey: 'totalUnpaid',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Total Unpaid" />
+		),
+		cell: ({ row }) => (
+			<div className="">
+				{Number(row.original.totalUnpaid).toLocaleString()}
+			</div>
+		),
+		enableSorting: true,
+	},
+	{
+		accessorKey: 'dueDate',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Due Date" />
+		),
+		cell: ({ row }) => (
+			<div className="truncate">{row.getValue('dueDate')}</div>
 		),
 		enableSorting: true,
 	},

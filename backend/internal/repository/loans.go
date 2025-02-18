@@ -45,13 +45,13 @@ type UpdateLoan struct {
 
 type Installment struct {
 	ID              uint32    `json:"id"`
-	LoanID          uint32    `json:"loan_id"`
-	InstallmentNo   uint32    `json:"installment_no"`
+	LoanID          uint32    `json:"loanId"`
+	InstallmentNo   uint32    `json:"installmentNo"`
 	Amount          float64   `json:"amount"`
-	RemainingAmount float64   `json:"remaining_amount"`
+	RemainingAmount float64   `json:"remainingAmount"`
 	Paid            bool      `json:"paid"`
-	PaidAt          time.Time `json:"paid_at"`
-	DueDate         time.Time `json:"due_date"`
+	PaidAt          string `json:"paidAt"`
+	DueDate         string `json:"dueDate"`
 }
 
 type UpdateInstallment struct {
@@ -79,6 +79,17 @@ type LoanEvent struct {
 	Title string `json:"title"`
 }
 
+type ExpectedPayment struct {
+	LoanId uint32	`json:"loanId"`
+	BranchName string	`json:"branchName"`
+	ClientName string	`json:"clientName"`
+	LoanOfficerName string	`json:"loanOfficerName"`
+	LoanAmount float64	`json:"loanAmount"`
+	RepayAmount float64	`json:"repayAmount"`
+	TotalUnpaid float64	`json:"totalUnpaid"`
+	DueDate string	`json:"dueDate"`
+}
+
 type LoansRepository interface {
 	CreateLoan(ctx context.Context, loan *Loan) (Loan, error)
 	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) (uint32, error)
@@ -87,10 +98,11 @@ type LoansRepository interface {
 	GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error)
 	ListLoans(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]Loan, pkg.PaginationMetadata, error)
 	DeleteLoan(ctx context.Context, id uint32) error
+	GetExpectedPayments(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]ExpectedPayment, pkg.PaginationMetadata, error)
 
 	// use client overpayment to pay loan
 
-	GetLoanInstallments(ctx context.Context, id uint32, pgData *pkg.PaginationMetadata) ([]Installment, error)
+	GetLoanInstallments(ctx context.Context, id uint32) ([]Installment, error)
 	GetInstallment(ctx context.Context, id uint32) (Installment, error)
 	UpdateInstallment(ctx context.Context, installment *UpdateInstallment) (Installment, error)
 

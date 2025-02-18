@@ -26,6 +26,34 @@ func (q *Queries) CheckActiveLoanForClient(ctx context.Context, clientID uint32)
 	return has_active_loan, err
 }
 
+const countExpectedPayments = `-- name: CountExpectedPayments :one
+SELECT COUNT(*) AS total_unexpected
+FROM clients c
+JOIN loans l ON l.client_id = c.id AND l.status = 'ACTIVE'
+JOIN products p ON l.product_id = p.id
+JOIN users u ON l.loan_officer = u.id
+JOIN branches b ON u.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(u.full_name) LIKE ?
+    )
+`
+
+type CountExpectedPaymentsParams struct {
+	Column1    interface{} `json:"column_1"`
+	FullName   string      `json:"full_name"`
+	FullName_2 string      `json:"full_name_2"`
+}
+
+func (q *Queries) CountExpectedPayments(ctx context.Context, arg CountExpectedPaymentsParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countExpectedPayments, arg.Column1, arg.FullName, arg.FullName_2)
+	var total_unexpected int64
+	err := row.Scan(&total_unexpected)
+	return total_unexpected, err
+}
+
 const countLoans = `-- name: CountLoans :one
 SELECT COUNT(*) AS total_loans 
 FROM loans l
@@ -334,6 +362,88 @@ func (q *Queries) GetLoanPaymentData(ctx context.Context, id uint32) (GetLoanPay
 		&i.RepayAmount,
 	)
 	return i, err
+}
+
+const listExpectedPayments = `-- name: ListExpectedPayments :many
+SELECT 
+	b.name AS branch_name,
+	c.full_name AS client_name,
+	u.full_name AS loan_officer_name,
+	l.id AS loan_id, 
+	p.loan_amount,
+	p.repay_amount,
+	COALESCE(p.repay_amount - l.paid_amount, 0) AS total_unpaid, 
+	l.due_date
+FROM clients c
+JOIN loans l ON l.client_id = c.id AND l.status = 'ACTIVE'
+JOIN products p ON l.product_id = p.id
+JOIN users u ON l.loan_officer = u.id
+JOIN branches b ON u.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(u.full_name) LIKE ?
+    )
+ORDER BY l.due_date DESC
+LIMIT ? OFFSET ?
+`
+
+type ListExpectedPaymentsParams struct {
+	Column1    interface{} `json:"column_1"`
+	FullName   string      `json:"full_name"`
+	FullName_2 string      `json:"full_name_2"`
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+}
+
+type ListExpectedPaymentsRow struct {
+	BranchName      string       `json:"branch_name"`
+	ClientName      string       `json:"client_name"`
+	LoanOfficerName string       `json:"loan_officer_name"`
+	LoanID          uint32       `json:"loan_id"`
+	LoanAmount      float64      `json:"loan_amount"`
+	RepayAmount     float64      `json:"repay_amount"`
+	TotalUnpaid     interface{}  `json:"total_unpaid"`
+	DueDate         sql.NullTime `json:"due_date"`
+}
+
+func (q *Queries) ListExpectedPayments(ctx context.Context, arg ListExpectedPaymentsParams) ([]ListExpectedPaymentsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listExpectedPayments,
+		arg.Column1,
+		arg.FullName,
+		arg.FullName_2,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListExpectedPaymentsRow{}
+	for rows.Next() {
+		var i ListExpectedPaymentsRow
+		if err := rows.Scan(
+			&i.BranchName,
+			&i.ClientName,
+			&i.LoanOfficerName,
+			&i.LoanID,
+			&i.LoanAmount,
+			&i.RepayAmount,
+			&i.TotalUnpaid,
+			&i.DueDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listLoans = `-- name: ListLoans :many

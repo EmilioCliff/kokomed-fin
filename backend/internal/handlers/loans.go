@@ -294,6 +294,24 @@ func (s *Server) getLoan(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, rsp)
 }
 
+func (s *Server) getLoanInstallments(ctx *gin.Context) {
+	id, err := pkg.StringToUint32(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	installments, err := s.repo.Loans.GetLoanInstallments(ctx, id)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"data": installments})
+}
+
 func (s *Server) listLoansByCategory(ctx *gin.Context) {
 	log.Println("cache miss")
 	pageNoStr := ctx.DefaultQuery("page", "1")
@@ -373,6 +391,60 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 	}
 
 	cacheKey := constructCacheKey("loan", cacheParams)
+
+	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (s *Server) listExpectedPayments(ctx *gin.Context) {
+	log.Println("cache miss")
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	params := repository.Category{}
+	cacheParams := map[string][]string{
+		"page": {pageNoStr},
+		"limit": {pageSizeStr},
+	}
+
+	search := ctx.Query("search")
+	if search != "" {
+		params.Search = pkg.StringPtr(strings.ToLower(search))
+		cacheParams["search"] = []string{search}
+	}
+
+	expectedPayments, pgData, err := s.repo.Loans.GetExpectedPayments(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	response := gin.H{
+		"metadata": pgData,
+		"data": expectedPayments,
+	}
+
+	cacheKey := constructCacheKey("loan/expected-payments", cacheParams)
 
 	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {

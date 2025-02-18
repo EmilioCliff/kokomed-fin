@@ -8,7 +8,7 @@ VALUES (
 SELECT * FROM installments WHERE id = ? LIMIT 1;
 
 -- name: ListInstallmentsByLoan :many
-SELECT * FROM installments WHERE loan_id = ? ORDER BY due_date ASC LIMIT ? OFFSET ?;
+SELECT * FROM installments WHERE loan_id = ? ORDER BY due_date ASC;
 
 -- name: ListUnpaidInstallmentsByLoan :many
 SELECT * FROM installments WHERE loan_id = ? AND remaining_amount > 0 ORDER BY due_date ASC;

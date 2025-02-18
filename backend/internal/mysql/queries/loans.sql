@@ -67,7 +67,6 @@ WHERE
  ORDER BY l.created_at DESC
 LIMIT ? OFFSET ?;
 
-
 -- name: CountLoans :one
 SELECT COUNT(*) AS total_loans 
 FROM loans l
@@ -83,6 +82,44 @@ WHERE
     AND (
         COALESCE(?, '') = '' 
         OR FIND_IN_SET(l.status, ?) > 0
+    );
+
+-- name: ListExpectedPayments :many
+SELECT 
+	b.name AS branch_name,
+	c.full_name AS client_name,
+	u.full_name AS loan_officer_name,
+	l.id AS loan_id, 
+	p.loan_amount,
+	p.repay_amount,
+	COALESCE(p.repay_amount - l.paid_amount, 0) AS total_unpaid, 
+	l.due_date
+FROM clients c
+JOIN loans l ON l.client_id = c.id AND l.status = 'ACTIVE'
+JOIN products p ON l.product_id = p.id
+JOIN users u ON l.loan_officer = u.id
+JOIN branches b ON u.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(u.full_name) LIKE ?
+    )
+ORDER BY l.due_date DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountExpectedPayments :one
+SELECT COUNT(*) AS total_unexpected
+FROM clients c
+JOIN loans l ON l.client_id = c.id AND l.status = 'ACTIVE'
+JOIN products p ON l.product_id = p.id
+JOIN users u ON l.loan_officer = u.id
+JOIN branches b ON u.branch_id = b.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(u.full_name) LIKE ?
     );
 
 -- name: DeleteLoan :exec

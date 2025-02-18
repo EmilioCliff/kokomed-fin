@@ -57,17 +57,11 @@ func (q *Queries) GetInstallment(ctx context.Context, id uint32) (Installment, e
 }
 
 const listInstallmentsByLoan = `-- name: ListInstallmentsByLoan :many
-SELECT id, loan_id, installment_number, amount_due, remaining_amount, paid, paid_at, due_date FROM installments WHERE loan_id = ? ORDER BY due_date ASC LIMIT ? OFFSET ?
+SELECT id, loan_id, installment_number, amount_due, remaining_amount, paid, paid_at, due_date FROM installments WHERE loan_id = ? ORDER BY due_date ASC
 `
 
-type ListInstallmentsByLoanParams struct {
-	LoanID uint32 `json:"loan_id"`
-	Limit  int32  `json:"limit"`
-	Offset int32  `json:"offset"`
-}
-
-func (q *Queries) ListInstallmentsByLoan(ctx context.Context, arg ListInstallmentsByLoanParams) ([]Installment, error) {
-	rows, err := q.db.QueryContext(ctx, listInstallmentsByLoan, arg.LoanID, arg.Limit, arg.Offset)
+func (q *Queries) ListInstallmentsByLoan(ctx context.Context, loanID uint32) ([]Installment, error) {
+	rows, err := q.db.QueryContext(ctx, listInstallmentsByLoan, loanID)
 	if err != nil {
 		return nil, err
 	}
