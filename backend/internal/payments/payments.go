@@ -40,6 +40,10 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 		PaidDate:          time.Now(),
 	}
 
+	if callbackData.PaidDate != nil {
+		params.PaidDate = *callbackData.PaidDate
+	}
+
 	loanID := uint32(0)
 	// if the payment is assigned to a client create a non posted and update the loan in tx
 	if params.AssignedTo != nil {

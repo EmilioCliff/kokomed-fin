@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TableSkeleton from '@/components/UI/TableSkeleton';
 import { roles } from '@/data/loan';
 import {
@@ -37,9 +37,11 @@ function UsersPage() {
 		placeholderData: keepPreviousData,
 	});
 
-	if (data?.metadata) {
-		updateTableContext(data.metadata);
-	}
+	useEffect(() => {
+		if (data?.metadata) {
+			updateTableContext(data.metadata);
+		}
+	}, [data]);
 
 	if (isLoading) {
 		return <TableSkeleton />;

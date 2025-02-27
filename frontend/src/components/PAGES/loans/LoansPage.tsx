@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import LoanForm from '@/components/PAGES/loans/LoanForm';
 import { loanColumns } from '@/components/PAGES/loans/loan';
 import { DataTable } from '@/components/table/data-table';
@@ -36,9 +36,11 @@ export default function LoanPage() {
 		placeholderData: keepPreviousData,
 	});
 
-	if (data?.metadata) {
-		updateTableContext(data.metadata);
-	}
+	useEffect(() => {
+		if (data?.metadata) {
+			updateTableContext(data.metadata);
+		}
+	}, [data]);
 
 	if (isLoading) {
 		return <TableSkeleton />;

@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import TableSkeleton from '@/components/UI/TableSkeleton';
 import { TableContext } from '@/context/TableContext';
 import {
@@ -32,9 +32,11 @@ function BranchesPage() {
 		placeholderData: keepPreviousData,
 	});
 
-	if (data?.metadata) {
-		updateTableContext(data.metadata);
-	}
+	useEffect(() => {
+		if (data?.metadata) {
+			updateTableContext(data.metadata);
+		}
+	}, [data]);
 
 	if (isLoading) {
 		return <TableSkeleton />;

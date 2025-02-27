@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
@@ -46,23 +47,24 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 
 	if app, ok := req["App"].(string); ok && app != "" {
 		callbackData.TransactionSource = "INTERNAL"
-		// payload, ok := ctx.Get(authorizationPayloadKey)
-		// if !ok {
-		// 	ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+		
+		if email, ok := req["Email"].(string); ok && email != "" {
+			callbackData.AssignedBy = email
+		}
 
-		// 	return
-		// }
-
-		// payloadData, ok := payload.(*pkg.Payload)
-		// if !ok {
-		// 	ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
-
-		// 	return
-		// }
-
-		callbackData.AssignedBy = "emiliocliff@gmail.com"
 	} else {
 		callbackData.TransactionSource = "MPESA"
+	}
+
+	if paidDate, ok := req["DatePaid"].(string); ok && paidDate != "" {
+		paidDateT, err := time.Parse("2006-01-02", paidDate)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid disburse_on date format")))
+
+			return
+		}
+
+		callbackData.PaidDate = pkg.TimePtr(paidDateT)
 	}
 
 	clientID, err := s.repo.Clients.GetClientIDByPhoneNumber(ctx, callbackData.AccountNumber)

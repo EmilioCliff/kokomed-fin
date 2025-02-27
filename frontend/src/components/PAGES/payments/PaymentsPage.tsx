@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTable } from '@/hooks/useTable';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
@@ -36,9 +36,11 @@ function PaymentsPage() {
 		placeholderData: keepPreviousData,
 	});
 
-	if (data?.metadata) {
-		updateTableContext(data.metadata);
-	}
+	useEffect(() => {
+		if (data?.metadata) {
+			updateTableContext(data.metadata);
+		}
+	}, [data]);
 
 	if (isLoading) {
 		return <TableSkeleton />;

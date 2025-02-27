@@ -6,6 +6,7 @@ import { DataTable } from '@/components/table/data-table';
 import LoanExpectedPaymentSheet from './LoanExpectedPaymentSheet';
 import getExpectedPayments from '@/services/getExpectedPayments';
 import { expectedPaymentColumns } from './loan';
+import { useEffect } from 'react';
 
 function LoanExpectedPayments() {
 	const { pageIndex, pageSize, search, updateTableContext } = useTable();
@@ -24,9 +25,11 @@ function LoanExpectedPayments() {
 		placeholderData: keepPreviousData,
 	});
 
-	if (data?.metadata) {
-		updateTableContext(data.metadata);
-	}
+	useEffect(() => {
+		if (data?.metadata) {
+			updateTableContext(data.metadata);
+		}
+	}, [data]);
 
 	if (isLoading) {
 		return <TableSkeleton />;

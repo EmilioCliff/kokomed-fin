@@ -28,7 +28,9 @@ export const paymentFormSchema = z.object({
 	FirstName: z
 		.string()
 		.min(3, { message: 'Must be 3 or more characters long' }),
+	DatePaid: z.string(),
 	App: z.string(),
+	Email: z.string().email(),
 });
 
 export type PaymentFormType = z.infer<typeof paymentFormSchema>;

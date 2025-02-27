@@ -11,16 +11,29 @@ import {
 	FormField,
 	FormItem,
 	FormLabel,
+	FormDescription,
 	FormMessage,
 } from '@/components/ui/form';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { useAuth } from '@/hooks/useAuth';
 
 interface LoanFormProps {
 	onFormOpen: (isOpen: boolean) => void;
 }
 
 function PaymentForm({ onFormOpen }: LoanFormProps) {
+	const { decoded } = useAuth();
+
 	const form = useForm<PaymentFormType>({
 		resolver: zodResolver(paymentFormSchema),
 		defaultValues: {
@@ -29,7 +42,9 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 			BillRefNumber: '',
 			MSISDN: '',
 			FirstName: '',
+			DatePaid: '',
 			App: 'INTERNAL',
+			Email: decoded?.email,
 		},
 	});
 	const queryClient = useQueryClient();
@@ -138,6 +153,70 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 									<FormControl>
 										<Input placeholder="John" {...field} />
 									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="DatePaid"
+							render={({ field }) => (
+								<FormItem className="flex flex-col mt-3">
+									<FormLabel>Paid On</FormLabel>
+									<Popover>
+										<PopoverTrigger asChild>
+											<FormControl>
+												<Button
+													variant={'outline'}
+													className={cn(
+														'w-[240px] pl-3 text-left font-normal',
+														!field.value &&
+															'text-muted-foreground',
+													)}
+												>
+													{field.value ? (
+														format(
+															field.value,
+															'PPP',
+														)
+													) : (
+														<span>Pick a date</span>
+													)}
+													<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+												</Button>
+											</FormControl>
+										</PopoverTrigger>
+										<PopoverContent
+											className="w-auto p-0"
+											align="start"
+										>
+											<Calendar
+												mode="single"
+												selected={
+													field.value
+														? new Date(field.value)
+														: undefined
+												}
+												onSelect={(date) =>
+													field.onChange(
+														format(
+															date!,
+															'yyyy-MM-dd',
+														),
+													)
+												}
+												disabled={(date) =>
+													date > new Date() ||
+													date <
+														new Date('1900-01-01')
+												}
+												initialFocus
+											/>
+										</PopoverContent>
+									</Popover>
+									<FormDescription>
+										Defaults to today
+									</FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}

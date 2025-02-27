@@ -1,14 +1,13 @@
 import {
-	Calendar,
 	ChevronDown,
 	Pencil,
 	User,
 	Settings,
 	LogOut,
-	Globe,
-	HelpCircle,
 	Menu,
 	ChevronLeft,
+	EyeOff,
+	Eye,
 } from 'lucide-react';
 import { Link } from 'react-router';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -20,16 +19,44 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useState, useEffect } from 'react';
 import ThemeToggle from './ThemeToogle';
+import updateUserCredentials from '@/services/updateUserCredentials';
+import { toast } from 'react-toastify';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 
 function Navbar() {
+	const [formOpen, setFormOpen] = useState(false);
 	const { toggleSidebar, open } = useSidebar();
-	const { logout, decoded } = useAuth();
+	const [newPassword, setNewPassword] = useState<string>('');
+	const [showPassword, setShowPassword] = useState(false);
+	const { logout, accessToken, decoded } = useAuth();
 	const [darkMode, setDarkMode] = useState(() => {
 		return localStorage.getItem('theme') === 'dark';
 	});
+
+	const onSubmit = async (event: any) => {
+		event.preventDefault();
+		const response = await updateUserCredentials(newPassword, accessToken!);
+		if (response.status === 'OK') {
+			toast.success('Password Changed Successfully');
+		} else {
+			toast.error('Failed updating password');
+		}
+
+		setFormOpen(false);
+		setNewPassword('');
+	};
 
 	useEffect(() => {
 		if (darkMode) {
@@ -107,6 +134,11 @@ function Navbar() {
 								<DropdownMenuItem>
 									<Pencil /> Edit Profile
 								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={() => setFormOpen(true)}
+								>
+									<EyeOff /> Change Password
+								</DropdownMenuItem>
 								<DropdownMenuItem>
 									<User /> View Profile
 								</DropdownMenuItem>
@@ -121,6 +153,57 @@ function Navbar() {
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</div>
+					<Dialog open={formOpen} onOpenChange={setFormOpen}>
+						<DialogContent
+							aria-describedby={undefined}
+							className=""
+						>
+							<DialogHeader>
+								<DialogTitle>Change Password</DialogTitle>
+							</DialogHeader>
+							<form onSubmit={onSubmit}>
+								<div className="space-y-2 relative">
+									<Input
+										placeholder="Password"
+										type={
+											showPassword ? 'text' : 'password'
+										}
+										value={newPassword}
+										onChange={(e) =>
+											setNewPassword(e.target.value)
+										}
+									/>
+									<button
+										type="button"
+										className="absolute right-3 top-3 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+										onClick={() =>
+											setShowPassword(
+												(prevState) => !prevState,
+											)
+										}
+										aria-label={
+											showPassword
+												? 'Hide password'
+												: 'Show password'
+										}
+									>
+										{showPassword ? (
+											<EyeOff className="h-5 w-5" />
+										) : (
+											<Eye className="h-5 w-5" />
+										)}
+									</button>
+									<Button
+										className=" ml-auto mr-auto"
+										type="submit"
+									>
+										Submit
+									</Button>
+								</div>
+							</form>
+							{/* <LoanForm onFormOpen={setFormOpen} /> */}
+						</DialogContent>
+					</Dialog>
 				</div>
 			</header>
 		</>

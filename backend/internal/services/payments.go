@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"time"
 )
 
 type MpesaCallbackData struct {
@@ -13,6 +14,7 @@ type MpesaCallbackData struct {
 	Amount        float64 `json:"amount"`
 	AssignedBy	  string `json:"assigned_by"`
 	AssignedTo    *uint32 `json:"assigned_to"`
+	PaidDate	*time.Time `json:"paid_date"`
 }
 
 type ManualPaymentData struct {
