@@ -90,6 +90,16 @@ type ExpectedPayment struct {
 	DueDate string	`json:"dueDate"`
 }
 
+type LoanShort struct {
+	ID	uint32 `json:"id"`
+	LoanAmount	float64 `json:"loanAmount"`
+	RepayAmount	float64 `json:"repayAmount"`
+	DisbursedOn	string `json:"disbursedOn"`
+	DueDate	string `json:"dueDate"`
+	PaidAmount	float64 `json:"paidAmount"`
+	Installments []Installment  `json:"installments"`
+}
+
 type LoansRepository interface {
 	CreateLoan(ctx context.Context, loan *Loan) (Loan, error)
 	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) (uint32, error)

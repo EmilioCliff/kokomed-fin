@@ -188,6 +188,44 @@ func (q *Queries) DisburseLoan(ctx context.Context, arg DisburseLoanParams) (sql
 	)
 }
 
+const getActiveLoanDetails = `-- name: GetActiveLoanDetails :one
+SELECT 
+    l.id,
+    p.loan_amount,
+    p.repay_amount,
+    l.disbursed_on,
+    l.due_date,
+    l.paid_amount
+FROM loans l
+JOIN products p ON l.product_id = p.id
+WHERE 
+    l.client_id = ? 
+    AND l.status = 'ACTIVE'
+`
+
+type GetActiveLoanDetailsRow struct {
+	ID          uint32       `json:"id"`
+	LoanAmount  float64      `json:"loan_amount"`
+	RepayAmount float64      `json:"repay_amount"`
+	DisbursedOn sql.NullTime `json:"disbursed_on"`
+	DueDate     sql.NullTime `json:"due_date"`
+	PaidAmount  float64      `json:"paid_amount"`
+}
+
+func (q *Queries) GetActiveLoanDetails(ctx context.Context, clientID uint32) (GetActiveLoanDetailsRow, error) {
+	row := q.db.QueryRowContext(ctx, getActiveLoanDetails, clientID)
+	var i GetActiveLoanDetailsRow
+	err := row.Scan(
+		&i.ID,
+		&i.LoanAmount,
+		&i.RepayAmount,
+		&i.DisbursedOn,
+		&i.DueDate,
+		&i.PaidAmount,
+	)
+	return i, err
+}
+
 const getClientActiveLoan = `-- name: GetClientActiveLoan :one
 SELECT id FROM loans WHERE client_id = ? AND status = ? LIMIT 1
 `

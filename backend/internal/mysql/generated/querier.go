@@ -15,6 +15,7 @@ type Querier interface {
 	CheckUserExistance(ctx context.Context, email string) (int64, error)
 	CountBranchesByCategory(ctx context.Context, arg CountBranchesByCategoryParams) (int64, error)
 	CountClientsByCategory(ctx context.Context, arg CountClientsByCategoryParams) (int64, error)
+	CountClientsNonPosted(ctx context.Context, arg CountClientsNonPostedParams) (int64, error)
 	CountExpectedPayments(ctx context.Context, arg CountExpectedPaymentsParams) (int64, error)
 	CountLoans(ctx context.Context, arg CountLoansParams) (int64, error)
 	CountLoansByCategory(ctx context.Context, arg CountLoansByCategoryParams) (int64, error)
@@ -36,6 +37,7 @@ type Querier interface {
 	DeleteNonPosted(ctx context.Context, id uint32) error
 	DeleteProduct(ctx context.Context, id uint32) error
 	DisburseLoan(ctx context.Context, arg DisburseLoanParams) (sql.Result, error)
+	GetActiveLoanDetails(ctx context.Context, clientID uint32) (GetActiveLoanDetailsRow, error)
 	GetBranch(ctx context.Context, id uint32) (Branch, error)
 	GetBranchReportData(ctx context.Context, arg GetBranchReportDataParams) ([]GetBranchReportDataRow, error)
 	GetClient(ctx context.Context, id uint32) (Client, error)
@@ -44,6 +46,7 @@ type Querier interface {
 	GetClientClientsReportData(ctx context.Context, arg GetClientClientsReportDataParams) (GetClientClientsReportDataRow, error)
 	GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error)
 	GetClientOverpayment(ctx context.Context, id uint32) (float64, error)
+	GetClientsNonPosted(ctx context.Context, arg GetClientsNonPostedParams) ([]GetClientsNonPostedRow, error)
 	GetInstallment(ctx context.Context, id uint32) (Installment, error)
 	GetLoan(ctx context.Context, id uint32) (Loan, error)
 	GetLoanData(ctx context.Context) ([]uint32, error)
@@ -56,6 +59,7 @@ type Querier interface {
 	GetProduct(ctx context.Context, id uint32) (Product, error)
 	GetProductRepayAmount(ctx context.Context, id uint32) (float64, error)
 	GetProductReportData(ctx context.Context, arg GetProductReportDataParams) ([]GetProductReportDataRow, error)
+	GetTotalPaidByIDorAccountNo(ctx context.Context, arg GetTotalPaidByIDorAccountNoParams) (interface{}, error)
 	GetUser(ctx context.Context, id uint32) (User, error)
 	GetUserAdminsReportData(ctx context.Context, arg GetUserAdminsReportDataParams) ([]GetUserAdminsReportDataRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
@@ -79,6 +83,29 @@ type Querier interface {
 	ListLoansByLoanOfficer(ctx context.Context, arg ListLoansByLoanOfficerParams) ([]Loan, error)
 	ListLoansByStatus(ctx context.Context, arg ListLoansByStatusParams) ([]Loan, error)
 	ListNonDisbursedLoans(ctx context.Context, arg ListNonDisbursedLoansParams) ([]Loan, error)
+	// SELECT
+	//     np.id,
+	//     np.transaction_source,
+	//     np.transaction_number,
+	//     np.account_number,
+	//     np.phone_number,
+	//     np.paying_name,
+	//     np.amount,
+	//     np.paid_date,
+	//     np.assign_to,
+	//     np.assigned_by,
+	//     (SELECT SUM(amount)
+	//      FROM non_posted
+	//      WHERE
+	//         (assign_to = COALESCE(sqlc.narg("assign_to"), assign_to))
+	//         OR (account_number = COALESCE(sqlc.narg("account_number"), account_number))
+	//     ) AS total_paid
+	// FROM non_posted np
+	// WHERE
+	//     (np.assign_to = COALESCE(sqlc.narg("assign_to"), np.assign_to))
+	//     OR (np.account_number = COALESCE(sqlc.narg("account_number"), np.account_number))
+	// ORDER BY np.paid_date DESC
+	// LIMIT ? OFFSET ?;
 	ListNonPostedByCategory(ctx context.Context, arg ListNonPostedByCategoryParams) ([]NonPosted, error)
 	ListNonPostedByTransactionSource(ctx context.Context, arg ListNonPostedByTransactionSourceParams) ([]NonPosted, error)
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error)

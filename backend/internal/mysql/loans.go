@@ -549,6 +549,24 @@ func convertGeneratedInstallment(installment generated.Installment) repository.I
 	}
 }
 
+func convertGeneratedInstallmentList(installments []generated.Installment) []repository.Installment {
+	rslt := make([]repository.Installment, len(installments))
+	for idx, installment := range installments {
+		rslt[idx] = repository.Installment{
+			ID:              installment.ID,
+			LoanID:          installment.LoanID,
+			InstallmentNo:   installment.InstallmentNumber,
+			Amount:          installment.AmountDue,
+			RemainingAmount: installment.RemainingAmount,
+			Paid:            installment.Paid,
+			PaidAt:          installment.PaidAt.Time.Format("2006-02-01"),
+			DueDate:         installment.DueDate.Format("2006-02-01"),
+		}
+	}
+	
+	return rslt
+}
+
 func convertLoanReportDataById(row GetLoanReportDataByIdRow) (services.LoanReportDataById, error) {
 	var installments []services.LoanReportDataByIdInstallmentDetails
 	if row.InstallmentDetails != nil {

@@ -202,6 +202,50 @@ func (s *Server) getNonPostedPayment(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, v)
 }
 
+type listClientsNonPostedReq struct {
+	ID uint32 `json:"id"`
+	PhoneNumber string `json:"phoneNumber"`
+}
+
+func (s *Server) listClientsNonPosted(ctx *gin.Context) {
+	var req listClientsNonPostedReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	log.Println(req)
+
+	rslt, pgData, err := s.repo.NonPosted.GetClientNonPosted(ctx, req.ID, req.PhoneNumber, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": pgData,
+		"data": rslt,
+	})
+}
+
 // type assignNonPostedPaymentRequest struct {
 // 	ClientID uint32  `binding:"required" json:"client_id"`
 // 	AdminID  uint32  `binding:"required" json:"admin_id"`

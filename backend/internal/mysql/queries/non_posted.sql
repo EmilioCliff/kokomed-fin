@@ -37,6 +37,65 @@ WHERE id = sqlc.arg("id");
 -- name: DeleteNonPosted :exec
 DELETE FROM non_posted WHERE id = ?;
 
+-- name: GetClientsNonPosted :many
+SELECT 
+    np.id,
+    np.transaction_source,
+    np.transaction_number,
+    np.account_number,
+    np.phone_number,
+    np.paying_name,
+    np.amount,
+    np.paid_date,
+    np.assign_to,
+    np.assigned_by
+FROM non_posted np
+WHERE 
+    (np.assign_to = sqlc.narg('assign_to'))
+    OR (np.account_number = sqlc.narg('account_number'))
+ORDER BY np.paid_date DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountClientsNonPosted :one
+SELECT COUNT(*) AS total_non_posted 
+FROM non_posted
+WHERE 
+    (
+        (assign_to = sqlc.narg('assign_to'))
+        OR (account_number = sqlc.narg('account_number'))
+    );
+
+-- name: GetTotalPaidByIDorAccountNo :one
+SELECT SUM(amount) 
+    FROM non_posted
+    WHERE 
+        (assign_to = sqlc.narg('assign_to'))
+        OR (account_number = sqlc.narg('account_number'));
+
+-- SELECT 
+--     np.id,
+--     np.transaction_source,
+--     np.transaction_number,
+--     np.account_number,
+--     np.phone_number,
+--     np.paying_name,
+--     np.amount,
+--     np.paid_date,
+--     np.assign_to,
+--     np.assigned_by,
+--     (SELECT SUM(amount) 
+--      FROM non_posted 
+--      WHERE 
+--         (assign_to = COALESCE(sqlc.narg("assign_to"), assign_to)) 
+--         OR (account_number = COALESCE(sqlc.narg("account_number"), account_number))
+--     ) AS total_paid
+-- FROM non_posted np
+-- WHERE 
+--     (np.assign_to = COALESCE(sqlc.narg("assign_to"), np.assign_to)) 
+--     OR (np.account_number = COALESCE(sqlc.narg("account_number"), np.account_number))
+-- ORDER BY np.paid_date DESC
+-- LIMIT ? OFFSET ?;
+
 -- name: ListNonPostedByCategory :many
 SELECT *
 FROM non_posted

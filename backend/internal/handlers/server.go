@@ -96,6 +96,7 @@ func (s *Server) setUpRoutes() {
 	authRoute.GET("/non-posted/unassigned", s.listUnassignedNonPostedPayments)
 	authRoute.GET("/non-posted/by-id/:id", s.getNonPostedPayment)
 	authRoute.GET("/non-posted/by-type/:type", s.listNonPostedByTransactionSource)
+	authRoute.POST("/non-posted/clients", s.listClientsNonPosted)
 
 	// branches routes
 	cachedRoutes.GET("/branch", s.listBranches)

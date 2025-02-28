@@ -186,3 +186,17 @@ JOIN clients c ON l.client_id = c.id
 JOIN products p ON l.product_id = p.id
 WHERE l.disbursed_on IS NOT NULL 
 ORDER BY l.disbursed_on DESC;
+
+-- name: GetActiveLoanDetails :one
+SELECT 
+    l.id,
+    p.loan_amount,
+    p.repay_amount,
+    l.disbursed_on,
+    l.due_date,
+    l.paid_amount
+FROM loans l
+JOIN products p ON l.product_id = p.id
+WHERE 
+    l.client_id = ? 
+    AND l.status = 'ACTIVE';

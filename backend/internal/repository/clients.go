@@ -41,6 +41,14 @@ type ClientCategorySearch struct {
 	Active *bool 	`json:"active"`
 }
 
+type ClientShort struct {
+	ID	uint32     `json:"id"`
+	FullName	string     `json:"fullName"`
+	PhoneNumber	string     `json:"phoneNumber"`
+	Overpayment	float64    `json:"overpayment"`
+	BranchName	string	`json:"branchName"`
+}
+
 type ClientRepository interface {
 	CreateClient(ctx context.Context, client *Client) (Client, error)
 	UpdateClient(ctx context.Context, client *UpdateClient) (error)
