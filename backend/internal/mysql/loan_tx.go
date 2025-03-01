@@ -75,7 +75,7 @@ func (r *LoanRepository) CreateLoan(ctx context.Context, loan *repository.Loan) 
 
 		// create loan installments if loan is disbursed already(loan is ACTIVE)
 		if params.Status == generated.LoansStatusACTIVE {
-			if err := helperCreateInstallation(ctx, q, loan.ID, loan.ProductID, params.TotalInstallments, params.InstallmentsPeriod); err != nil {
+			if err := helperCreateInstallation(ctx, q, *loan.DisbursedOn, loan.ID, loan.ProductID, params.TotalInstallments, params.InstallmentsPeriod); err != nil {
 				return err
 			}
 		}
@@ -154,7 +154,7 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 
 		// here we will create installments if and only if the status was changed to active
 		if disburseLoan.Status != nil && generated.LoansStatus(*disburseLoan.Status) == generated.LoansStatusACTIVE {
-			if err = helperCreateInstallation(ctx, q, loan.ID, loan.ProductID, loan.TotalInstallments, loan.InstallmentsPeriod); err != nil {
+			if err = helperCreateInstallation(ctx, q, *disburseLoan.DisbursedOn, loan.ID, loan.ProductID, loan.TotalInstallments, loan.InstallmentsPeriod); err != nil {
 				return err
 			}
 		}
@@ -168,14 +168,14 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 	return loan.ClientID, nil
 }
 
-func helperCreateInstallation(ctx context.Context, q *generated.Queries, loanID, productID, totalInstallment, intallmentPeriod uint32) error {
+func helperCreateInstallation(ctx context.Context, q *generated.Queries, disbursedDate time.Time, loanID, productID, totalInstallment, intallmentPeriod uint32) error {
 	repayAmout, err := q.GetProductRepayAmount(ctx, productID)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get product repay amount: %s", err.Error())
 	}
 
 	installmentAmount := repayAmout / float64(totalInstallment)
-	firstDueDate := time.Now().AddDate(0, 0, int(intallmentPeriod))
+	firstDueDate := disbursedDate.AddDate(0, 0, int(intallmentPeriod))
 
 	for i := 0; i < int(totalInstallment); i++ {
 		dueDate := firstDueDate.AddDate(0, 0, i*int(intallmentPeriod))

@@ -62,7 +62,7 @@ export default function LoanTimeline() {
 		<div>
 			<FullCalendar
 				plugins={[dayGridPlugin, interactionPlugin]}
-				initialView="dayGridMonth"
+				initialView="dayGridYear"
 				dateClick={handleDateClick}
 				selectable={true}
 				events={data?.data}

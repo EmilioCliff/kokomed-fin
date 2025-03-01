@@ -199,8 +199,9 @@ SELECT
 FROM loans l
 JOIN products p ON l.product_id = p.id
 WHERE 
-    l.client_id = ? 
+    l.client_id = ?
     AND l.status = 'ACTIVE'
+LIMIT 1
 `
 
 type GetActiveLoanDetailsRow struct {

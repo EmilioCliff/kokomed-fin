@@ -52,9 +52,9 @@ export default function LoanForm({ onFormOpen }: LoanFormProps) {
 			disburse: false,
 			disburseOn: '',
 			installments: 4,
-			installmentsPeriod: 30,
+			installmentsPeriod: 7,
 			processingFee: 400,
-			processingFeePaid: false,
+			processingFeePaid: true,
 		},
 	});
 	const queryClient = useQueryClient();
@@ -232,6 +232,7 @@ export default function LoanForm({ onFormOpen }: LoanFormProps) {
 												}
 												checked={field.value === true}
 												className="mr-2"
+												disabled
 											/>
 											Yes
 										</label>
@@ -244,6 +245,7 @@ export default function LoanForm({ onFormOpen }: LoanFormProps) {
 												}
 												checked={field.value === false}
 												className="mr-2"
+												disabled
 											/>
 											No
 										</label>

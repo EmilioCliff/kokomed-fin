@@ -44,6 +44,7 @@ type Querier interface {
 	GetClient(ctx context.Context, id uint32) (Client, error)
 	GetClientActiveLoan(ctx context.Context, arg GetClientActiveLoanParams) (uint32, error)
 	GetClientAdminsReportData(ctx context.Context, arg GetClientAdminsReportDataParams) ([]GetClientAdminsReportDataRow, error)
+	GetClientByPhoneNumber(ctx context.Context, phoneNumber string) (Client, error)
 	GetClientClientsReportData(ctx context.Context, arg GetClientClientsReportDataParams) (GetClientClientsReportDataRow, error)
 	GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error)
 	GetClientOverpayment(ctx context.Context, id uint32) (float64, error)
@@ -122,10 +123,6 @@ type Querier interface {
 	TransferLoan(ctx context.Context, arg TransferLoanParams) (sql.Result, error)
 	UpdateBranch(ctx context.Context, arg UpdateBranchParams) (sql.Result, error)
 	UpdateClient(ctx context.Context, arg UpdateClientParams) (sql.Result, error)
-	// -- name: UpdateClientOverpayment :execresult
-	// UPDATE clients
-	//     SET overpayment = overpayment + sqlc.arg("overpayment")
-	// WHERE phone_number = sqlc.arg("phone_number");
 	UpdateClientOverpayment(ctx context.Context, arg UpdateClientOverpaymentParams) (sql.Result, error)
 	UpdateInstallment(ctx context.Context, arg UpdateInstallmentParams) (sql.Result, error)
 	UpdateLoan(ctx context.Context, arg UpdateLoanParams) (sql.Result, error)

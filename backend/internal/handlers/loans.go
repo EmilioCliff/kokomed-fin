@@ -96,9 +96,12 @@ func (s *Server) createLoan(ctx *gin.Context) {
 				return
 			}
 		} 
+		log.Println("disbursedDate: ", disburseDate)
 		params.DisbursedOn = pkg.TimePtr(disburseDate)
 		params.DisbursedBy = pkg.Uint32Ptr(payloadData.UserID)
 		params.Status = "ACTIVE"
+
+		log.Println("dueDate: ", disburseDate.AddDate(0, 0, int(req.Installments)*int(req.InstallmentsPeriod)))
 
 		params.DueDate = pkg.TimePtr(disburseDate.AddDate(0, 0, int(req.Installments)*int(req.InstallmentsPeriod)))
 	}

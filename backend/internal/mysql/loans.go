@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sort"
 	"time"
 
@@ -202,7 +201,7 @@ func (r *LoanRepository) GetExpectedPayments(ctx context.Context, category *repo
 			LoanAmount: payment.LoanAmount,
 			RepayAmount: payment.RepayAmount,
 			TotalUnpaid: pkg.InterfaceFloat64(payment.TotalUnpaid),
-			DueDate: payment.DueDate.Time.Format("2006-02-01"),
+			DueDate: payment.DueDate.Time.Format("2006-01-02"),
 		}
 	}
 
@@ -490,68 +489,6 @@ func (r *LoanRepository) GetLoanEvents(ctx context.Context) ([]repository.LoanEv
 	return rslt, nil
 }
 
-// func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.UnpaidInstallmentData, pkg.PaginationMetadata, error) {
-// 	params := generated.GetUnpaidInstallmentsDataParams{
-// 		Column1: "",
-// 		FullName:   "", 
-// 		PhoneNumber: "",
-// 		Limit:    int32(pgData.PageSize),
-// 		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
-// 	}
-
-// 	params2 := generated.CountUnpaidInstallmentsDataParams{
-// 		Column1: "",
-// 		FullName:   "", 
-// 		PhoneNumber: "",
-// 	}
-
-// 	if category.Search != nil {
-// 		searchValue := "%" + *category.Search + "%"
-// 		params.Column1 = "has_search"
-// 		params.FullName = searchValue
-// 		params.PhoneNumber = searchValue
-
-// 		params2.Column1 = "has_search"
-// 		params2.FullName = searchValue
-// 		params2.PhoneNumber = searchValue
-// 	}
-
-// 	installments, err := r.queries.GetUnpaidInstallmentsData(ctx, params)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no unpaid installments found")
-// 		}
-// 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get unpaid installments: %s", err.Error())
-// 	}
-
-// 	totalInstallments, err := r.queries.CountUnpaidInstallmentsData(ctx, params2)
-// 	if err != nil {
-// 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total unpaid installments: %s", err.Error())
-// 	}
-
-// 	result := make([]repository.UnpaidInstallmentData, len(installments))
-
-// 	for i, installment := range installments {
-// 		result[i] = repository.UnpaidInstallmentData{
-// 			InstallmentNumber: installment.InstallmentNumber,
-// 			AmountDue: installment.AmountDue,
-// 			RemainingAmount: installment.RemainingAmount,
-// 			DueDate: installment.DueDate.Format("2006-02-01"),
-// 			LoanId: installment.LoanID,
-// 			LoanAmount: installment.LoanAmount,
-// 			RepayAmount: installment.RepayAmount,
-// 			PaidAmount: installment.TotalPaidAmount,
-// 			ClientId: installment.ClientID,
-// 			FullName: installment.ClientName,
-// 			PhoneNumber: installment.ClientPhone,
-// 			BranchName: installment.BranchName,
-// 			TotalDueAmount: pkg.InterfaceFloat64(installment.TotalDueAmount),
-// 		}
-// 	}
-
-// 	return result, pkg.CreatePaginationMetadata(uint32(totalInstallments), pgData.PageSize, pgData.CurrentPage), nil
-// }
-
 func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.UnpaidInstallmentData, pkg.PaginationMetadata, error) {
 	params := generated.GetUnpaidInstallmentsDataParams{
 		Column1:    "",
@@ -591,13 +528,11 @@ func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, categor
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total unpaid installments: %s", err.Error())
 	}
 
-	// Step 1: Sort by due_date ASC (earliest first) for correct accumulation
 	sort.Slice(installments, func(i, j int) bool {
 		return installments[i].DueDate.Before(installments[j].DueDate)
 	})
 
-	// Step 2: Compute incremental total_due_amount
-	loanDueAmount := make(map[uint32]float64) // Track cumulative due per loan
+	loanDueAmount := make(map[uint32]float64)
 	result := make([]repository.UnpaidInstallmentData, len(installments))
 
 	for i, installment := range installments {
@@ -609,118 +544,28 @@ func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, categor
 
 		loanDueAmount[loanID] += installment.RemainingAmount
 
-		log.Printf("Loan ID: %d Installment No: %d Remaining Amount: %.2f LoanDueAmount: %.2f",
-			loanID, installment.InstallmentNumber, installment.RemainingAmount, loanDueAmount[loanID])
-
 		result[i] = repository.UnpaidInstallmentData{
 			InstallmentNumber: installment.InstallmentNumber,
-			AmountDue:         installment.AmountDue,
 			RemainingAmount:   installment.RemainingAmount,
 			DueDate:           installment.DueDate.Format("2006-01-02"),
+			LoanOfficer:       installment.LoanOfficer,
 			LoanId:            installment.LoanID,
-			LoanAmount:        installment.LoanAmount,
-			RepayAmount:       installment.RepayAmount,
-			PaidAmount:        installment.TotalPaidAmount,
+			ProductName: 	   fmt.Sprintf("%s %v Loan", installment.ProductBranchname, installment.LoanAmount),
 			ClientId:          installment.ClientID,
 			FullName:          installment.ClientName,
 			PhoneNumber:       installment.ClientPhone,
-			BranchName:        installment.BranchName,
-			TotalDueAmount:    loanDueAmount[loanID], // ✅ Correct incremental sum
+			ClientBranch: 	   installment.ClientBranchname,		
+			TotalDueAmount:    loanDueAmount[loanID], 
 		}
 	}
 
-	// Step 3: Reverse the result slice to maintain original descending order
-	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
-		result[i], result[j] = result[j], result[i]
-	}
+	// Reverse the result slice to maintain original descending order
+	// for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+	// 	result[i], result[j] = result[j], result[i]
+	// }
 
 	return result, pkg.CreatePaginationMetadata(uint32(totalInstallments), pgData.PageSize, pgData.CurrentPage), nil
 }
-
-// func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.UnpaidInstallmentData, pkg.PaginationMetadata, error) {
-// 	params := generated.GetUnpaidInstallmentsDataParams{
-// 		Column1:    "",
-// 		FullName:   "", 
-// 		PhoneNumber: "",
-// 		Limit:      int32(pgData.PageSize),
-// 		Offset:     int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
-// 	}
-
-// 	params2 := generated.CountUnpaidInstallmentsDataParams{
-// 		Column1:    "",
-// 		FullName:   "", 
-// 		PhoneNumber: "",
-// 	}
-
-// 	if category.Search != nil {
-// 		searchValue := "%" + *category.Search + "%"
-// 		params.Column1 = "has_search"
-// 		params.FullName = searchValue
-// 		params.PhoneNumber = searchValue
-
-// 		params2.Column1 = "has_search"
-// 		params2.FullName = searchValue
-// 		params2.PhoneNumber = searchValue
-// 	}
-
-// 	installments, err := r.queries.GetUnpaidInstallmentsData(ctx, params)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no unpaid installments found")
-// 		}
-// 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get unpaid installments: %s", err.Error())
-// 	}
-
-// 	totalInstallments, err := r.queries.CountUnpaidInstallmentsData(ctx, params2)
-// 	if err != nil {
-// 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total unpaid installments: %s", err.Error())
-// 	}
-
-// 	// 🔹 Sort installments by due_date (earliest first)
-// 	sort.Slice(installments, func(i, j int) bool {
-// 		return installments[i].DueDate.Before(installments[j].DueDate)
-// 	})
-
-// 	// Map to track cumulative due amount per loan
-// 	loanDueAmount := make(map[uint32]float64)
-
-// 	// Result slice
-// 	result := make([]repository.UnpaidInstallmentData, len(installments))
-
-// 	for i, installment := range installments {
-// 		loanID := installment.LoanID
-
-// 		// Initialize the loan's due amount if it's not already set
-// 		if _, exists := loanDueAmount[loanID]; !exists {
-// 			loanDueAmount[loanID] = 0
-// 		}
-
-// 		// Accumulate total_due_amount correctly
-// 		loanDueAmount[loanID] += installment.RemainingAmount
-
-// 		// Log for debugging
-// 		log.Printf("Loan ID: %d Installment No: %d Installment Amount To Pay: %.2f Installment Amount Paid: %.2f  Remaining Amount: %.2f  LoanDueAmount: %v %.2f",
-// 			loanID, installment.InstallmentNumber, installment.AmountDue, installment.TotalPaidAmount, installment.RemainingAmount, loanDueAmount, loanDueAmount[loanID])
-
-// 		result[i] = repository.UnpaidInstallmentData{
-// 			InstallmentNumber: installment.InstallmentNumber,
-// 			AmountDue:         installment.AmountDue,
-// 			RemainingAmount:   installment.RemainingAmount,
-// 			DueDate:           installment.DueDate.Format("2006-01-02"),
-// 			LoanId:            installment.LoanID,
-// 			LoanAmount:        installment.LoanAmount,
-// 			RepayAmount:       installment.RepayAmount,
-// 			PaidAmount:        installment.TotalPaidAmount,
-// 			ClientId:          installment.ClientID,
-// 			FullName:          installment.ClientName,
-// 			PhoneNumber:       installment.ClientPhone,
-// 			BranchName:        installment.BranchName,
-// 			TotalDueAmount:    loanDueAmount[loanID], // ✅ Correct incremental sum
-// 		}
-// 	}
-
-// 	return result, pkg.CreatePaginationMetadata(uint32(totalInstallments), pgData.PageSize, pgData.CurrentPage), nil
-// }
 
 func convertGeneratedInstallment(installment generated.Installment) repository.Installment {
 	return repository.Installment{
@@ -730,8 +575,8 @@ func convertGeneratedInstallment(installment generated.Installment) repository.I
 		Amount:          installment.AmountDue,
 		RemainingAmount: installment.RemainingAmount,
 		Paid:            installment.Paid,
-		PaidAt:          installment.PaidAt.Time.Format("2006-02-01"),
-		DueDate:         installment.DueDate.Format("2006-02-01"),
+		PaidAt:          installment.PaidAt.Time.Format("2006-01-02"),
+		DueDate:         installment.DueDate.Format("2006-01-02"),
 	}
 }
 
@@ -745,8 +590,8 @@ func convertGeneratedInstallmentList(installments []generated.Installment) []rep
 			Amount:          installment.AmountDue,
 			RemainingAmount: installment.RemainingAmount,
 			Paid:            installment.Paid,
-			PaidAt:          installment.PaidAt.Time.Format("2006-02-01"),
-			DueDate:         installment.DueDate.Format("2006-02-01"),
+			PaidAt:          installment.PaidAt.Time.Format("2006-01-02"),
+			DueDate:         installment.DueDate.Format("2006-01-02"),
 		}
 	}
 	

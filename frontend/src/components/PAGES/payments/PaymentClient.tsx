@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import VirtualizeddSelect from '@/components/UI/VisualizedSelect';
-import {
-	useQuery,
-	useMutation,
-	keepPreviousData,
-	useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query';
 import getFormData from '@/services/getFormData';
 import { Input } from '@/components/ui/input';
 import {
@@ -37,7 +32,6 @@ import { clientPaymentColumns } from './payment';
 import { paymentSources } from '@/data/loan';
 import { useTable } from '@/hooks/useTable';
 import { useDebounce } from '@/hooks/useDebounce';
-import { Payment } from './schema';
 
 function PaymentClient() {
 	const [searchType, setSearchType] = useState('id');
@@ -75,6 +69,7 @@ function PaymentClient() {
 	const mutation = useMutation({
 		mutationFn: getClientNonPosted,
 		onError: (error: any) => {
+			setSearched(false);
 			toast.error(error.message);
 		},
 	});
@@ -132,7 +127,7 @@ function PaymentClient() {
 							onValueChange={(value: string) => {
 								setClientId(0);
 								setPhoneNumber('');
-								mutation.data = undefined;
+								setSearched(false);
 								setSearchType(value);
 							}}
 						>
@@ -156,7 +151,7 @@ function PaymentClient() {
 					</div>
 				</form>
 			</Card>
-			{mutation.data && (
+			{mutation.data && searched && (
 				<>
 					<Card className="p-4 mb-6">
 						{mutation.data.data.clientDetails.id === 0 ? (
@@ -391,11 +386,11 @@ function PaymentClient() {
 						) : (
 							<div>
 								<div className="flex justify-between items-center mb-4">
-									<h2 className="text-xl font-semibold text-gray-800">
+									<h2 className="text-xl font-semibold">
 										Payment History
 									</h2>
 									<span className="text-lg font-semibold text-blue-600">
-										Total: KES
+										Total: KES{' '}
 										{`${mutation.data.data.totalPaid.toLocaleString()}`}
 									</span>
 								</div>
@@ -429,7 +424,7 @@ function PaymentClient() {
 					</Card>
 				</>
 			)}
-			{!mutation.data && (
+			{searched === false && (
 				<Card className="mt-10">
 					<div className="p-6 rounded-lg shadow-md text-center">
 						<p className="text-muted-foreground">

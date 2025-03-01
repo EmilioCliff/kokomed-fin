@@ -86,17 +86,15 @@ export type LoanShort = z.infer<typeof loanShortSchema>;
 
 export const unpaidInstallmentSchema = z.object({
 	installmentNumber: z.number(),
-	amountDue: z.number(),
 	remainingAmount: z.number(),
 	dueDate: z.string(),
+	loanOfficer: z.string(),
 	loanId: z.number(),
-	loanAmount: z.number(),
-	repayAmount: z.number(),
-	paidAmount: z.number(),
+	productName: z.string(),
 	clientId: z.number(),
 	fullName: z.string(),
 	phoneNumber: z.string(),
-	branchName: z.string(),
+	clientBranch: z.string(),
 	totalDueAmount: z.number(),
 });
 

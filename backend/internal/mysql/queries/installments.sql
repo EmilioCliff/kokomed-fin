@@ -30,19 +30,19 @@ WHERE id = sqlc.arg("id");
 -- name: GetUnpaidInstallmentsData :many
 SELECT 
     i.installment_number,
-    i.amount_due,
     i.remaining_amount,
     i.due_date,
+    u.full_name AS loan_officer,
 
     l.id AS loan_id,
     p.loan_amount,
     p.repay_amount,
-    l.paid_amount AS total_paid_amount,
+    b.name AS product_branchName,
+    b2.name AS client_branchName,
     
     c.id AS client_id,
     c.full_name AS client_name,
     c.phone_number AS client_phone,
-    b.name AS branch_name,
 
     (
         SELECT SUM(i2.remaining_amount)
@@ -54,9 +54,11 @@ SELECT
 
 FROM installments i
 JOIN loans l ON i.loan_id = l.id
+JOIN users u ON u.id = l.loan_officer
 JOIN clients c ON l.client_id = c.id
-JOIN branches b ON c.branch_id = b.id
+JOIN branches b2 ON u.branch_id = b2.id
 JOIN products p ON l.product_id = p.id
+JOIN branches b ON p.branch_id = b.id
 
 WHERE 
     (i.paid = FALSE OR i.remaining_amount > 0) 

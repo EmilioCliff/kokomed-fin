@@ -252,7 +252,7 @@ export const expectedPaymentColumns: ColumnDef<ExpectedPayment>[] = [
 
 export const unpaidInstallments: ColumnDef<UnpaidInstallment>[] = [
 	{
-		accessorKey: 'LoanId',
+		accessorKey: 'loanId',
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title="Loan ID" />
 		),
@@ -265,19 +265,19 @@ export const unpaidInstallments: ColumnDef<UnpaidInstallment>[] = [
 		enableHiding: true,
 	},
 	{
-		id: 'branchName',
+		id: 'clientBranch',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Branch Name" />
+			<DataTableColumnHeader column={column} title="Office" />
 		),
-		cell: ({ row }) => <div>{row.original.branchName}</div>,
+		cell: ({ row }) => <div>{row.original.clientBranch}</div>,
 		enableHiding: true,
 	},
 	{
-		id: 'clientName',
+		id: 'loanOfficer',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Client Name" />
+			<DataTableColumnHeader column={column} title="Loan Officer" />
 		),
-		cell: ({ row }) => <div>{row.original.fullName}</div>,
+		cell: ({ row }) => <div>{row.original.loanOfficer}</div>,
 		filterFn: (row, filterValue) => {
 			const fullName = row.original.fullName.toLowerCase();
 			const phoneNumber = row.original.phoneNumber.toLowerCase();
@@ -308,43 +308,43 @@ export const unpaidInstallments: ColumnDef<UnpaidInstallment>[] = [
 		enableHiding: true,
 	},
 	{
-		accessorKey: 'loanAmount',
+		id: 'clientName',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Loan Amount" />
+			<DataTableColumnHeader column={column} title="Client Name" />
 		),
-		cell: ({ row }) => (
-			<div>{Number(row.original.loanAmount).toLocaleString()}</div>
+		cell: ({ row }) => <div>{row.original.fullName}</div>,
+		filterFn: (row, filterValue) => {
+			const fullName = row.original.fullName.toLowerCase();
+			const phoneNumber = row.original.phoneNumber.toLowerCase();
+			return (
+				fullName.includes(filterValue.toLowerCase()) ||
+				phoneNumber.includes(filterValue.toLowerCase())
+			);
+		},
+		enableSorting: true,
+	},
+	{
+		accessorKey: 'productName',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Product" />
 		),
+		cell: ({ row }) => <div>{row.original.productName}</div>,
 		enableHiding: true,
 	},
 	{
-		accessorKey: 'repayAmount',
+		accessorKey: 'dueDate',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Repay Amount" />
+			<DataTableColumnHeader column={column} title="Due Date" />
 		),
 		cell: ({ row }) => (
-			<div className="">
-				{Number(row.original.repayAmount).toLocaleString()}
-			</div>
+			<div className="truncate">{row.original.dueDate}</div>
 		),
-		enableHiding: true,
-	},
-	{
-		accessorKey: 'paidAmount',
-		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Loan Paid Amount" />
-		),
-		cell: ({ row }) => (
-			<div className="">
-				{Number(row.original.paidAmount).toLocaleString()}
-			</div>
-		),
-		enableHiding: true,
+		enableSorting: true,
 	},
 	{
 		accessorKey: 'installmentNumber',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Installment Number" />
+			<DataTableColumnHeader column={column} title="Installment No" />
 		),
 		cell: ({ row }) => (
 			<div className="">{row.original.installmentNumber}</div>
@@ -352,20 +352,9 @@ export const unpaidInstallments: ColumnDef<UnpaidInstallment>[] = [
 		enableHiding: true,
 	},
 	{
-		accessorKey: 'amountDue',
-		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Installment Amount" />
-		),
-		cell: ({ row }) => <div className="">{row.original.amountDue}</div>,
-		enableHiding: true,
-	},
-	{
 		accessorKey: 'remainingAmount',
 		header: ({ column }) => (
-			<DataTableColumnHeader
-				column={column}
-				title="Installment Remaining Amount"
-			/>
+			<DataTableColumnHeader column={column} title="Total Due" />
 		),
 		cell: ({ row }) => (
 			<div className="">{row.original.remainingAmount}</div>
@@ -375,24 +364,11 @@ export const unpaidInstallments: ColumnDef<UnpaidInstallment>[] = [
 	{
 		accessorKey: 'totalDueAmount',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Total Due Loan" />
+			<DataTableColumnHeader column={column} title="Total Overdue" />
 		),
 		cell: ({ row }) => (
 			<div className="">{row.original.totalDueAmount}</div>
 		),
 		enableHiding: true,
-	},
-	{
-		accessorKey: 'dueDate',
-		header: ({ column }) => (
-			<DataTableColumnHeader
-				column={column}
-				title="Installment Due Date"
-			/>
-		),
-		cell: ({ row }) => (
-			<div className="truncate">{row.original.dueDate}</div>
-		),
-		enableSorting: true,
 	},
 ];

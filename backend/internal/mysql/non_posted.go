@@ -280,6 +280,18 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 			}
 		}
 		clientPresent = true
+	} else {
+		if phoneNumber != "" {
+			client, err = r.queries.GetClientByPhoneNumber(ctx, phoneNumber)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					clientPresent = false
+				} else {
+					return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s", err.Error())
+				}
+			}
+			clientPresent = true
+		}
 	}
 
 	params := generated.GetClientsNonPostedParams{
@@ -290,7 +302,7 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 	params2 := generated.GetTotalPaidByIDorAccountNoParams{}
 	params3 := generated.CountClientsNonPostedParams{}
 
-	if clientPresent {
+	if clientPresent && id != 0 {
 		params.AssignTo = sql.NullInt32{
 			Valid: true,
 			Int32: int32(client.ID),
@@ -378,8 +390,8 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 		rslt.LoanDetails.ID = loan.ID
 		rslt.LoanDetails.LoanAmount = loan.LoanAmount
 		rslt.LoanDetails.RepayAmount = loan.RepayAmount
-		rslt.LoanDetails.DisbursedOn = loan.DisbursedOn.Time.Format("2006-02-01")
-		rslt.LoanDetails.DueDate = loan.DueDate.Time.Format("2006-02-01")
+		rslt.LoanDetails.DisbursedOn = loan.DisbursedOn.Time.Format("2006-01-02")
+		rslt.LoanDetails.DueDate = loan.DueDate.Time.Format("2006-01-02")
 		rslt.LoanDetails.PaidAmount = loan.PaidAmount
 		rslt.LoanDetails.Installments = convertGeneratedInstallmentList(installments)
 	}

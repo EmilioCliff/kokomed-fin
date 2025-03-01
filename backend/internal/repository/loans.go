@@ -102,17 +102,15 @@ type LoanShort struct {
 
 type UnpaidInstallmentData struct {
 	InstallmentNumber	uint32	`json:"installmentNumber"`
-	AmountDue	float64	`json:"amountDue"`
 	RemainingAmount	float64	`json:"remainingAmount"`
 	DueDate	string	`json:"dueDate"`
+	LoanOfficer string `json:"loanOfficer"`
 	LoanId	uint32	`json:"loanId"`
-	LoanAmount	float64	`json:"loanAmount"`
-	RepayAmount	float64	`json:"repayAmount"`
-	PaidAmount	float64	`json:"paidAmount"`
+	ProductName string `json:"productName"`
 	ClientId	uint32	`json:"clientId"`
 	FullName	string	`json:"fullName"`
 	PhoneNumber	string	`json:"phoneNumber"`
-	BranchName	string	`json:"branchName"`
+	ClientBranch string 	`json:"clientBranch"`
 	TotalDueAmount float64 `json:"totalDueAmount"`
 }
 
