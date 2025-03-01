@@ -181,8 +181,167 @@ func (p *PaymentService) TriggerManualPayment(ctx context.Context, paymentData s
 	return loanID, err
 }
 
+// func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repository.UpdateLoan) error {
+// 	log.Println("Initial AMount: ", loan.PaidAmount)
+// 	loanData, err := q.GetLoanPaymentData(ctx, loan.ID)
+// 	if err != nil {
+// 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan payment data: %s", err.Error())
+// 	}
+
+// 	// if client has any overpayment add it to help pay
+// 	clientOverpayment, err := q.GetClientOverpayment(ctx, loanData.ClientID)
+// 	if err != nil {
+// 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client overpayment: %s", err.Error())
+// 	}
+
+// 	// remove the overpayment from client account
+// 	if clientOverpayment > 0 {
+// 		_, err := q.NullifyClientOverpayment(ctx, loanData.ClientID)
+// 		if err != nil {
+// 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get nullify client overpayment: %s", err.Error())
+// 		}
+// 	}
+
+// 	loan.PaidAmount += clientOverpayment
+
+// 	// calculate total paid do not include the processing fee
+// 	totalPaid := 0.0
+
+// 	// pay the processing fee first
+// 	if !loanData.FeePaid {
+// 		log.Println("Paying Processing Fee")
+// 		if loan.PaidAmount >= loanData.ProcessingFee {
+// 			_, err := q.UpdateLoanProcessingFeeStatus(ctx, generated.UpdateLoanProcessingFeeStatusParams{
+// 				ID:      loan.ID,
+// 				FeePaid: true,
+// 			})
+// 			if err != nil {
+// 				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan processing fee status: %s", err.Error())
+// 			}
+
+// 			loan.PaidAmount -= loanData.ProcessingFee
+// 			log.Println("Processing Fee Paying: ", loan.PaidAmount)
+// 		} else {
+// 			// if the processing fee is not paid fully add credit to client(overpayment).
+// 			_, err = q.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
+// 				PhoneNumber: loanData.PhoneNumber,
+// 				Overpayment: loan.PaidAmount,
+// 				ClientID:    loanData.ClientID,
+// 			})
+// 			if err != nil {
+// 				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan overpayment: %s", err.Error())
+// 			}
+
+// 			log.Println("Processing Fee: Wasnt enough. Added to overpayment")
+
+// 			return nil
+// 		}
+// 	}
+
+// 	installments, err := q.ListUnpaidInstallmentsByLoan(ctx, loan.ID)
+// 	if err != nil {
+// 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list unpaid installments: %s", err.Error())
+// 	}
+
+// 	for idx, i := range installments {
+// 		log.Println("In Installment: ", idx, "/", len(installments), "  of LoanID", i.LoanID)
+// 		if loan.PaidAmount >= i.RemainingAmount {
+// 			// pay the installment fully
+// 			_, err := q.PayInstallment(ctx, generated.PayInstallmentParams{
+// 				ID:              i.ID,
+// 				RemainingAmount: 0,
+// 				Paid: sql.NullBool{
+// 					Valid: true,
+// 					Bool:  true,
+// 				},
+// 				PaidAt: sql.NullTime{
+// 					Valid: true,
+// 					Time:  time.Now(),
+// 				},
+// 			})
+// 			if err != nil {
+// 				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to pay installment: %s", err.Error())
+// 			}
+
+// 			loan.PaidAmount -= i.RemainingAmount
+// 			totalPaid += i.RemainingAmount
+// 			log.Println("Paid full installment: ", loan.PaidAmount, " Total paid: ", totalPaid, " Remaining Installment: ", i.RemainingAmount)
+// 		} else {
+// 			if loan.PaidAmount == 0 {
+// 				log.Println("amount in zero breaking")
+// 				break
+// 			}
+// 			// pay installment partially
+// 			_, err := q.PayInstallment(ctx, generated.PayInstallmentParams{
+// 				ID:              i.ID,
+// 				RemainingAmount: i.RemainingAmount - loan.PaidAmount,
+// 			})
+// 			if err != nil {
+// 				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to pay installment: %s", err.Error())
+// 			}
+
+// 			totalPaid += loan.PaidAmount
+// 			loan.PaidAmount = 0
+// 			log.Println("Paying Partially: ", loan.PaidAmount, " Total Paid: ", totalPaid)
+
+// 			break // no more amount to allocate
+// 		}
+// 	}
+
+// 	// update the loan
+// 	params := generated.UpdateLoanParams{
+// 		ID:         loan.ID,
+// 		PaidAmount: totalPaid,
+// 	}
+
+// 	if loan.UpdatedBy != nil {
+// 		params.UpdatedBy = sql.NullInt32{
+// 			Valid: true,
+// 			Int32: int32(*loan.UpdatedBy),
+// 		}
+// 	}
+
+// 	_, err = q.UpdateLoan(ctx, params)
+// 	if err != nil {
+// 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan: %s", err.Error())
+// 	}
+
+// 	log.Println("This is the overpayment", loan.PaidAmount)
+// 	if loan.PaidAmount > 0 {
+// 		// if client has an overpayment for the loan link to his account
+// 		log.Println("Adding overpayment to client")
+// 		_, err = q.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
+// 			PhoneNumber: loanData.PhoneNumber,
+// 			Overpayment: loan.PaidAmount,
+// 			ClientID:    loanData.ClientID,
+// 		})
+// 		if err != nil {
+// 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan overpayment: %s", err.Error())
+// 		}
+// 	}
+
+// 	// If no remaining installments, mark loan as completed
+// 	installmentsLeft, err := q.ListUnpaidInstallmentsByLoan(ctx, loan.ID)
+// 	if err != nil {
+// 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list unpaid installments: %s", err.Error())
+// 	}
+
+// 	if len(installmentsLeft) == 0 {
+// 		log.Println("Changing status to complete")
+// 		_, err = q.UpdateLoanStatus(ctx, generated.UpdateLoanStatusParams{
+// 			ID:     loan.ID,
+// 			Status: generated.LoansStatusCOMPLETED,
+// 		})
+// 		if err != nil {
+// 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to change loans status: %s", err.Error())
+// 		}
+// 	}
+
+// 	return nil
+// }
+
 func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repository.UpdateLoan) error {
-	log.Println("Initial AMount: ", loan.PaidAmount)
+	log.Println("VALIDATE START: Initial Amount: ", loan.PaidAmount)
 	loanData, err := q.GetLoanPaymentData(ctx, loan.ID)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan payment data: %s", err.Error())
@@ -202,7 +361,9 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 		}
 	}
 
+	originalAmount := loan.PaidAmount
 	loan.PaidAmount += clientOverpayment
+	log.Println("VALIDATE AFTER OVERPAYMENT: Original Amount=", originalAmount, "Overpayment=", clientOverpayment, "New Amount=", loan.PaidAmount)
 
 	// calculate total paid do not include the processing fee
 	totalPaid := 0.0
@@ -219,8 +380,9 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan processing fee status: %s", err.Error())
 			}
 
+			beforeFee := loan.PaidAmount
 			loan.PaidAmount -= loanData.ProcessingFee
-			log.Println("Processing Fee Paying: ", loan.PaidAmount)
+			log.Println("Processing Fee Paid: Before=", beforeFee, "Fee=", loanData.ProcessingFee, "After=", loan.PaidAmount)
 		} else {
 			// if the processing fee is not paid fully add credit to client(overpayment).
 			_, err = q.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
@@ -232,7 +394,7 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan overpayment: %s", err.Error())
 			}
 
-			log.Println("Processing Fee: Wasnt enough. Added to overpayment")
+			log.Println("Processing Fee: Wasn't enough. Added to overpayment")
 
 			return nil
 		}
@@ -244,7 +406,10 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 	}
 
 	for idx, i := range installments {
+		log.Println("--------------------------------------------------------")
 		log.Println("In Installment: ", idx, "/", len(installments), "  of LoanID", i.LoanID)
+		log.Println("BEFORE PAYMENT: loan.PaidAmount=", loan.PaidAmount, "i.RemainingAmount=", i.RemainingAmount)
+		
 		if loan.PaidAmount >= i.RemainingAmount {
 			// pay the installment fully
 			_, err := q.PayInstallment(ctx, generated.PayInstallmentParams{
@@ -263,21 +428,58 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to pay installment: %s", err.Error())
 			}
 
-			loan.PaidAmount -= i.RemainingAmount
-			totalPaid += i.RemainingAmount
-			log.Println("Paid full installment: ", loan.PaidAmount, " Total paid: ", totalPaid, " Remaining Installment: ", i.RemainingAmount)
+			// Store current values for safety check
+			oldPaidAmount := loan.PaidAmount
+			remainingAmount := i.RemainingAmount
+			
+			// Calculate expected new amount
+			expectedNewAmount := oldPaidAmount - remainingAmount
+			
+			// Update paid amount
+			loan.PaidAmount = expectedNewAmount
+			
+			// Safety check
+			if loan.PaidAmount != expectedNewAmount {
+				log.Println("ERROR: Calculation mismatch! Expected:", expectedNewAmount, "Got:", loan.PaidAmount)
+				loan.PaidAmount = expectedNewAmount
+			}
+			
+			// Update total paid
+			totalPaid += remainingAmount
+			
+			log.Println("AFTER PAYMENT: loan.PaidAmount=", loan.PaidAmount, "totalPaid=", totalPaid)
+			log.Println("Payment Details: Old Amount=", oldPaidAmount, "Installment=", remainingAmount, "New Amount=", loan.PaidAmount)
+			log.Println("Paid full installment: ", loan.PaidAmount, " Total paid: ", totalPaid, " Remaining Installment: ", remainingAmount)
 		} else {
+			if loan.PaidAmount == 0 {
+				log.Println("Amount is zero, breaking")
+				break
+			}
 			// pay installment partially
+			partialPayment := loan.PaidAmount
+			newRemainingAmount := i.RemainingAmount - partialPayment
+			
 			_, err := q.PayInstallment(ctx, generated.PayInstallmentParams{
 				ID:              i.ID,
-				RemainingAmount: i.RemainingAmount - loan.PaidAmount,
+				RemainingAmount: newRemainingAmount,
 			})
 			if err != nil {
 				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to pay installment: %s", err.Error())
 			}
 
-			totalPaid += loan.PaidAmount
+			oldTotalPaid := totalPaid
+			totalPaid += partialPayment
+			
+			// Safety check for totalPaid calculation
+			if totalPaid != oldTotalPaid + partialPayment {
+				log.Println("ERROR: Total Paid calculation error! Expected:", oldTotalPaid + partialPayment, "Got:", totalPaid)
+				totalPaid = oldTotalPaid + partialPayment
+			}
+			
+			oldPaidAmount := loan.PaidAmount
 			loan.PaidAmount = 0
+			
+			log.Println("PARTIAL PAYMENT: Old Amount=", oldPaidAmount, "Partial Payment=", partialPayment, "New Remaining=", newRemainingAmount)
 			log.Println("Paying Partially: ", loan.PaidAmount, " Total Paid: ", totalPaid)
 
 			break // no more amount to allocate
@@ -302,10 +504,10 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan: %s", err.Error())
 	}
 
-	log.Println("This is the overpayment", loan.PaidAmount)
+	log.Println("Final overpayment amount:", loan.PaidAmount)
 	if loan.PaidAmount > 0 {
 		// if client has an overpayment for the loan link to his account
-		log.Println("Adding overpayment to client")
+		log.Println("Adding overpayment to client account")
 		_, err = q.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
 			PhoneNumber: loanData.PhoneNumber,
 			Overpayment: loan.PaidAmount,
@@ -333,5 +535,6 @@ func helperUpdateLoan(ctx context.Context, q *generated.Queries, loan *repositor
 		}
 	}
 
+	log.Println("FUNCTION COMPLETE: Final totalPaid=", totalPaid, "Final loan.PaidAmount=", loan.PaidAmount)
 	return nil
 }
