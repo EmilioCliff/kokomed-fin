@@ -18,7 +18,9 @@ import { TableContextWrapper } from './context/TableContext';
 import { ReportsPage } from './components/PAGES/reports/ReportsPage';
 import LoanTimeline from './components/PAGES/loans/LoanTimeline';
 import { ToastContainer } from 'react-toastify';
-// import GetDataTest from "./pages/GetDataTest";
+import PaymentClient from './components/PAGES/payments/PaymentClient';
+// import GetDataTest from './pages/GetDataTest';
+import LoanUnpaidInstallments from './components/PAGES/loans/LoanUnpaidInstallments';
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,10 @@ function App() {
 								<Route
 									path="loans/overview"
 									element={<LoansPage />}
+								/>
+								<Route
+									path="loans/unpaid-installments"
+									element={<LoanUnpaidInstallments />}
 								/>
 								<Route
 									path="loans/timeline"
@@ -65,6 +71,10 @@ function App() {
 									element={<PaymentsPage />}
 								/>
 								<Route
+									path="payments/client"
+									element={<PaymentClient />}
+								/>
+								<Route
 									path="products/overview"
 									element={<ProductsPage />}
 								/>
@@ -72,7 +82,10 @@ function App() {
 									path="reports"
 									element={<ReportsPage />}
 								/>
-								{/* <Route path='getdata' element={<GetDataTest />} /> */}
+								{/* <Route
+									path="getdata"
+									element={<GetDataTest />}
+								/> */}
 								<Route
 									path="*"
 									element={<h1 className="mt-10">404</h1>}

@@ -235,6 +235,69 @@ func (r *HelperRepository) GetUserFullname(ctx context.Context, id uint32) (stri
 	return name, err
 }
 
+func (r *HelperRepository) GetClientNonPayments(ctx context.Context,id uint32, phoneNumber string, pgData *pkg.PaginationMetadata) ([]repository.NonPostedShort, pkg.PaginationMetadata, error) {
+	params := generated.GetClientsNonPostedParams{
+		Limit:    int32(pgData.PageSize),
+		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+	}
+
+	params2 := generated.CountClientsNonPostedParams{}
+
+	if id != 0 {
+		params.AssignTo = sql.NullInt32{
+			Valid: true,
+			Int32: int32(id),
+		}
+		params2.AssignTo = sql.NullInt32{
+			Valid: true,
+			Int32: int32(id),
+		}
+	} else {
+		if phoneNumber == "" {
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INVALID_ERROR, "both id and phonenumber cannot m=be missing")
+		}
+		params.AccountNumber = sql.NullString{
+			Valid: true,
+			String: phoneNumber,
+		}
+		params2.AccountNumber = sql.NullString{
+			Valid: true,
+			String: phoneNumber,
+		}
+	}
+
+	nonPosteds, err := r.queries.GetClientsNonPosted(ctx, params)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get non-posted: %s", err.Error())
+		} else {
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get non-posted: %s", err.Error())
+		}
+	}
+
+	totalNonPosted, err := r.queries.CountClientsNonPosted(ctx, params2)
+	if err != nil {
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err)
+	}
+
+	paymentDetails := make([]repository.NonPostedShort, len(nonPosteds))
+		for i, nonPosted := range nonPosteds {
+			paymentDetails[i] = repository.NonPostedShort{
+				ID:                nonPosted.ID,
+				TransactionSource: string(nonPosted.TransactionSource),
+				TransactionNumber: nonPosted.TransactionNumber,
+				AccountNumber:     nonPosted.AccountNumber,
+				PhoneNumber:       nonPosted.PhoneNumber,
+				PayingName:        nonPosted.PayingName,
+				Amount:            nonPosted.Amount,
+				PaidDate:          nonPosted.PaidDate,
+				AssignedBy: 	   nonPosted.AssignedBy,
+			}
+		}
+
+	return paymentDetails, pkg.CreatePaginationMetadata(uint32(totalNonPosted), pgData.PageSize, pgData.CurrentPage), nil
+}
+
 func (r *HelperRepository)userToClientDashboard(ctx context.Context, id uint32) repository.ClientDashboardResponse {
 	client, _ := r.queries.GetClient(ctx, id)
 

@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"time"
+
+	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
 type DashboardData struct {
@@ -105,6 +107,7 @@ type HelperRepository interface {
 	GetLoanOfficerData(ctx context.Context) ([]LoanOfficerData, error)
 	GetBranchData(ctx context.Context) ([]BranchData,  error)
 	GetLoanData(ctx context.Context) ([]LoanData,  error)
+	GetClientNonPayments(ctx context.Context,id uint32, phoneNumber string, pgData *pkg.PaginationMetadata) ([]NonPostedShort, pkg.PaginationMetadata, error)
 
 	// helpers for users
 	GetUserFullname(ctx context.Context, id uint32) (string, error)

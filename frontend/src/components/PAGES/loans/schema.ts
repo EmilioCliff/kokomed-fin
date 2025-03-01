@@ -71,3 +71,33 @@ export const installmentSchema = z.object({
 });
 
 export type Installment = z.infer<typeof installmentSchema>;
+
+export const loanShortSchema = z.object({
+	id: z.number(),
+	loanAmount: z.number(),
+	repayAmount: z.number(),
+	disbursedOn: z.string(),
+	dueDate: z.string(),
+	paidAmount: z.number(),
+	installments: z.array(installmentSchema),
+});
+
+export type LoanShort = z.infer<typeof loanShortSchema>;
+
+export const unpaidInstallmentSchema = z.object({
+	installmentNumber: z.number(),
+	amountDue: z.number(),
+	remainingAmount: z.number(),
+	dueDate: z.string(),
+	loanId: z.number(),
+	loanAmount: z.number(),
+	repayAmount: z.number(),
+	paidAmount: z.number(),
+	clientId: z.number(),
+	fullName: z.string(),
+	phoneNumber: z.string(),
+	branchName: z.string(),
+	totalDueAmount: z.number(),
+});
+
+export type UnpaidInstallment = z.infer<typeof unpaidInstallmentSchema>;

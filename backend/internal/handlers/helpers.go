@@ -98,3 +98,45 @@ func (s *Server) getLoanEvents(ctx *gin.Context) {
 		"data": events,
 	})
 }
+
+type getClientNonPostedReq struct {
+	ID uint32 `json:"id"`
+	PhoneNumber string `json:"phoneNumber"`
+}
+
+func (s *Server) getClientNonPosted(ctx *gin.Context) {
+	var req getClientNonPostedReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	rslt, pgData, err := s.repo.Helpers.GetClientNonPayments(ctx, req.ID, req.PhoneNumber, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": pgData,
+		"data": rslt,
+	})
+}

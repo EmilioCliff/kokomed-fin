@@ -100,6 +100,22 @@ type LoanShort struct {
 	Installments []Installment  `json:"installments"`
 }
 
+type UnpaidInstallmentData struct {
+	InstallmentNumber	uint32	`json:"installmentNumber"`
+	AmountDue	float64	`json:"amountDue"`
+	RemainingAmount	float64	`json:"remainingAmount"`
+	DueDate	string	`json:"dueDate"`
+	LoanId	uint32	`json:"loanId"`
+	LoanAmount	float64	`json:"loanAmount"`
+	RepayAmount	float64	`json:"repayAmount"`
+	PaidAmount	float64	`json:"paidAmount"`
+	ClientId	uint32	`json:"clientId"`
+	FullName	string	`json:"fullName"`
+	PhoneNumber	string	`json:"phoneNumber"`
+	BranchName	string	`json:"branchName"`
+	TotalDueAmount float64 `json:"totalDueAmount"`
+}
+
 type LoansRepository interface {
 	CreateLoan(ctx context.Context, loan *Loan) (Loan, error)
 	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) (uint32, error)
@@ -115,6 +131,7 @@ type LoansRepository interface {
 	GetLoanInstallments(ctx context.Context, id uint32) ([]Installment, error)
 	GetInstallment(ctx context.Context, id uint32) (Installment, error)
 	UpdateInstallment(ctx context.Context, installment *UpdateInstallment) (Installment, error)
+	ListUnpaidInstallmentsData(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]UnpaidInstallmentData, pkg.PaginationMetadata, error)
 
 	GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, services.LoanSummary, error)
 	GetReportLoanByIdData(ctx context.Context,id uint32) (services.LoanReportDataById, error)

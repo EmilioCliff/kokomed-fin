@@ -3,7 +3,6 @@ package mysql
 import (
 	"context"
 	"database/sql"
-	"log"
 	"strings"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
@@ -281,7 +280,6 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 			}
 		}
 		clientPresent = true
-		log.Println("client: ", client)
 	}
 
 	params := generated.GetClientsNonPostedParams{
@@ -307,7 +305,7 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 		}
 	} else {
 		if phoneNumber == "" {
-			return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INVALID_ERROR, "both id and phonenumber cannot m=be missing")
+			return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INVALID_ERROR, "both id and phonenumber cannot be missing")
 		}
 		params.AccountNumber = sql.NullString{
 			Valid: true,
@@ -332,23 +330,19 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 		}
 	}
 	clientHasNonPosted = true
-	log.Println("non-posted: ", nonPosteds)
 
 	totalNonPosted, err := r.queries.CountClientsNonPosted(ctx, params3)
 	if err != nil {
 		return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err)
 	}
-	log.Println("total count: ", totalNonPosted)
 
 	totalPaid, err := r.queries.GetTotalPaidByIDorAccountNo(ctx, params2)
 	if err != nil {
 		return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total payment: %s", err)
 	}
 
-	log.Println("total paid: ", totalPaid)
 	if clientPresent {
 		loan, err = r.queries.GetActiveLoanDetails(ctx, client.ID)
-		log.Println("error: ", err)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				clientHasActiveLoan = false
@@ -402,12 +396,13 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 				PayingName:        nonPosted.PayingName,
 				Amount:            nonPosted.Amount,
 				PaidDate:          nonPosted.PaidDate,
+				AssignedBy: 	   nonPosted.AssignedBy,
 			}
 		}
 		rslt.PaymentDetails = paymentDetails
 		rslt.TotalPaid = pkg.InterfaceFloat64(totalPaid)
 	}
-	// pkg.CreatePaginationMetadata(uint32(totalNonPosted), pgData.PageSize, pgData.CurrentPage)
+
 	return rslt, pkg.CreatePaginationMetadata(uint32(totalNonPosted), pgData.PageSize, pgData.CurrentPage), nil
 }
 

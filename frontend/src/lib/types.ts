@@ -3,6 +3,8 @@ import {
 	Loan,
 	ExpectedPayment,
 	Installment,
+	LoanShort,
+	UnpaidInstallment,
 } from '@/components/PAGES/loans/schema';
 import { User } from '@/components/PAGES/users/schema';
 import { Product } from '@/components/PAGES/products/schema';
@@ -131,8 +133,22 @@ export interface getExpectedPaymentsType extends Omit<commonresponse, 'data'> {
 	data: ExpectedPayment[];
 }
 
+export interface getUnpaidInstallmentsType
+	extends Omit<commonresponse, 'data'> {
+	data: UnpaidInstallment[];
+}
+
 export interface getLoanInstallmentsType extends Omit<commonresponse, 'data'> {
 	data: Installment[];
+}
+
+export interface getClientNonPostedType extends Omit<commonresponse, 'data'> {
+	data: {
+		clientDetails: Client;
+		paymentDetails: Payment[];
+		loanShort: LoanShort;
+		totalPaid: number;
+	};
 }
 
 export interface getProductsType extends Omit<commonresponse, 'data'> {

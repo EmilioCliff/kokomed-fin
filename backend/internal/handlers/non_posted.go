@@ -231,8 +231,6 @@ func (s *Server) listClientsNonPosted(ctx *gin.Context) {
 		return
 	}
 
-	log.Println(req)
-
 	rslt, pgData, err := s.repo.NonPosted.GetClientNonPosted(ctx, req.ID, req.PhoneNumber, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
@@ -245,42 +243,6 @@ func (s *Server) listClientsNonPosted(ctx *gin.Context) {
 		"data": rslt,
 	})
 }
-
-// type assignNonPostedPaymentRequest struct {
-// 	ClientID uint32  `binding:"required" json:"client_id"`
-// 	AdminID  uint32  `binding:"required" json:"admin_id"`
-// 	Amount   float64 `binding:"required" json:"amount"`
-// }
-
-// func (s *Server) assignNonPostedPayment(ctx *gin.Context) {
-// 	var req assignNonPostedPaymentRequest
-// 	if err := ctx.ShouldBindJSON(&req); err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
-
-// 		return
-// 	}
-
-// 	id, err := pkg.StringToUint32(ctx.Param("id"))
-// 	if err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-// 		return
-// 	}
-
-// 	err = s.payments.TriggerManualPayment(ctx, services.ManualPaymentData{
-// 		LoanID:      id,
-// 		ClientID:    req.ClientID,
-// 		Amount:      req.Amount,
-// 		AdminUserID: req.AdminID,
-// 	})
-// 	if err != nil {
-// 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-// 		return
-// 	}
-
-// 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
-// }
 
 func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (nonPostedResponse, error) {
 	cacheKey := fmt.Sprintf("non-posted:%v", p.ID)

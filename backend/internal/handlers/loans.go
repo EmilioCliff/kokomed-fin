@@ -33,40 +33,6 @@ type loanResponse struct {
 	CreatedAt          time.Time	`json:"createdAt"`
 }
 
-// type loanProductResponse struct {
-// 	ID             uint32  `json:"id"`
-// 	BranchName     string  `json:"branch_name"`
-// 	LoanAmount     float64 `json:"loan_amount"`
-// 	RepayAmount    float64 `json:"repay_amount"`
-// 	InterestAmount float64 `json:"interest_amount"`
-// }
-
-// type loanClientResponse struct {
-// 	ID          uint32    `json:"id"`
-// 	Name        string    `json:"name"`
-// 	PhoneNumber string    `json:"phone_number"`
-// 	IdNumber    string    `json:"id_number"`
-// 	Dob         time.Time `json:"dob"`
-// 	Gender      string    `json:"gender"`
-// 	Active      bool      `json:"active"`
-// 	BranchName  string    `json:"branch_name"`
-// 	Overpayment float64   `json:"overpayment"`
-// 	AssignedStaff userResponse `json:"assigned_staff"`
-// 	DueAmount float64 `json:"due_amount"`
-// 	CreatedBy userResponse `json:"created_by"`
-// 	CreatedAt time.Time `json:"created_at"`
-// }
-
-// type loanUserResponse struct {
-// 	ID       uint32 `json:"id"`
-// 	Fullname string `json:"fullname"`
-// 	PhoneNumber string `json:"phone_number"`
-// 	Email string `json:"email"`
-// 	Role     string `json:"role"`
-// 	BranchName string `json:"branch_name"`
-// 	CreatedAt time.Time `json:"created_at"`
-// }
-
 type createLoanRequest struct {
 	ProductID          uint32  `binding:"required" json:"productId"`
 	ClientID           uint32  `binding:"required" json:"clientId"`
@@ -162,6 +128,7 @@ func (s *Server) createLoan(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, rsp)
 }
+
 // binding:"oneof=ACTIVE DEFAULTED"
 type disburseLoanRequest struct {
 	Status string ` json:"status"`
@@ -391,6 +358,60 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 	}
 
 	cacheKey := constructCacheKey("loan", cacheParams)
+
+	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (s *Server) listUnpaidInstallmentsData(ctx *gin.Context) {
+	log.Println("cache miss")
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	params := repository.Category{}
+	cacheParams := map[string][]string{
+		"page": {pageNoStr},
+		"limit": {pageSizeStr},
+	}
+
+	search := ctx.Query("search")
+	if search != "" {
+		params.Search = pkg.StringPtr(strings.ToLower(search))
+		cacheParams["search"] = []string{search}
+	}
+
+	rsp, pgData, err := s.repo.Loans.ListUnpaidInstallmentsData(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	response := gin.H{
+		"metadata": pgData,
+		"data": rsp, 
+	}
+
+	cacheKey := constructCacheKey("loan/unpaid-installments", cacheParams)
 
 	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {

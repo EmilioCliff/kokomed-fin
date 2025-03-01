@@ -112,6 +112,7 @@ func (s *Server) setUpRoutes() {
 	authRoute.GET("/loan/:id/installments", s.getLoanInstallments)
 	cachedRoutes.GET("/loan", s.listLoansByCategory)
 	cachedRoutes.GET("/loan/expected-payments", s.listExpectedPayments)
+	cachedRoutes.GET("/loan/unpaid-installments", s.listUnpaidInstallmentsData)
 
 	// payments routes
 	v1.POST("/payment/callback", s.paymentCallback)
@@ -120,12 +121,12 @@ func (s *Server) setUpRoutes() {
 
 	// payment of from credit to repay some loan(overpayment to pay loan)
 
-
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)
 	authRoute.GET("/helper/formData", s.getLoanFormData)
 	authRoute.GET("/helper/loanEvents", s.getLoanEvents)
 	authRoute.GET("/mpesa/token", s.getMPESAAccesToken)
+	authRoute.POST("/helper/client-payments", s.getClientNonPosted)
 	// cachedRoutes.GET("/helper/loanEvents", s.getLoanEvents)
 
 	// reports routes

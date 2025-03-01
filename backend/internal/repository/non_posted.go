@@ -54,4 +54,5 @@ type NonPostedShort struct {
 	PayingName        string    `json:"payingName"`
 	Amount            float64   `json:"amount"`
 	PaidDate          time.Time `json:"paidDate"`
+	AssignedBy string `json:"assignedBy"`
 }

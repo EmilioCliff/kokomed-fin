@@ -144,6 +144,10 @@ const items = [
 				url: '/loans/overview',
 			},
 			{
+				title: 'Unpaid Installments',
+				url: '/loans/unpaid-installments',
+			},
+			{
 				title: 'Expected Payments',
 				url: '/loans/expected-payments',
 			},
@@ -161,6 +165,10 @@ const items = [
 			{
 				title: 'Overview',
 				url: '/payments/overview',
+			},
+			{
+				title: 'Client Payments',
+				url: '/payments/client',
 			},
 			{
 				title: 'Payments Calendar',
