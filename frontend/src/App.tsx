@@ -12,7 +12,7 @@ import PaymentsPage from './components/PAGES/payments/PaymentsPage';
 import UsersPage from './components/PAGES/users/UsersPage';
 import BranchesPage from './components/PAGES/branches/BranchesPage';
 import ProductsPage from './components/PAGES/products/ProductsPage';
-import LoanExpectedPayments from './components/PAGES/loans/LoanExpectedPayments';
+// import LoanExpectedPayments from './components/PAGES/loans/LoanExpectedPayments';
 import { AuthContextWrapper } from './context/AuthContext';
 import { TableContextWrapper } from './context/TableContext';
 import { ReportsPage } from './components/PAGES/reports/ReportsPage';
@@ -50,10 +50,10 @@ function App() {
 									path="loans/timeline"
 									element={<LoanTimeline />}
 								/>
-								<Route
+								{/* <Route
 									path="loans/expected-payments"
 									element={<LoanExpectedPayments />}
-								/>
+								/> */}
 								<Route
 									path="customers/overview"
 									element={<CustomersPage />}

@@ -40,8 +40,6 @@ function LoanUnpaidInstallments() {
 		return <div>Error: {error.message}</div>;
 	}
 
-	console.log(data);
-
 	return (
 		<div className="px-4">
 			<div className="flex justify-between items-center mb-4">

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,7 +26,6 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 
 	amountFlt, err := strconv.ParseFloat(req["TransAmount"].(string), 64)
 	if err != nil {
-		log.Println(err)
 		ctx.JSON(http.StatusOK, gin.H{
 			"ResultCode": 400,
 			"ResultDesc": "Rejected",

@@ -532,18 +532,9 @@ func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, categor
 		return installments[i].DueDate.Before(installments[j].DueDate)
 	})
 
-	loanDueAmount := make(map[uint32]float64)
 	result := make([]repository.UnpaidInstallmentData, len(installments))
 
 	for i, installment := range installments {
-		loanID := installment.LoanID
-
-		if _, exists := loanDueAmount[loanID]; !exists {
-			loanDueAmount[loanID] = 0
-		}
-
-		loanDueAmount[loanID] += installment.RemainingAmount
-
 		result[i] = repository.UnpaidInstallmentData{
 			InstallmentNumber: installment.InstallmentNumber,
 			RemainingAmount:   installment.RemainingAmount,
@@ -555,7 +546,7 @@ func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, categor
 			FullName:          installment.ClientName,
 			PhoneNumber:       installment.ClientPhone,
 			ClientBranch: 	   installment.ClientBranchname,		
-			TotalDueAmount:    loanDueAmount[loanID], 
+			TotalDueAmount:    installment.RepayAmount - installment.LoanPaidAmount, 
 		}
 	}
 

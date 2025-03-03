@@ -25,7 +25,7 @@ export const paymentFormSchema = z.object({
 	BillRefNumber: z
 		.string()
 		.min(10, { message: 'Must be 10 characters long' }),
-	MSISDN: z.string().min(10, { message: 'Must be 10 characters long' }),
+	MSISDN: z.string().min(3, { message: 'Must be 3 characters long' }),
 	FirstName: z
 		.string()
 		.min(3, { message: 'Must be 3 or more characters long' }),

@@ -436,5 +436,6 @@ func convertGenerateNonPosted(nonPosted generated.NonPosted) repository.NonPoste
 		Amount:            nonPosted.Amount,
 		PaidDate:          nonPosted.PaidDate,
 		AssignedTo:        assignedTo,
+		AssignedBy: 	   nonPosted.AssignedBy,
 	}
 }

@@ -1,4 +1,4 @@
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import Spinner from '@/components/UI/Spinner';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -26,6 +26,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useAuth } from '@/hooks/useAuth';
+import getFormData from '@/services/getFormData';
+import VirtualizeddSelect from '@/components/UI/VisualizedSelect';
 
 interface LoanFormProps {
 	onFormOpen: (isOpen: boolean) => void;
@@ -34,13 +36,19 @@ interface LoanFormProps {
 function PaymentForm({ onFormOpen }: LoanFormProps) {
 	const { decoded } = useAuth();
 
+	const { isLoading, data, error } = useQuery({
+		queryKey: ['loans/form'],
+		queryFn: () => getFormData(false, true, false, false, false),
+		staleTime: 5 * 1000,
+	});
+
 	const form = useForm<PaymentFormType>({
 		resolver: zodResolver(paymentFormSchema),
 		defaultValues: {
 			TransAmount: 0,
 			TransID: '',
 			BillRefNumber: '',
-			MSISDN: '',
+			MSISDN: '***',
 			FirstName: '',
 			DatePaid: '',
 			App: 'INTERNAL',
@@ -72,6 +80,10 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 	return (
 		<>
 			{mutation.isPending && <Spinner />}
+
+			{isLoading && <Spinner />}
+
+			{error && <h1>error</h1>}
 
 			{mutation.error && (
 				<h5 onClick={() => mutation.reset()}>{`${mutation.error}`}</h5>
@@ -119,10 +131,18 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 								<FormItem>
 									<FormLabel>Account Number</FormLabel>
 									<FormControl>
-										<Input
-											placeholder="0712345678"
-											{...field}
-										/>
+										{data?.client && (
+											<VirtualizeddSelect
+												options={data.client}
+												placeholder="Select a loan officer"
+												value={field.value}
+												onPhoneChange={(
+													phoneNumber,
+												) => {
+													field.onChange(phoneNumber);
+												}}
+											/>
+										)}
 									</FormControl>
 									<FormMessage />
 								</FormItem>

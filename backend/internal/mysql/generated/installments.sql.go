@@ -101,15 +101,7 @@ SELECT
     c.id AS client_id,
     c.full_name AS client_name,
     c.phone_number AS client_phone,
-
-    (
-        SELECT SUM(i2.remaining_amount)
-        FROM installments i2
-        WHERE i2.loan_id = l.id
-          AND (i2.paid = FALSE OR i2.remaining_amount > 0)
-          AND i2.due_date <= CURDATE()
-    ) AS total_due_amount
-
+    l.paid_amount AS loan_paid_amount
 FROM installments i
 JOIN loans l ON i.loan_id = l.id
 JOIN users u ON u.id = l.loan_officer
@@ -140,19 +132,19 @@ type GetUnpaidInstallmentsDataParams struct {
 }
 
 type GetUnpaidInstallmentsDataRow struct {
-	InstallmentNumber uint32      `json:"installment_number"`
-	RemainingAmount   float64     `json:"remaining_amount"`
-	DueDate           time.Time   `json:"due_date"`
-	LoanOfficer       string      `json:"loan_officer"`
-	LoanID            uint32      `json:"loan_id"`
-	LoanAmount        float64     `json:"loan_amount"`
-	RepayAmount       float64     `json:"repay_amount"`
-	ProductBranchname string      `json:"product_branchname"`
-	ClientBranchname  string      `json:"client_branchname"`
-	ClientID          uint32      `json:"client_id"`
-	ClientName        string      `json:"client_name"`
-	ClientPhone       string      `json:"client_phone"`
-	TotalDueAmount    interface{} `json:"total_due_amount"`
+	InstallmentNumber uint32    `json:"installment_number"`
+	RemainingAmount   float64   `json:"remaining_amount"`
+	DueDate           time.Time `json:"due_date"`
+	LoanOfficer       string    `json:"loan_officer"`
+	LoanID            uint32    `json:"loan_id"`
+	LoanAmount        float64   `json:"loan_amount"`
+	RepayAmount       float64   `json:"repay_amount"`
+	ProductBranchname string    `json:"product_branchname"`
+	ClientBranchname  string    `json:"client_branchname"`
+	ClientID          uint32    `json:"client_id"`
+	ClientName        string    `json:"client_name"`
+	ClientPhone       string    `json:"client_phone"`
+	LoanPaidAmount    float64   `json:"loan_paid_amount"`
 }
 
 func (q *Queries) GetUnpaidInstallmentsData(ctx context.Context, arg GetUnpaidInstallmentsDataParams) ([]GetUnpaidInstallmentsDataRow, error) {
@@ -183,7 +175,7 @@ func (q *Queries) GetUnpaidInstallmentsData(ctx context.Context, arg GetUnpaidIn
 			&i.ClientID,
 			&i.ClientName,
 			&i.ClientPhone,
-			&i.TotalDueAmount,
+			&i.LoanPaidAmount,
 		); err != nil {
 			return nil, err
 		}

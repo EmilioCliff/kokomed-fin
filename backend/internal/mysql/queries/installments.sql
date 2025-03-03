@@ -43,15 +43,7 @@ SELECT
     c.id AS client_id,
     c.full_name AS client_name,
     c.phone_number AS client_phone,
-
-    (
-        SELECT SUM(i2.remaining_amount)
-        FROM installments i2
-        WHERE i2.loan_id = l.id
-          AND (i2.paid = FALSE OR i2.remaining_amount > 0)
-          AND i2.due_date <= CURDATE()
-    ) AS total_due_amount
-
+    l.paid_amount AS loan_paid_amount
 FROM installments i
 JOIN loans l ON i.loan_id = l.id
 JOIN users u ON u.id = l.loan_officer

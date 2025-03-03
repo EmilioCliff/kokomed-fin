@@ -13,8 +13,9 @@ import { commonDataResponse } from '@/lib/types';
 interface VirtualizeddSelectProps {
 	options: commonDataResponse[];
 	placeholder: string;
-	value: number | null;
-	onChange: (id: number) => void;
+	value: number | string | null;
+	onChange?: (id: number) => void;
+	onPhoneChange?: (phoneNumber: string) => void;
 }
 
 export default function VirtualizeddSelect({
@@ -22,6 +23,7 @@ export default function VirtualizeddSelect({
 	placeholder,
 	value,
 	onChange,
+	onPhoneChange,
 }: VirtualizeddSelectProps) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedOption, setSelectedOption] = useState('');
@@ -67,7 +69,16 @@ export default function VirtualizeddSelect({
 							)}
 							onClick={() => {
 								setSelectedOption(filteredOptions[index].name);
-								onChange(filteredOptions[index].id);
+								if (onChange) {
+									onChange(filteredOptions[index].id);
+								}
+								if (onPhoneChange) {
+									onPhoneChange(
+										filteredOptions[index].name
+											.split('-')[1]
+											?.trim(),
+									);
+								}
 								setOpen(false);
 							}}
 						>

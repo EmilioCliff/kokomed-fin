@@ -97,6 +97,15 @@ function PaymentSheet() {
 				/>
 			);
 		},
+		assignedBy: (value) => {
+			return (
+				<Input
+					readOnly
+					placeholder={value}
+					className="readonly-input"
+				/>
+			);
+		},
 		paidDate: (value) => {
 			return (
 				<Input

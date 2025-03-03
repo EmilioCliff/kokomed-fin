@@ -147,10 +147,10 @@ const items = [
 				title: 'Unpaid Installments',
 				url: '/loans/unpaid-installments',
 			},
-			{
-				title: 'Expected Payments',
-				url: '/loans/expected-payments',
-			},
+			// {
+			// 	title: 'Expected Payments',
+			// 	url: '/loans/expected-payments',
+			// },
 			{
 				title: 'Loans Timeline',
 				url: '/loans/timeline',

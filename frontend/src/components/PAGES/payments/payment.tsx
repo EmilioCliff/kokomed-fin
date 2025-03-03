@@ -128,6 +128,20 @@ export const paymentColumns: ColumnDef<Payment>[] = [
 		},
 		enableSorting: true,
 	},
+	{
+		accessorKey: 'assignedBy',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Assigned By" />
+		),
+		cell: ({ row }) => (
+			<div className="w-[80]">
+				{row.original.assignedBy === 'APP'
+					? 'System'
+					: row.original.assignedBy}
+			</div>
+		),
+		enableSorting: false,
+	},
 ];
 
 export const clientPaymentColumns: ColumnDef<Payment>[] = [

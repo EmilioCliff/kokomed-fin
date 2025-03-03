@@ -23,6 +23,7 @@ type nonPostedResponse struct {
 	PaidDate          time.Time         `json:"paidDate"`
 	AssignedTo        clientShortResponse `json:"assignedTo"`
 	Assigned bool	`json:"assigned"`
+	AssignedBy string 	`json:"assignedBy"`
 }
 
 func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
@@ -262,6 +263,7 @@ func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (
 		PayingName:        p.PayingName,
 		Amount:            p.Amount,
 		PaidDate:          p.PaidDate,
+		AssignedBy: 	   p.AssignedBy,		
 	}
 
 	if p.AssignedTo != nil {
