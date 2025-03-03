@@ -276,6 +276,20 @@ function PaymentClient() {
 									</div>
 									<div>
 										<p className="text-sm text-gray-500">
+											Unpaid Amount
+										</p>
+										<p className="font-medium">
+											KES{' '}
+											{(
+												mutation.data.data.loanShort
+													.repayAmount -
+												mutation.data.data.loanShort
+													.paidAmount
+											).toLocaleString()}
+										</p>
+									</div>
+									<div>
+										<p className="text-sm text-gray-500">
 											Disbursed On
 										</p>
 										<p className="font-medium">
