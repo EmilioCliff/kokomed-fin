@@ -50,10 +50,17 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 		var err error
 		loanID, err = p.mySQL.Loans.GetClientActiceLoan(ctx, *params.AssignedTo)
 		if err != nil {
+			// have this in a transaction
 			if pkg.ErrorCode(err) == pkg.NOT_FOUND_ERROR {
 				// if client doesnt have a active loan add payment to the overpayment
 				if err = p.mySQL.Clients.UpdateClientOverpayment(ctx, params.AccountNumber, params.Amount); err != nil {
 					return 0, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan overpayment: %s", err.Error())
+				}
+
+				// also create a non-posted for him
+				_, err := p.mySQL.NonPosted.CreateNonPosted(ctx, params)
+				if err != nil {
+					return 0, err
 				}
 
 				return 0, nil
@@ -102,7 +109,7 @@ func (p *PaymentService) ProcessCallback(ctx context.Context, callbackData *serv
 			return 0, err
 		}
 	} else {
-		log.Println(params)
+		log.Println("Non-Posted Data: ", params)
 		_, err := p.mySQL.NonPosted.CreateNonPosted(ctx, params)
 		if err != nil {
 			return 0, err
