@@ -56,35 +56,6 @@ func authMiddleware(maker pkg.JWTMaker) gin.HandlerFunc {
 	}
 }
 
-// func loggerMiddleware() gin.HandlerFunc {
-// 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-
-// 	return func(c *gin.Context) {
-// 		start := time.Now()
-
-// 		c.Next()
-
-// 		duration := time.Since(start)
-
-// 		var errors []error
-// 		for _, err := range c.Errors {
-// 			errors = append(errors, err)
-// 		}
-
-// 		logger := log.Info()
-// 		if len(c.Errors) > 0 {
-// 			logger = log.Error().Errs("errors", errors)
-// 		}
-
-// 		logger.
-// 			Str("method", c.Request.Method).
-// 			Str("path", c.Request.RequestURI).
-// 			Int("status_code", c.Writer.Status()).
-// 			Str("status_text", http.StatusText(c.Writer.Status())).
-// 			Dur("duration", duration)
-// 	}
-// }
-
 func redisCacheMiddleware(cache services.CacheService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestPath := ctx.Request.URL.Path
@@ -111,11 +82,9 @@ func redisCacheMiddleware(cache services.CacheService) gin.HandlerFunc {
 
 func CORSmiddleware() gin.HandlerFunc {
 	allowedOrigins := []string{
-        "https://kokomed-fin.vercel.app",
         "https://frontend-production-ca6a.up.railway.app",
-		"http://frontend:3000",
+		"https://frontend-development-fdd2.up.railway.app",
 		"http://localhost:3001",
-		"http://localhost:5173",
     }
 
 	return func(ctx *gin.Context) {
