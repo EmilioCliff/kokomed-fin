@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"sort"
@@ -15,6 +16,11 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Server struct {
@@ -22,29 +28,47 @@ type Server struct {
 	ln     net.Listener
 	srv    *http.Server
 
+	// dependencies
 	config pkg.Config
 	maker  pkg.JWTMaker
 	repo   *mysql.MySQLRepo
 
+	// services
 	payments services.PaymentService
 	worker services.WorkerService
 	cache services.CacheService
 	report services.ReportService
+
+	// otel components
+	meter metric.Meter
+	logger *slog.Logger
+	tracer trace.Tracer
 }
 
 func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, payment *payments.PaymentService, worker services.WorkerService, cache services.CacheService, report services.ReportService) *Server {
 	r := gin.Default()
 
+	meter := otel.Meter("")
+	logger := otelslog.NewLogger("")
+	tracer := otel.Tracer("kokomed-fin")
+
+
 	s := &Server{
 		router:   r,
+		ln:       nil,
+
 		config:   config,
 		maker:    maker,
 		repo:     repo,
+
+		payments: payment,
 		worker: worker,
 		cache: cache,
 		report: report,
-		payments: payment,
-		ln:       nil,
+
+		meter: meter,
+		logger: logger,
+		tracer: tracer,
 	}
 
 	s.setUpRoutes()
@@ -53,6 +77,7 @@ func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, pay
 }
 
 func (s *Server) setUpRoutes() {
+	s.router.Use(otelgin.Middleware(s.config.SERVER_NAME)) // otelgin middleware
 	s.router.Use(CORSmiddleware())
 	
 	v1 := s.router.Group("/api/v1")
@@ -61,6 +86,7 @@ func (s *Server) setUpRoutes() {
 	// protected routes
 	authRoute := v1Auth.Use(authMiddleware(s.maker))
 
+	// cached routes
 	cachedRoutes := authRoute.Use(redisCacheMiddleware(s.cache))
 
 	// health check
@@ -80,22 +106,16 @@ func (s *Server) setUpRoutes() {
 	// clients routes
 	authRoute.POST("/client", s.createClient)
 	cachedRoutes.GET("/client", s.listClients)
-	authRoute.GET("/client/branch/:id", s.listClientsByBranch)
-	authRoute.GET("/client/status", s.listClientsByActive) // use query params
 	authRoute.GET("/client/:id", s.getClient)
 	authRoute.PATCH("/client/:id", s.updateClient)
 
 	// product routes
 	authRoute.POST("/product", s.createProduct)
 	cachedRoutes.GET("/product", s.listProducts)
-	authRoute.GET("/product/branch/:id", s.listProductsByBranch)
 	authRoute.GET("/product/:id", s.getProduct)
 
 	// non-posted routes
 	cachedRoutes.GET("/non-posted/all", s.listAllNonPostedPayments)
-	authRoute.GET("/non-posted/unassigned", s.listUnassignedNonPostedPayments)
-	authRoute.GET("/non-posted/by-id/:id", s.getNonPostedPayment)
-	authRoute.GET("/non-posted/by-type/:type", s.listNonPostedByTransactionSource)
 	authRoute.POST("/non-posted/clients", s.listClientsNonPosted)
 
 	// branches routes
@@ -107,8 +127,6 @@ func (s *Server) setUpRoutes() {
 	// loans routes
 	authRoute.POST("/loan", s.createLoan)
 	authRoute.PATCH("/loan/:id/disburse", s.disburseLoan)
-	authRoute.PATCH("/loan/:id/assign", s.transferLoanOfficer)
-	authRoute.GET("/loan/:id", s.getLoan)
 	authRoute.GET("/loan/:id/installments", s.getLoanInstallments)
 	cachedRoutes.GET("/loan", s.listLoansByCategory)
 	cachedRoutes.GET("/loan/expected-payments", s.listExpectedPayments)
@@ -119,7 +137,6 @@ func (s *Server) setUpRoutes() {
 	v1.POST("/payment/validation", s.validationCallback)
 	authRoute.PATCH("/payment/:id/assign", s.paymentByAdmin)
 
-	// payment of from credit to repay some loan(overpayment to pay loan)
 
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)
@@ -127,7 +144,6 @@ func (s *Server) setUpRoutes() {
 	authRoute.GET("/helper/loanEvents", s.getLoanEvents)
 	authRoute.GET("/mpesa/token", s.getMPESAAccesToken)
 	authRoute.POST("/helper/client-payments", s.getClientNonPosted)
-	// cachedRoutes.GET("/helper/loanEvents", s.getLoanEvents)
 
 	// reports routes
 	authRoute.POST("/report", s.generateReport)
@@ -185,10 +201,7 @@ func errorResponse(err error) gin.H {
 }
 
 func constructCacheKey(path string, queryParams map[string][]string) string {
-	const prefix = "/api/v1/"
-	if strings.HasPrefix(path, prefix) {
-		path = strings.TrimPrefix(path, prefix)
-	}
+	path = strings.TrimPrefix(path, "/api/v1/")
 
 	var queryParts []string
 	for key, values := range queryParams {

@@ -12,6 +12,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var _ repository.LoansRepository = (*LoanRepository)(nil)
@@ -45,18 +46,23 @@ func (r *LoanRepository) TransferLoan(ctx context.Context, officerId uint32, loa
 }
 
 func (r *LoanRepository) GetLoanByID(ctx context.Context, id uint32) (repository.Loan, error) {
-	loan, err := r.queries.GetLoan(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: GetLoanByID")
+	defer span.End()
+
+	loan, err := r.queries.GetLoan(tc, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.Loan{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "loan not found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get loan")
 		return repository.Loan{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan: %s", err.Error())
 	}
 
 	return convertGeneratedLoan(loan), nil
 }
 
+// used in transactions to get client active loan
 func (t *LoanRepository) GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error) {
 	loanID, err := t.queries.GetClientActiveLoan(ctx, generated.GetClientActiveLoanParams{
 		ClientID: clientID,
@@ -73,7 +79,10 @@ func (t *LoanRepository) GetClientActiceLoan(ctx context.Context, clientID uint3
 	return loanID, nil
 }
 
-func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.Loan, pkg.PaginationMetadata, error) {
+func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.LoanFullData, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: ListLoans")
+	defer span.End()
+
 	params := generated.ListLoansParams{
 		Column1: "",
 		FullName:   "", 
@@ -110,11 +119,13 @@ func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Cat
 		params2.FINDINSET = *category.Statuses
 	}
 
-	loans, err := r.queries.ListLoans(ctx, params)
+	loans, err := r.queries.ListLoans(tc, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
 		}
+
+		setSpanError(span, codes.Error, err, "failed to get loans")
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans: %s", err.Error())
 	}
 
@@ -123,35 +134,19 @@ func (r *LoanRepository) ListLoans(ctx context.Context, category *repository.Cat
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
 	}
 
-	result := make([]repository.Loan, len(loans))
+	result := make([]repository.LoanFullData, len(loans))
 
 	for i, loan := range loans {
-		result[i] = convertGeneratedLoan(generated.Loan{
-			ID:                 loan.ID,
-			ProductID:          loan.ProductID,
-			ClientID:           loan.ClientID,
-			LoanOfficer:        loan.LoanOfficer,
-			LoanPurpose:        loan.LoanPurpose,
-			DueDate:            loan.DueDate,
-			ApprovedBy:         loan.ApprovedBy,
-			DisbursedOn:        loan.DisbursedOn,
-			DisbursedBy:        loan.DisbursedBy,
-			TotalInstallments:  loan.TotalInstallments,
-			InstallmentsPeriod: loan.InstallmentsPeriod,
-			Status:             loan.Status,
-			ProcessingFee:      loan.ProcessingFee,
-			PaidAmount:         loan.PaidAmount,
-			UpdatedBy:          loan.UpdatedBy,
-			CreatedBy:          loan.CreatedBy,
-			CreatedAt:          loan.CreatedAt,
-			FeePaid:            loan.FeePaid,
-		})
+		result[i] = convertListLoanRowToRepo(&loan)
 	}
 
 	return result, pkg.CreatePaginationMetadata(uint32(totalLoans), pgData.PageSize, pgData.CurrentPage), nil
 }
 
 func (r *LoanRepository) GetExpectedPayments(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.ExpectedPayment, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: GetExpectedPayments")
+	defer span.End()
+
 	params := generated.ListExpectedPaymentsParams{
 		Column1: "",
 		FullName:   "", 
@@ -177,11 +172,13 @@ func (r *LoanRepository) GetExpectedPayments(ctx context.Context, category *repo
 		params2.FullName_2 = searchValue
 	}
 
-	expectedPayments, err := r.queries.ListExpectedPayments(ctx, params)
+	expectedPayments, err := r.queries.ListExpectedPayments(tc, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no unexpected payments found")
 		}
+
+		setSpanError(span, codes.Error, err, "failed to get unexpected payments")
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get unexpected payments: %s", err.Error())
 	}
 
@@ -209,12 +206,16 @@ func (r *LoanRepository) GetExpectedPayments(ctx context.Context, category *repo
 }
 
 func (r *LoanRepository) DeleteLoan(ctx context.Context, id uint32) error {
-	err := r.queries.DeleteLoan(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: DeleteLoan")
+	defer span.End()
+
+	err := r.queries.DeleteLoan(tc, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loan found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to delete loan")
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete loan: %s", err.Error())
 	}
 
@@ -222,12 +223,16 @@ func (r *LoanRepository) DeleteLoan(ctx context.Context, id uint32) error {
 }
 
 func (r *LoanRepository) GetLoanInstallments(ctx context.Context, id uint32) ([]repository.Installment, error) {
-	installments, err := r.queries.ListInstallmentsByLoan(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: GetLoanInstallments")
+	defer span.End()
+
+	installments, err := r.queries.ListInstallmentsByLoan(tc, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans installments found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get loans installments")
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loans installments: %s", err.Error())
 	}
 
@@ -241,12 +246,16 @@ func (r *LoanRepository) GetLoanInstallments(ctx context.Context, id uint32) ([]
 }
 
 func (r *LoanRepository) GetInstallment(ctx context.Context, id uint32) (repository.Installment, error) {
-	installment, err := r.queries.GetInstallment(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: GetInstallment")
+	defer span.End()
+
+	installment, err := r.queries.GetInstallment(tc, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.Installment{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no installment found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get installment")
 		return repository.Installment{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get intallment: %s", err.Error())
 	}
 
@@ -254,6 +263,9 @@ func (r *LoanRepository) GetInstallment(ctx context.Context, id uint32) (reposit
 }
 
 func (r *LoanRepository) UpdateInstallment(ctx context.Context, installment *repository.UpdateInstallment) (repository.Installment, error) {
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: UpdateInstallment")
+	defer span.End()
+
 	params := generated.UpdateInstallmentParams{
 		ID:              installment.ID,
 		RemainingAmount: installment.RemainingAmount,
@@ -273,8 +285,9 @@ func (r *LoanRepository) UpdateInstallment(ctx context.Context, installment *rep
 		}
 	}
 
-	execResult, err := r.queries.UpdateInstallment(ctx, params)
+	execResult, err := r.queries.UpdateInstallment(tc, params)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to update installment")
 		return repository.Installment{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update installment: %s", err.Error())
 	}
 
@@ -286,61 +299,11 @@ func (r *LoanRepository) UpdateInstallment(ctx context.Context, installment *rep
 	return r.GetInstallment(ctx, uint32(id))
 }
 
-func convertGeneratedLoan(loan generated.Loan) repository.Loan {
-	var loanPurpose *string
-	if loan.LoanPurpose.Valid {
-		loanPurpose = &loan.LoanPurpose.String
-	}
-
-	var dueDate *time.Time
-	if loan.DueDate.Valid {
-		dueDate = &loan.DueDate.Time
-	}
-
-	var disbursedOn *time.Time
-	if loan.DisbursedOn.Valid {
-		disbursedOn = &loan.DisbursedOn.Time
-	}
-
-	var disbursedBy *uint32
-
-	if loan.DisbursedBy.Valid {
-		value := uint32(loan.DisbursedBy.Int32)
-		disbursedBy = &value
-	}
-
-	var updatedBy *uint32
-
-	if loan.UpdatedBy.Valid {
-		value := uint32(loan.UpdatedBy.Int32)
-		updatedBy = &value
-	}
-
-	return repository.Loan{
-		ID:                 loan.ID,
-		ProductID:          loan.ProductID,
-		ClientID:           loan.ClientID,
-		LoanOfficerID:      loan.LoanOfficer,
-		LoanPurpose:        loanPurpose,
-		DueDate:            dueDate,
-		ApprovedBy:         loan.ApprovedBy,
-		DisbursedOn:        disbursedOn,
-		DisbursedBy:        disbursedBy,
-		TotalInstallments:  loan.TotalInstallments,
-		InstallmentsPeriod: loan.InstallmentsPeriod,
-		Status:             string(loan.Status),
-		ProcessingFee:      loan.ProcessingFee,
-		PaidAmount:         loan.PaidAmount,
-		UpdatedBy:          updatedBy,
-		CreatedBy:          loan.CreatedBy,
-		CreatedAt:          loan.CreatedAt,
-		FeePaid:            loan.FeePaid,
-	}
-}
-
-
 func (r *LoanRepository) GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, services.LoanSummary, error) {
-	loans, err := r.GetLoansReportData(ctx, GetLoansReportDataParams{
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: GetReportLoanData")
+	defer span.End()
+
+	loans, err := r.GetLoansReportData(tc, GetLoansReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate:   filters.EndDate,
 	})
@@ -348,6 +311,8 @@ func (r *LoanRepository) GetReportLoanData(ctx context.Context, filters services
 		if err == sql.ErrNoRows {
 			return nil, services.LoanSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
 		}
+
+		setSpanError(span, codes.Error, err, "failed to get report loan data")
 		return nil, services.LoanSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report loan data: %s", err.Error())
 	}
 
@@ -420,12 +385,16 @@ func (r *LoanRepository) GetReportLoanData(ctx context.Context, filters services
 }
 
 func (r *LoanRepository) GetReportLoanByIdData(ctx context.Context,id uint32) (services.LoanReportDataById, error) {
-	loan, err := r.GetLoanReportDataById(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: GetReportLoanByIdData")
+	defer span.End()
+
+	loan, err := r.GetLoanReportDataById(tc, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return services.LoanReportDataById{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get report loan by id data")
 		return services.LoanReportDataById{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report loan by id data: %s", err.Error())
 	}
 
@@ -433,11 +402,16 @@ func (r *LoanRepository) GetReportLoanByIdData(ctx context.Context,id uint32) (s
 }
 
 func (r *LoanRepository) GetLoanEvents(ctx context.Context) ([]repository.LoanEvent, error) {
-	events, err := r.GetLoanEventsHelper(ctx)
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: GetLoanEvents")
+	defer span.End()
+
+	events, err := r.GetLoanEventsHelper(tc)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return []repository.LoanEvent{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
 		}
+
+		setSpanError(span, codes.Error, err, "failed to get loan events")
 		return []repository.LoanEvent{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan events: %s", err.Error())
 	}
 
@@ -490,6 +464,9 @@ func (r *LoanRepository) GetLoanEvents(ctx context.Context) ([]repository.LoanEv
 }
 
 func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, category *repository.Category, pgData *pkg.PaginationMetadata) ([]repository.UnpaidInstallmentData, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "Loan Repo: ListUnpaidInstallmentsData")
+	defer span.End()
+
 	params := generated.GetUnpaidInstallmentsDataParams{
 		Column1:    "",
 		FullName:   "", 
@@ -515,11 +492,13 @@ func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, categor
 		params2.PhoneNumber = searchValue
 	}
 
-	installments, err := r.queries.GetUnpaidInstallmentsData(ctx, params)
+	installments, err := r.queries.GetUnpaidInstallmentsData(tc, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no unpaid installments found")
 		}
+
+		setSpanError(span, codes.Error, err, "failed to get unpaid installments")
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get unpaid installments: %s", err.Error())
 	}
 
@@ -556,6 +535,141 @@ func (r *LoanRepository) ListUnpaidInstallmentsData(ctx context.Context, categor
 	// }
 
 	return result, pkg.CreatePaginationMetadata(uint32(totalInstallments), pgData.PageSize, pgData.CurrentPage), nil
+}
+
+
+func convertListLoanRowToRepo(loan *generated.ListLoansRow) repository.LoanFullData {
+	rsp := repository.LoanFullData{
+		ID: loan.ID,
+		Product: repository.ProductShort{
+			ID:             loan.ProductID,
+			BranchName:     loan.ProductBranchName, // You might need to join the product's branch name if required
+			LoanAmount:     loan.LoanAmount,
+			RepayAmount:    loan.RepayAmount,
+			InterestAmount: loan.InterestAmount,
+		},
+		Client: repository.ClientShort{
+			ID:          loan.ClientID,
+			FullName:    loan.ClientName,
+			PhoneNumber: loan.ClientPhone,
+			Active:      loan.ClientActive,
+			BranchName:  loan.ClientBranchName,
+		},
+		LoanOfficer: repository.UserShortResponse{
+			ID:          loan.LoanOfficer,
+			FullName:    loan.LoanOfficerName,
+			Email:       loan.LoanOfficerEmail,
+			PhoneNumber: loan.LoanOfficerPhone,
+		},
+		LoanPurpose:        pkg.StringPtr(""),
+		DueDate:            &time.Time{},
+		ApprovedBy: repository.UserShortResponse{
+			ID:          loan.ApprovedBy,
+			FullName:    loan.ApprovedByName,
+			Email:       loan.ApprovedByEmail,
+			PhoneNumber: loan.ApprovedByPhone,
+		},
+		DisbursedOn: &time.Time{},
+		TotalInstallments:  loan.TotalInstallments,
+		InstallmentsPeriod: loan.InstallmentsPeriod,
+		Status:             string(loan.Status),
+		ProcessingFee:      loan.ProcessingFee,
+		FeePaid:            loan.FeePaid,
+		PaidAmount:         loan.PaidAmount,
+		RemainingAmount:    loan.RepayAmount - loan.PaidAmount,
+		CreatedBy: repository.UserShortResponse{
+			ID:          loan.CreatedBy,
+			FullName:    loan.CreatedByName.String,
+			Email:       loan.CreatedByEmail.String,
+			PhoneNumber: loan.CreatedByPhone.String,
+		},
+		CreatedAt: loan.CreatedAt,
+	}
+
+	if loan.DueDate.Valid {
+		rsp.DueDate = &loan.DueDate.Time
+	}
+
+	if loan.DisbursedOn.Valid{
+		rsp.DisbursedOn = &loan.DisbursedOn.Time
+	}
+
+	if loan.LoanPurpose.Valid{
+		rsp.LoanPurpose = &loan.LoanPurpose.String
+	}
+
+	if loan.UpdatedBy.Valid {
+		rsp.UpdatedBy = repository.UserShortResponse{
+			ID:          uint32(loan.UpdatedBy.Int32),
+			FullName:    loan.UpdatedByName.String,
+			Email:       loan.UpdatedByEmail.String,
+			PhoneNumber: loan.UpdatedByPhone.String,
+		}
+	}
+
+	if loan.DisbursedBy.Valid {
+		rsp.DisbursedBy = repository.UserShortResponse{
+			ID:          uint32(loan.DisbursedBy.Int32),
+			FullName:    loan.DisbursedByName.String,
+			Email:       loan.DisbursedByEmail.String,
+			PhoneNumber: loan.DisbursedByPhone.String,
+		}
+	}
+
+
+	return rsp
+}
+
+func convertGeneratedLoan(loan generated.Loan) repository.Loan {
+	var loanPurpose *string
+	if loan.LoanPurpose.Valid {
+		loanPurpose = &loan.LoanPurpose.String
+	}
+
+	var dueDate *time.Time
+	if loan.DueDate.Valid {
+		dueDate = &loan.DueDate.Time
+	}
+
+	var disbursedOn *time.Time
+	if loan.DisbursedOn.Valid {
+		disbursedOn = &loan.DisbursedOn.Time
+	}
+
+	var disbursedBy *uint32
+
+	if loan.DisbursedBy.Valid {
+		value := uint32(loan.DisbursedBy.Int32)
+		disbursedBy = &value
+	}
+
+	var updatedBy *uint32
+
+	if loan.UpdatedBy.Valid {
+		value := uint32(loan.UpdatedBy.Int32)
+		updatedBy = &value
+	}
+
+	return repository.Loan{
+		ID:                 loan.ID,
+		ProductID:          loan.ProductID,
+		ClientID:           loan.ClientID,
+		LoanOfficerID:      loan.LoanOfficer,
+		LoanPurpose:        loanPurpose,
+		DueDate:            dueDate,
+		ApprovedBy:         loan.ApprovedBy,
+		DisbursedOn:        disbursedOn,
+		DisbursedBy:        disbursedBy,
+		TotalInstallments:  loan.TotalInstallments,
+		InstallmentsPeriod: loan.InstallmentsPeriod,
+		Status:             string(loan.Status),
+		ProcessingFee:      loan.ProcessingFee,
+		PaidAmount:         loan.PaidAmount,
+		UpdatedBy:          updatedBy,
+		CreatedBy:          loan.CreatedBy,
+		CreatedAt:          loan.CreatedAt,
+		FeePaid:            loan.FeePaid,
+	}
 }
 
 func convertGeneratedInstallment(installment generated.Installment) repository.Installment {

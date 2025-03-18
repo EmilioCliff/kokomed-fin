@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strconv"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+	"go.opentelemetry.io/otel/codes"
 )
 
 
@@ -27,18 +27,24 @@ func NewHelperRepository(db *Store) *HelperRepository {
 }
 
 func (r *HelperRepository) GetDashboardData(ctx context.Context) (repository.DashboardData, error) {
-	widgetsData, err := r.queries.DashBoardDataHelper(ctx)
+	tc, span := r.db.tracer.Start(ctx, "Helper Repo: GetDashboardData")
+	defer span.End()
+
+	widgetsData, err := r.queries.DashBoardDataHelper(tc)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to get dashboard data")
 		return repository.DashboardData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting dashboard widgets")
 	}
 
-	loansData, err := r.queries.DashBoardInactiveLoans(ctx)
+	loansData, err := r.queries.DashBoardInactiveLoans(tc)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to get dashboard inactive loans")
 		return repository.DashboardData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting dashboard inactive loans")
 	}
 
-	paymentsData, err := r.queries.DashBoardRecentsPayments(ctx)
+	paymentsData, err := r.queries.DashBoardRecentsPayments(tc)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to get dashboard recent payment")
 		return repository.DashboardData{}, pkg.Errorf(pkg.INTERNAL_ERROR, err.Error())
 	}
 
@@ -64,16 +70,8 @@ func (r *HelperRepository) GetDashboardData(ctx context.Context) (repository.Das
 		}
 	}
 
-		totalLoanAmountBtye, _ := widgetsData.TotalLoanAmount.([]byte)
-		totalLoanAmount, _ := strconv.ParseFloat(string(totalLoanAmountBtye), 64)
-		totalLoanDisbursedBtye, _ := widgetsData.TotalLoanDisbursed.([]byte)
-		totalLoanDisbursed, _ := strconv.ParseFloat(string(totalLoanDisbursedBtye), 64)
-		totalLoanPaidBtye, _ := widgetsData.TotalLoanPaid.([]byte)
-		totalLoanPaid, _ := strconv.ParseFloat(string(totalLoanPaidBtye), 64)
-		totalPaymentsReceivedBtye, _ := widgetsData.TotalPaymentsReceived.([]byte)
-		totalPaymentsReceived, _ := strconv.ParseFloat(string(totalPaymentsReceivedBtye), 64)
-		totalNonPostedBtye, _ := widgetsData.TotalNonPosted.([]byte)
-		totalNonPosted, _ := strconv.ParseFloat(string(totalNonPostedBtye), 64)
+		totalPaymentsReceived  := pkg.InterfaceFloat64(widgetsData.TotalPaymentsReceived)
+		totalNonPosted := pkg.InterfaceFloat64(widgetsData.TotalNonPosted)
 
 		widgets := []repository.Widget{
 			{
@@ -94,10 +92,10 @@ func (r *HelperRepository) GetDashboardData(ctx context.Context) (repository.Das
 			},
 			{
 				Title: "Transactions",
-				MainAmount: totalLoanAmount,
-				Active: totalLoanDisbursed,
+				MainAmount: pkg.InterfaceFloat64(widgetsData.TotalLoanAmount),
+				Active: pkg.InterfaceFloat64(widgetsData.TotalLoanDisbursed),
 				ActiveTitle: "Disbursed",
-				Closed: totalLoanPaid,
+				Closed: pkg.InterfaceFloat64(widgetsData.TotalLoanPaid),
 				ClosedTitle: "Completed Loans",
 				Currency: "Ksh",
 			},
@@ -120,13 +118,17 @@ func (r *HelperRepository) GetDashboardData(ctx context.Context) (repository.Das
 }
 
 func (r *HelperRepository) GetProductData(ctx context.Context) ([]repository.ProductData, error) {
-	products, err := r.queries.HelperProduct(ctx)
+	tc, span := r.db.tracer.Start(ctx, "Helper Repo: GetProductData")
+	defer span.End()
+
+	products, err := r.queries.HelperProduct(tc)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting product list data")		
+		setSpanError(span, codes.Error, err, "failed to get product ddata")
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting product data")		
 	}
 
 	rsp := make([]repository.ProductData, len(products))
@@ -140,12 +142,16 @@ func (r *HelperRepository) GetProductData(ctx context.Context) ([]repository.Pro
 	return rsp, nil
 }
 func (r *HelperRepository) GetClientData(ctx context.Context) ([]repository.ClientData, error) {
-	clients, err := r.queries.HelperClient(ctx)
+	tc, span := r.db.tracer.Start(ctx, "Helper Repo: GetClientData")
+	defer span.End()
+
+	clients, err := r.queries.HelperClient(tc)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get clients data")
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting clients list data")		
 	}
 
@@ -160,12 +166,16 @@ func (r *HelperRepository) GetClientData(ctx context.Context) ([]repository.Clie
 	return rsp, nil
 }
 func (r *HelperRepository) GetLoanOfficerData(ctx context.Context) ([]repository.LoanOfficerData, error) {
-	users, err := r.queries.HelperUser(ctx)
+	tc, span := r.db.tracer.Start(ctx, "Helper Repo: GetLoanOfficerData")
+	defer span.End()
+
+	users, err := r.queries.HelperUser(tc)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get user data")
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting user list data")		
 	}
 
@@ -181,12 +191,16 @@ func (r *HelperRepository) GetLoanOfficerData(ctx context.Context) ([]repository
 }
 
 func (r *HelperRepository) GetBranchData(ctx context.Context) ([]repository.BranchData,  error) {
-	branches, err := r.queries.ListBranches(ctx)
+	tc, span := r.db.tracer.Start(ctx, "Helper Repo: GetBranchData")
+	defer span.End()
+
+	branches, err := r.queries.ListBranches(tc)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get branch data")
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting branch list data")		
 	}
 
@@ -202,13 +216,17 @@ func (r *HelperRepository) GetBranchData(ctx context.Context) ([]repository.Bran
 }
 
 func (r *HelperRepository) GetLoanData(ctx context.Context) ([]repository.LoanData,  error) {
-	loansId, err := r.queries.GetLoanData(ctx)
+	tc, span := r.db.tracer.Start(ctx, "Helper Repo: GetLoanData")
+	defer span.End()
+
+	loansId, err := r.queries.GetLoanData(tc)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting branch list data")		
+		setSpanError(span, codes.Error, err, "failed to get loan data")
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "error getting loan list data")		
 	}
 
 	rsp := make([]repository.LoanData, len(loansId))
@@ -236,6 +254,9 @@ func (r *HelperRepository) GetUserFullname(ctx context.Context, id uint32) (stri
 }
 
 func (r *HelperRepository) GetClientNonPayments(ctx context.Context,id uint32, phoneNumber string, pgData *pkg.PaginationMetadata) ([]repository.NonPostedShort, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "Helper Repo: GetClientNonPayments")
+	defer span.End()
+
 	params := generated.GetClientsNonPostedParams{
 		Limit:    int32(pgData.PageSize),
 		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
@@ -266,13 +287,14 @@ func (r *HelperRepository) GetClientNonPayments(ctx context.Context,id uint32, p
 		}
 	}
 
-	nonPosteds, err := r.queries.GetClientsNonPosted(ctx, params)
+	nonPosteds, err := r.queries.GetClientsNonPosted(tc, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get non-posted: %s", err.Error())
-		} else {
-			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get non-posted: %s", err.Error())
-		}
+		} 
+
+		setSpanError(span, codes.Error, err, "failed to get client data")
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get non-posted: %s", err.Error())	
 	}
 
 	totalNonPosted, err := r.queries.CountClientsNonPosted(ctx, params2)
@@ -298,39 +320,39 @@ func (r *HelperRepository) GetClientNonPayments(ctx context.Context,id uint32, p
 	return paymentDetails, pkg.CreatePaginationMetadata(uint32(totalNonPosted), pgData.PageSize, pgData.CurrentPage), nil
 }
 
-func (r *HelperRepository)userToClientDashboard(ctx context.Context, id uint32) repository.ClientDashboardResponse {
-	client, _ := r.queries.GetClient(ctx, id)
+// func (r *HelperRepository)userToClientDashboard(ctx context.Context, id uint32) repository.ClientDashboardResponse {
+// 	client, _ := r.queries.GetClient(ctx, id)
 
-	branch, _ := r.queries.GetBranch(ctx, client.BranchID)
+// 	branch, _ := r.queries.GetBranch(ctx, client.BranchID)
 
-	return repository.ClientDashboardResponse{
-		ID: client.ID,
-		FullName: client.FullName,
-		PhoneNumber: client.PhoneNumber,
-		IdNumber: client.IDNumber.String,
-		Dob: client.Dob.Time.String(),
-		Gender: string(client.Gender),
-		Active: client.Active,
-		Overpayment: client.Overpayment,
-		CreatedAt: client.CreatedAt,
-		AssignedStaff: r.clientToUserDashboard(ctx, client.AssignedStaff),
-		CreatedBy: r.clientToUserDashboard(ctx, client.CreatedBy),
-		BranchName: branch.Name,
-	}
-} 
+// 	return repository.ClientDashboardResponse{
+// 		ID: client.ID,
+// 		FullName: client.FullName,
+// 		PhoneNumber: client.PhoneNumber,
+// 		IdNumber: client.IDNumber.String,
+// 		Dob: client.Dob.Time.String(),
+// 		Gender: string(client.Gender),
+// 		Active: client.Active,
+// 		Overpayment: client.Overpayment,
+// 		CreatedAt: client.CreatedAt,
+// 		AssignedStaff: r.clientToUserDashboard(ctx, client.AssignedStaff),
+// 		CreatedBy: r.clientToUserDashboard(ctx, client.CreatedBy),
+// 		BranchName: branch.Name,
+// 	}
+// } 
 
-func (r *HelperRepository)clientToUserDashboard(ctx context.Context, id uint32) repository.UserDashboardResponse {
-	user, _ := r.queries.GetUser(ctx, id)
+// func (r *HelperRepository)clientToUserDashboard(ctx context.Context, id uint32) repository.UserDashboardResponse {
+// 	user, _ := r.queries.GetUser(ctx, id)
 
-	branch, _ := r.queries.GetBranch(ctx, user.BranchID)
+// 	branch, _ := r.queries.GetBranch(ctx, user.BranchID)
 
-	return repository.UserDashboardResponse{
-		ID: user.ID,
-		Fullname: user.FullName,
-		Email: user.Email,
-		PhoneNumber: user.PhoneNumber,
-		Role: string(user.Role),
-		BranchName: branch.Name,
-		CreatedAt: user.CreatedAt,
-	}
-}
+// 	return repository.UserDashboardResponse{
+// 		ID: user.ID,
+// 		Fullname: user.FullName,
+// 		Email: user.Email,
+// 		PhoneNumber: user.PhoneNumber,
+// 		Role: string(user.Role),
+// 		BranchName: branch.Name,
+// 		CreatedAt: user.CreatedAt,
+// 	}
+// }

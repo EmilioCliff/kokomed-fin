@@ -11,6 +11,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var _ repository.ClientRepository = (*ClientRepository)(nil)
@@ -27,7 +28,10 @@ func NewClientRepository(db *Store) *ClientRepository {
 	}
 }
 
-func (r *ClientRepository) CreateClient(ctx context.Context, client *repository.Client) (repository.Client, error) {
+func (r *ClientRepository) CreateClient(ctx context.Context, client *repository.Client) (repository.ClientFullData, error) {
+	tc, span := r.db.tracer.Start(ctx, "Client Repo: CreateClient")
+	defer span.End()
+	
 	params := generated.CreateClientParams{
 		FullName:      client.FullName,
 		PhoneNumber:   client.PhoneNumber,
@@ -52,22 +56,43 @@ func (r *ClientRepository) CreateClient(ctx context.Context, client *repository.
 		}
 	}
 
-	execResult, err := r.queries.CreateClient(ctx, params)
+	execResult, err := r.queries.CreateClient(tc, params)
 	if err != nil {
-		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create client: %s", err.Error())
+		setSpanError(span, codes.Error, err, "failed to create client")
+		return repository.ClientFullData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create client: %s", err.Error())
 	}
 
 	id, err := execResult.LastInsertId()
 	if err != nil {
-		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
+		return repository.ClientFullData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
 	}
 
 	client.ID = uint32(id)
 
-	return *client, nil
+	return r.GetClientFullData(tc, client.ID)
+}
+
+func (r *ClientRepository) GetClientFullData(ctx context.Context, id uint32) (repository.ClientFullData, error) {
+	tc, span := r.db.tracer.Start(ctx, "Client Repo: GetClientFullData")
+	defer span.End()
+
+	client, err := r.queries.GetClientFullData(tc, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return repository.ClientFullData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "client not found")
+		}
+
+		setSpanError(span, codes.Error, err, "failed to get client full data")
+		return repository.ClientFullData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client full data: %s", err.Error())
+	}
+
+	return convertClientFullData(client), nil
 }
 
 func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.UpdateClient) (error) {
+	tc, span := r.db.tracer.Start(ctx, "Client Repo: UpdateClient")
+	defer span.End()
+
 	params := generated.UpdateClientParams{
 		ID: client.ID,
 		UpdatedBy: client.UpdatedBy,
@@ -101,14 +126,16 @@ func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.
 		}
 	}
 
-	_, err := r.queries.UpdateClient(ctx, params)
+	_, err := r.queries.UpdateClient(tc, params)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to update client")
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update client: %s", err.Error())
 	}
 
 	return  nil
 }
 
+// used during transactions
 func (r *ClientRepository) UpdateClientOverpayment(ctx context.Context, phoneNumber string, overpayment float64) error {
 	_, err := r.queries.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
 		PhoneNumber: phoneNumber,
@@ -121,7 +148,10 @@ func (r *ClientRepository) UpdateClientOverpayment(ctx context.Context, phoneNum
 	return nil
 }
 
-func (r *ClientRepository) ListClients(ctx context.Context, category *repository.ClientCategorySearch, pgData *pkg.PaginationMetadata) ([]repository.Client, pkg.PaginationMetadata, error) {
+func (r *ClientRepository) ListClients(ctx context.Context, category *repository.ClientCategorySearch, pgData *pkg.PaginationMetadata) ([]repository.ClientFullData, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "Client Repo: ListClients")
+	defer span.End()
+
 	params := generated.ListClientsByCategoryParams{
 		Column1: "",
 		FullName: "",
@@ -158,12 +188,13 @@ func (r *ClientRepository) ListClients(ctx context.Context, category *repository
 		}
 	}
 
-	clients, err := r.queries.ListClientsByCategory(ctx, params)
+	clients, err := r.queries.ListClientsByCategory(tc, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no clients found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to list clients")
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list clients: %s", err.Error())
 	}
 
@@ -172,17 +203,15 @@ func (r *ClientRepository) ListClients(ctx context.Context, category *repository
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
 	}
 
-	result := make([]repository.Client, len(clients))
+	result := make([]repository.ClientFullData, len(clients))
 	for i, client := range clients {
 		var dob *time.Time
-
 		if client.Dob.Valid {
 			value := client.Dob.Time
 			dob = &value
 		}
 
 		var idNo *string
-
 		if client.IDNumber.Valid {
 			value := client.IDNumber.String
 			idNo = &value
@@ -191,22 +220,39 @@ func (r *ClientRepository) ListClients(ctx context.Context, category *repository
 		dueAmountBtye, _ := client.Dueamount.([]byte)
 		dueAmount, _ := strconv.ParseFloat(string(dueAmountBtye), 64)
 
-		result[i] = repository.Client{
+		result[i] = repository.ClientFullData{
 			ID:            client.ID,
 			FullName:      client.FullName,
 			PhoneNumber:   client.PhoneNumber,
-			IdNumber:      idNo,
-			Dob:           dob,
+			IDNumber:      idNo,
+			DOB:           dob,
 			Gender:        string(client.Gender),
 			Active:        client.Active,
-			BranchID:      client.BranchID,
-			AssignedStaff: client.AssignedStaff,
+			AssignedStaff: repository.UserShortResponse{
+				ID: uint32(client.AssignedUserID.Int32),
+				FullName: client.AssignedUserName.String,
+				PhoneNumber: client.AssignedUserPhone.String,
+				Email: client.AssignedUserEmail.String,
+				Role: string(client.AssignedUserRole.UsersRole),
+			},
 			Overpayment:   client.Overpayment,
-			UpdatedBy:     client.UpdatedBy,
+			UpdatedBy:     repository.UserShortResponse{
+				ID: uint32(client.UpdatedUserID.Int32),
+				FullName: client.UpdatedUserName.String,
+				PhoneNumber: client.UpdatedUserPhone.String,
+				Email: client.UpdatedUserEmail.String,
+				Role: string(client.UpdatedUserRole.UsersRole),
+			},
 			UpdatedAt:     client.UpdatedAt,
-			CreatedBy:     client.CreatedBy,
+			CreatedBy:     repository.UserShortResponse{
+				ID: uint32(client.CreatedUserID.Int32),
+				FullName: client.CreatedUserName.String,
+				PhoneNumber: client.CreatedUserPhone.String,
+				Email: client.CreatedUserEmail.String,
+				Role: string(client.CreatedUserRole.UsersRole),
+			},
 			CreatedAt:     client.CreatedAt,
-			BranchName: &client.BranchName,
+			BranchName:    client.BranchName,
 			DueAmount: dueAmount,
 		}
 	}
@@ -214,26 +260,34 @@ func (r *ClientRepository) ListClients(ctx context.Context, category *repository
 	return result, pkg.CreatePaginationMetadata(uint32(totalClients), pgData.PageSize, pgData.CurrentPage), nil
 }
 
-func (r *ClientRepository) GetClient(ctx context.Context, clientID uint32) (repository.Client, error) {
-	client, err := r.queries.GetClient(ctx, clientID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return repository.Client{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "client not found")
-		}
+// func (r *ClientRepository) GetClient(ctx context.Context, clientID uint32) (repository.ClientFullData, error) {
+// 	tc, span := r.db.tracer.Start(ctx, "Client Repo: GetClient")
+// 	defer span.End()
 
-		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s", err.Error())
-	}
+// 	client, err := r.queries.GetClient(tc, clientID)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			return repository.ClientFullData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "client not found")
+// 		}
 
-	return convertGeneratedClient(client), nil
-}
+// 		setSpanError(span, codes.Error, err, "failed to get client")
+// 		return repository.ClientFullData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s", err.Error())
+// 	}
+
+// 	return convertGeneratedClient(client), nil
+// }
 
 func (r *ClientRepository) GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error) {
-	id, err := r.queries.GetClientIDByPhoneNumber(ctx, phoneNumber)
+	tc, span := r.db.tracer.Start(ctx, "Client Repo: GetClientIDByPhoneNumber")
+	defer span.End()
+
+	id, err := r.queries.GetClientIDByPhoneNumber(tc, phoneNumber)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return 0, pkg.Errorf(pkg.NOT_FOUND_ERROR, "client not found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get client")
 		return 0, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s", err.Error())
 	}
 
@@ -241,7 +295,10 @@ func (r *ClientRepository) GetClientIDByPhoneNumber(ctx context.Context, phoneNu
 }
 
 func (r *ClientRepository) ListClientsByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {
-	clients, err := r.queries.ListClientsByBranch(ctx, generated.ListClientsByBranchParams{
+	tc, span := r.db.tracer.Start(ctx, "Client Repo: ListClientsByBranch")
+	defer span.End()
+
+	clients, err := r.queries.ListClientsByBranch(tc, generated.ListClientsByBranchParams{
 		Limit:    int32(pgData.PageSize),
 		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 		BranchID: branchID,
@@ -251,6 +308,7 @@ func (r *ClientRepository) ListClientsByBranch(ctx context.Context, branchID uin
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no clients found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to list clients")
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list clients: %s", err.Error())
 	}
 
@@ -263,7 +321,10 @@ func (r *ClientRepository) ListClientsByBranch(ctx context.Context, branchID uin
 }
 
 func (r *ClientRepository) ListClientsByActiveStatus(ctx context.Context, active bool, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {
-	clients, err := r.queries.ListClientsByActiveStatus(ctx, generated.ListClientsByActiveStatusParams{
+	tc, span := r.db.tracer.Start(ctx, "Client Repo: ListClientsByActiveStatus")
+	defer span.End()
+
+	clients, err := r.queries.ListClientsByActiveStatus(tc, generated.ListClientsByActiveStatusParams{
 		Limit:  int32(pgData.PageSize),
 		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 		Active: active,
@@ -273,6 +334,7 @@ func (r *ClientRepository) ListClientsByActiveStatus(ctx context.Context, active
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no clients found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to list clients")
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list clients: %s", err.Error())
 	}
 
@@ -285,7 +347,10 @@ func (r *ClientRepository) ListClientsByActiveStatus(ctx context.Context, active
 }
 
 func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters services.ReportFilters) ([]services.ClientAdminsReportData, services.ClientSummary, error) {
-	clients, err := r.GetClientAdminsReportData(ctx, GetClientAdminsReportDataParams{
+	tc, span := r.db.tracer.Start(ctx, "Client Repo: GetReportClientAdminData")
+	defer span.End()
+
+	clients, err := r.GetClientAdminsReportData(tc, GetClientAdminsReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate:   filters.EndDate,
 	})
@@ -294,6 +359,7 @@ func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters
 			return nil, services.ClientSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no client found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get report client admin data")
 		return nil, services.ClientSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report client admin data: %s", err.Error())
 	}
 
@@ -354,7 +420,10 @@ func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters
 }
 
 func (r *ClientRepository) GetReportClientClientsData(ctx context.Context,id uint32, filters services.ReportFilters) (services.ClientClientsReportData, error) {
-	client, err := r.GetClientClientsReportData(ctx, GetClientClientsReportDataParams{
+	tc, span := r.db.tracer.Start(ctx, "Client Repo: GetReportClientClientsData")
+	defer span.End()
+
+	client, err := r.GetClientClientsReportData(tc, GetClientClientsReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate: filters.EndDate,
 		ID: id,
@@ -364,6 +433,7 @@ func (r *ClientRepository) GetReportClientClientsData(ctx context.Context,id uin
 			return services.ClientClientsReportData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no client found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get report client admin data")
 		return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report client admin data: %s", err.Error())
 	}
 
@@ -400,6 +470,47 @@ func convertGeneratedClient(client generated.Client) repository.Client {
 		UpdatedAt:     client.UpdatedAt,
 		CreatedBy:     client.CreatedBy,
 		CreatedAt:     client.CreatedAt,
+	}
+}
+
+func convertClientFullData(client generated.GetClientFullDataRow) repository.ClientFullData {
+	var dob *time.Time
+	if client.Dob.Valid {
+		value := client.Dob.Time
+		dob = &value
+	}
+
+	var idNo *string
+	if client.IDNumber.Valid {
+		value := client.IDNumber.String
+		idNo = &value
+	}
+
+	return repository.ClientFullData{
+		ID:			client.ClientID,
+		FullName:			client.ClientName,
+		PhoneNumber:			client.ClientPhone,
+		IDNumber:			idNo,
+		DOB:			dob,
+		Gender:			string(client.Gender),
+		Active:			client.Active,
+		BranchName:			client.BranchName,
+		Overpayment:			client.Overpayment,
+		CreatedAt:			client.ClientCreatedAt,
+		AssignedStaff: repository.UserShortResponse{
+			ID: client.AssignedUserID,
+			FullName: client.AssignedUserName,
+			PhoneNumber: client.AssignedUserPhone,
+			Email: client.AssignedUserEmail,
+			Role: string(client.AssignedUserRole),
+		},
+		CreatedBy: repository.UserShortResponse{
+			ID: client.CreatedByID,
+			FullName: client.CreatedByName,
+			PhoneNumber: client.CreatedByPhone,
+			Email: client.CreatedByEmail,
+			Role: string(client.CreatedByRole),
+		},
 	}
 }
 

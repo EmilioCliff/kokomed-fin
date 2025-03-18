@@ -2,7 +2,10 @@ package pkg
 
 import (
 	"strconv"
+	"strings"
 	"time"
+
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
 func StringToUint32(s string) (uint32, error) {
@@ -15,6 +18,20 @@ func StringToUint32(s string) (uint32, error) {
 	}
 
 	return uint32(id), nil
+}
+
+func StringToFloat64(s string) (float64, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, Errorf(INVALID_ERROR, "input string is empty")
+	}
+
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, Errorf(INVALID_ERROR, "invalid float64 format: " + s)
+	}
+
+	return f, nil
 }
 
 func PtrToStr(s *string) string {return *s}
@@ -61,6 +78,8 @@ func TimePtr(t time.Time) *time.Time { return &t }
 // DurationPtr returns a pointer to the given time.Duration.
 func DurationPtr(d time.Duration) *time.Duration { return &d }
 
+// transform interface to float64 if error it logs and return 0.00
+// used to trransform money from db to go type float64
 func InterfaceFloat64(i interface{}) float64 {
 	iByte, ok := i.([]byte)
 	if !ok {
@@ -68,6 +87,11 @@ func InterfaceFloat64(i interface{}) float64 {
 	}
 	iFloat, err := strconv.ParseFloat(string(iByte), 64)
 	if err != nil {
+		logger := otelslog.NewLogger("")
+		logger.Error("failed parsing float", 
+			"parsing", i,
+			"error", err,
+		)
 		return 0.00
 	}
 

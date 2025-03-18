@@ -10,8 +10,8 @@ import (
 
 type User struct {
 	ID              uint32    `json:"id"`
-	FullName        string    `json:"full_name"`
-	PhoneNumber     string    `json:"phone_number"`
+	FullName        string    `json:"fullName"`
+	PhoneNumber     string    `json:"phoneNumber"`
 	Email           string    `json:"email"`
 	Password        string    `json:"password"`
 	PasswordUpdated uint32    `json:"password_updated"`
@@ -22,7 +22,7 @@ type User struct {
 	UpdatedBy       uint32    `json:"updated_by"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	CreatedBy       uint32    `json:"created_by"`
-	CreatedAt       time.Time `json:"created_at"`
+	CreatedAt       time.Time `json:"createdAt"`
 }
 
 type UpdateUser struct {
@@ -33,6 +33,14 @@ type UpdateUser struct {
 	RefreshToken *string    `json:"refresh_token"`
 	UpdatedBy    *uint32    `json:"updated_by"`
 	UpdatedAt    *time.Time `json:"updated_at"`
+}
+
+type UserShortResponse struct {
+	ID          uint32 `json:"id"`
+	FullName    string `json:"fullName"`
+	PhoneNumber string `json:"phoneNumber"`
+	Email       string `json:"email"`
+	Role        string `json:"role"`
 }
 
 type CategorySearch struct {

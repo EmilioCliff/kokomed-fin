@@ -30,5 +30,8 @@ migrateup:
 migratedown:
 	migrate -path ./internal/mysql/migrations -database "mysql://kokomed:secret@tcp(localhost:3306)/kokomed-fin" -verbose down
 
-.PHONY: test race-test sqlc run coverage createMigrate mock
+cert:
+	cd ./internal/cert && ./gen.sh
+
+.PHONY: test race-test sqlc run coverage createMigrate mock cert
 	

@@ -93,12 +93,35 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Res
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, full_name, phone_number, email, password, password_updated, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users WHERE id = ? LIMIT 1
+SELECT 
+    u.id, u.full_name, u.phone_number, u.email, u.password, u.password_updated, u.refresh_token, u.role, u.branch_id, u.updated_by, u.updated_at, u.created_by, u.created_at, 
+    b.name AS branch_name 
+FROM users u
+JOIN branches b ON u.branch_id = b.id
+WHERE u.id = ? 
+LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, id uint32) (User, error) {
+type GetUserRow struct {
+	ID              uint32    `json:"id"`
+	FullName        string    `json:"full_name"`
+	PhoneNumber     string    `json:"phone_number"`
+	Email           string    `json:"email"`
+	Password        string    `json:"password"`
+	PasswordUpdated uint32    `json:"password_updated"`
+	RefreshToken    string    `json:"refresh_token"`
+	Role            UsersRole `json:"role"`
+	BranchID        uint32    `json:"branch_id"`
+	UpdatedBy       uint32    `json:"updated_by"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	CreatedBy       uint32    `json:"created_by"`
+	CreatedAt       time.Time `json:"created_at"`
+	BranchName      string    `json:"branch_name"`
+}
+
+func (q *Queries) GetUser(ctx context.Context, id uint32) (GetUserRow, error) {
 	row := q.db.QueryRowContext(ctx, getUser, id)
-	var i User
+	var i GetUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.FullName,
@@ -113,17 +136,43 @@ func (q *Queries) GetUser(ctx context.Context, id uint32) (User, error) {
 		&i.UpdatedAt,
 		&i.CreatedBy,
 		&i.CreatedAt,
+		&i.BranchName,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, full_name, phone_number, email, password, password_updated, refresh_token, role, branch_id, updated_by, updated_at, created_by, created_at FROM users WHERE email = ? LIMIT 1
+
+SELECT 
+    u.id, u.full_name, u.phone_number, u.email, u.password, u.password_updated, u.refresh_token, u.role, u.branch_id, u.updated_by, u.updated_at, u.created_by, u.created_at, 
+    b.name AS branch_name 
+FROM users u
+JOIN branches b ON u.branch_id = b.id
+WHERE u.email = ? 
+LIMIT 1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+type GetUserByEmailRow struct {
+	ID              uint32    `json:"id"`
+	FullName        string    `json:"full_name"`
+	PhoneNumber     string    `json:"phone_number"`
+	Email           string    `json:"email"`
+	Password        string    `json:"password"`
+	PasswordUpdated uint32    `json:"password_updated"`
+	RefreshToken    string    `json:"refresh_token"`
+	Role            UsersRole `json:"role"`
+	BranchID        uint32    `json:"branch_id"`
+	UpdatedBy       uint32    `json:"updated_by"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	CreatedBy       uint32    `json:"created_by"`
+	CreatedAt       time.Time `json:"created_at"`
+	BranchName      string    `json:"branch_name"`
+}
+
+// SELECT * FROM users WHERE id = ? LIMIT 1;
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
-	var i User
+	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.FullName,
@@ -138,6 +187,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.UpdatedAt,
 		&i.CreatedBy,
 		&i.CreatedAt,
+		&i.BranchName,
 	)
 	return i, err
 }

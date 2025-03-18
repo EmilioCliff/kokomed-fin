@@ -45,16 +45,37 @@ type ClientShort struct {
 	ID	uint32     `json:"id"`
 	FullName	string     `json:"fullName"`
 	PhoneNumber	string     `json:"phoneNumber"`
+	Active bool `json:"active"`
 	Overpayment	float64    `json:"overpayment"`
 	BranchName	string	`json:"branchName"`
+	DueAmount float64 `json:"dueAmount"`
+}
+
+type ClientFullData struct {
+	ID          uint32            `json:"id"`
+	FullName    string            `json:"fullName"`
+	PhoneNumber string            `json:"phoneNumber"`
+	IDNumber    *string           `json:"idNumber,omitempty"`
+	DOB         *time.Time        `json:"dob,omitempty"`
+	Gender      string            `json:"gender"`
+	Active      bool              `json:"active"`
+	BranchName  string            `json:"branchName"`
+	AssignedStaff    UserShortResponse `json:"assignedStaff"`
+	Overpayment float64           `json:"overpayment"`
+	DueAmount	float64`json:"dueAmount"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+	CreatedBy   UserShortResponse `json:"createdBy"`
+	UpdatedBy   UserShortResponse `json:"updatedBy,omitempty"`
 }
 
 type ClientRepository interface {
-	CreateClient(ctx context.Context, client *Client) (Client, error)
+	CreateClient(ctx context.Context, client *Client) (ClientFullData, error)
 	UpdateClient(ctx context.Context, client *UpdateClient) (error)
 	UpdateClientOverpayment(ctx context.Context, phoneNumber string, overpayment float64) error
-	ListClients(ctx context.Context, category *ClientCategorySearch, pgData *pkg.PaginationMetadata) ([]Client, pkg.PaginationMetadata, error)
-	GetClient(ctx context.Context, clientID uint32) (Client, error)
+	ListClients(ctx context.Context, category *ClientCategorySearch, pgData *pkg.PaginationMetadata) ([]ClientFullData, pkg.PaginationMetadata, error)
+	// GetClient(ctx context.Context, clientID uint32) (ClientFullData, error)
+	GetClientFullData(ctx context.Context, clientID uint32) (ClientFullData, error)
 	GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error)
 	ListClientsByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]Client, error)
 	ListClientsByActiveStatus(ctx context.Context, active bool, pgData *pkg.PaginationMetadata) ([]Client, error)

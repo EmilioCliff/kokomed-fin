@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"log/slog"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
@@ -12,18 +13,36 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
-	_ "github.com/golang-migrate/migrate/v4/database/mysql"
+
+	// _ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Store struct {
 	db     *sql.DB
 	config pkg.Config
+
+	meter metric.Meter
+	logger *slog.Logger
+	tracer trace.Tracer
 }
 
 func NewStore(config pkg.Config) *Store {
+	meter := otel.Meter("")
+	logger := otelslog.NewLogger("")
+	tracer := otel.Tracer("kokomed-fin")
+
 	return &Store{
 		config: config,
+
+		meter: meter,
+		logger: logger,
+		tracer: tracer,
 	}
 }
 
@@ -123,4 +142,9 @@ func (s *Store) ExecTx(ctx context.Context, fn func(q *generated.Queries) error)
 	}
 
 	return tx.Commit()
+}
+
+func setSpanError(span trace.Span, code codes.Code, err error, description string) {
+	span.RecordError(err)
+	span.SetStatus(code, description)
 }

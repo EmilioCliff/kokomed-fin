@@ -69,12 +69,30 @@ func (q *Queries) DeleteProduct(ctx context.Context, id uint32) error {
 }
 
 const getProduct = `-- name: GetProduct :one
-SELECT id, branch_id, loan_amount, repay_amount, interest_amount, updated_by, updated_at, created_at FROM products WHERE id = ? LIMIT 1
+SELECT 
+    p.id, p.branch_id, p.loan_amount, p.repay_amount, p.interest_amount, p.updated_by, p.updated_at, p.created_at, 
+    b.name AS branch_name 
+FROM products p
+JOIN branches b ON p.branch_id = b.id
+WHERE p.id = ? 
+LIMIT 1
 `
 
-func (q *Queries) GetProduct(ctx context.Context, id uint32) (Product, error) {
+type GetProductRow struct {
+	ID             uint32    `json:"id"`
+	BranchID       uint32    `json:"branch_id"`
+	LoanAmount     float64   `json:"loan_amount"`
+	RepayAmount    float64   `json:"repay_amount"`
+	InterestAmount float64   `json:"interest_amount"`
+	UpdatedBy      uint32    `json:"updated_by"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedAt      time.Time `json:"created_at"`
+	BranchName     string    `json:"branch_name"`
+}
+
+func (q *Queries) GetProduct(ctx context.Context, id uint32) (GetProductRow, error) {
 	row := q.db.QueryRowContext(ctx, getProduct, id)
-	var i Product
+	var i GetProductRow
 	err := row.Scan(
 		&i.ID,
 		&i.BranchID,
@@ -84,14 +102,17 @@ func (q *Queries) GetProduct(ctx context.Context, id uint32) (Product, error) {
 		&i.UpdatedBy,
 		&i.UpdatedAt,
 		&i.CreatedAt,
+		&i.BranchName,
 	)
 	return i, err
 }
 
 const getProductRepayAmount = `-- name: GetProductRepayAmount :one
+
 SELECT repay_amount FROM products WHERE id = ? LIMIT 1
 `
 
+// SELECT * FROM products WHERE id = ? LIMIT 1;
 func (q *Queries) GetProductRepayAmount(ctx context.Context, id uint32) (float64, error) {
 	row := q.db.QueryRowContext(ctx, getProductRepayAmount, id)
 	var repay_amount float64

@@ -148,6 +148,18 @@ export const loanColumns: ColumnDef<Loan>[] = [
 		),
 		enableSorting: true,
 	},
+	{
+		accessorKey: 'remainingAmount',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Remaining Amount" />
+		),
+		cell: ({ row }) => (
+			<div className="">
+				{Number(row.getValue('remainingAmount')).toLocaleString()}
+			</div>
+		),
+		enableSorting: true,
+	},
 ];
 
 export const expectedPaymentColumns: ColumnDef<ExpectedPayment>[] = [

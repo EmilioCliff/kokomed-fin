@@ -8,6 +8,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var _ repository.BranchRepository = (*BranchRepository)(nil)
@@ -25,8 +26,12 @@ func NewBranchRepository(db *Store) *BranchRepository {
 }
 
 func (r *BranchRepository) CreateBranch(ctx context.Context, branch *repository.Branch) (repository.Branch, error) {
-	execResult, err := r.queries.CreateBranch(ctx, branch.Name)
+	tc, span := r.db.tracer.Start(ctx, "Branch Repo: CreateBranch")
+	defer span.End()
+
+	execResult, err := r.queries.CreateBranch(tc, branch.Name)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to create branch")
 		return repository.Branch{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create branch: %s", err.Error())
 	}
 
@@ -41,6 +46,9 @@ func (r *BranchRepository) CreateBranch(ctx context.Context, branch *repository.
 }
 
 func (r *BranchRepository) ListBranches(ctx context.Context, search *string, pgData *pkg.PaginationMetadata) ([]repository.Branch, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "Branch Repo: ListBranches")
+	defer span.End()
+
 	params := generated.ListBrachesByCategoryParams{
 		Column1: "",
 		Name: "",
@@ -62,7 +70,7 @@ func (r *BranchRepository) ListBranches(ctx context.Context, search *string, pgD
 		params2.Name = searchValue
 	}
 
-	branches, err := r.queries.ListBrachesByCategory(ctx, params)
+	branches, err := r.queries.ListBrachesByCategory(tc, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil,pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no branches found")
@@ -71,7 +79,7 @@ func (r *BranchRepository) ListBranches(ctx context.Context, search *string, pgD
 		return nil,pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get branches: %s", err.Error())
 	}
 
-	totalBranches, err := r.queries.CountBranchesByCategory(ctx, generated.CountBranchesByCategoryParams(params2))
+	totalBranches, err := r.queries.CountBranchesByCategory(tc, generated.CountBranchesByCategoryParams(params2))
 	if err != nil {
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total branches: %s", err.Error())
 	}
@@ -175,11 +183,15 @@ func (r *BranchRepository) GetReportBranchData(ctx context.Context, filters serv
 }
 
 func (r *BranchRepository) UpdateBranch(ctx context.Context, name string, id uint32) (repository.Branch, error) {
-	_, err := r.queries.UpdateBranch(ctx, generated.UpdateBranchParams{
+	tc, span := r.db.tracer.Start(ctx, "Branch Repo: UpdateBranch")
+	defer span.End()
+
+	_, err := r.queries.UpdateBranch(tc, generated.UpdateBranchParams{
 		Name: name,
 		ID:   id,
 	})
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to update branch")
 		return repository.Branch{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update branch: %s", err.Error())
 	}
 

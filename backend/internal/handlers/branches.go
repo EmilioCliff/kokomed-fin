@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/attribute"
+	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 type createBranchRequest struct {
@@ -22,7 +23,10 @@ func (s *Server) createBranch(ctx *gin.Context) {
 		return
 	}
 
-	branch, err := s.repo.Branches.CreateBranch(ctx, &repository.Branch{Name: req.Name})
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Creating Branch", oteltrace.WithAttributes(attribute.String("name", req.Name)))
+	defer span.End()
+
+	branch, err := s.repo.Branches.CreateBranch(tc, &repository.Branch{Name: req.Name})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -53,7 +57,9 @@ func (s *Server) getBranch(ctx *gin.Context) {
 }
 
 func (s *Server) listBranches(ctx *gin.Context) {
-	log.Println("cache miss")
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Listing Branches")
+	defer span.End()
+
 	pageNoStr := ctx.DefaultQuery("page", "1")
 	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
@@ -70,6 +76,11 @@ func (s *Server) listBranches(ctx *gin.Context) {
 		return
 	}
 
+	span.SetAttributes(
+		attribute.String("page_no", pageNoStr),
+		attribute.String("page_size", pageSizeStr),
+	)
+
 	cacheParams := map[string][]string{
 		"page": {pageNoStr},
 		"limit": {pageSizeStr},
@@ -77,10 +88,11 @@ func (s *Server) listBranches(ctx *gin.Context) {
 
 	search := ctx.Query("search")
 	if search != "" {
+		span.SetAttributes(attribute.String("searched", search))
 		cacheParams["search"] = []string{search}
 	}
 
-	branches, metadata, err := s.repo.Branches.ListBranches(ctx, pkg.StringPtr(search), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	branches, metadata, err := s.repo.Branches.ListBranches(tc, pkg.StringPtr(search), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -119,7 +131,10 @@ func (s *Server) updateBranch(ctx *gin.Context) {
 		return
 	}
 
-	branch, err := s.repo.Branches.UpdateBranch(ctx, req.Name, id)
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Updating Branch Name", oteltrace.WithAttributes(attribute.String("new_branchName", req.Name), attribute.Int64("branch_id", int64(id))))
+	defer span.End()
+
+	branch, err := s.repo.Branches.UpdateBranch(tc, req.Name, id)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 

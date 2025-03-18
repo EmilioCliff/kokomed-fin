@@ -241,6 +241,10 @@ function CustomerSheet() {
 								);
 							}
 
+							if (key === 'updatedBy') {
+								return <></>;
+							}
+
 							return (
 								<div
 									key={key}

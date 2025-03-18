@@ -10,15 +10,16 @@ import (
 
 type NonPosted struct {
 	ID                uint32    `json:"id"`
-	TransactionSource string    `json:"transaction_source"`
-	TransactionNumber string    `json:"transaction_number"`
-	AccountNumber     string    `json:"account_number"`
-	PhoneNumber       string    `json:"phone_number"`
-	PayingName        string    `json:"paying_name"`
+	TransactionSource string    `json:"transactionSource"`
+	TransactionNumber string    `json:"transactionNumber"`
+	AccountNumber     string    `json:"accountNumber"`
+	PhoneNumber       string    `json:"phoneNumber"`
+	PayingName        string    `json:"payingName"`
 	Amount            float64   `json:"amount"`
-	PaidDate          time.Time `json:"paid_date"`
-	AssignedTo        *uint32   `json:"assigned_to"`
-	AssignedBy 		  string	`json:"assigned_by"`
+	PaidDate          time.Time `json:"paidDate"`
+	AssignedTo        *uint32   `json:"assignedTo,omitempty"`
+	AssignedBy 		  string	`json:"assignedBy"`
+	AssignedClient        ClientShort `json:"assignedTo,omitempty"`
 }
 
 type NonPostedCategory struct {

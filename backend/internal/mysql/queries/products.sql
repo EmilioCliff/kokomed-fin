@@ -5,7 +5,14 @@ VALUES (
 );
 
 -- name: GetProduct :one
-SELECT * FROM products WHERE id = ? LIMIT 1;
+SELECT 
+    p.*, 
+    b.name AS branch_name 
+FROM products p
+JOIN branches b ON p.branch_id = b.id
+WHERE p.id = ? 
+LIMIT 1;
+-- SELECT * FROM products WHERE id = ? LIMIT 1;
 
 -- name: GetProductRepayAmount :one
 SELECT repay_amount FROM products WHERE id = ? LIMIT 1;

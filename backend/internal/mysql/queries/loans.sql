@@ -38,6 +38,64 @@ UPDATE loans SET loan_officer = ?, updated_by = ? WHERE id = ?;
 -- name: GetLoan :one
 SELECT * FROM loans WHERE id = ? LIMIT 1;
 
+-- name: GetLoanFullData :one
+SELECT 
+    l.*, 
+
+    -- Product Details
+    pb.name AS product_branch_name,  -- Fetch the product branch name
+    p.loan_amount, 
+    p.repay_amount, 
+    p.interest_amount,
+
+    -- Client Details
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    c.active AS client_active,
+    c.branch_id AS client_branch_id,
+    cb.name AS client_branch_name,
+
+    -- Loan Officer Details
+    u.full_name AS loan_officer_name,
+    u.email AS loan_officer_email,
+    u.phone_number AS loan_officer_phone,
+
+    -- Approved By
+    a.full_name AS approved_by_name,
+    a.email AS approved_by_email,
+    a.phone_number AS approved_by_phone,
+
+    -- Disbursed By (optional)
+    d.full_name AS disbursed_by_name,
+    d.email AS disbursed_by_email,
+    d.phone_number AS disbursed_by_phone,
+
+    -- Updated By (optional)
+    up.full_name AS updated_by_name,
+    up.email AS updated_by_email,
+    up.phone_number AS updated_by_phone,
+
+    -- Created By
+    cr.full_name AS created_by_name,
+    cr.email AS created_by_email,
+    cr.phone_number AS created_by_phone
+
+FROM loans l
+JOIN products p ON l.product_id = p.id
+JOIN branches pb ON p.branch_id = pb.id  -- Fetching product branch name
+JOIN clients c ON l.client_id = c.id
+JOIN branches cb ON c.branch_id = cb.id
+JOIN users u ON l.loan_officer = u.id
+JOIN users a ON l.approved_by = a.id
+
+-- Left joins for optional fields (disbursed_by, updated_by, created_by)
+LEFT JOIN users d ON l.disbursed_by = d.id
+LEFT JOIN users up ON l.updated_by = up.id
+LEFT JOIN users cr ON l.created_by = cr.id
+
+WHERE l.id = ?
+LIMIT 1;
+
 -- name: GetClientActiveLoan :one
 SELECT id FROM loans WHERE client_id = ? AND status = ? LIMIT 1;
 
@@ -47,13 +105,59 @@ SELECT id FROM loans;
 -- name: ListLoans :many
 SELECT 
     l.*, 
-    p.branch_id,
+
+    -- Product Details
+    p.branch_id AS product_branch_id,
+    pb.name AS product_branch_name,  -- Fetch the product branch name
+    p.loan_amount, 
+    p.repay_amount, 
+    p.interest_amount,
+
+    -- Client Details
     c.full_name AS client_name,
-    u.full_name AS loan_officer_name
+    c.phone_number AS client_phone,
+    c.active AS client_active,
+    c.branch_id AS client_branch_id,
+    cb.name AS client_branch_name,
+
+    -- Loan Officer Details
+    u.full_name AS loan_officer_name,
+    u.email AS loan_officer_email,
+    u.phone_number AS loan_officer_phone,
+
+    -- Approved By Details
+    a.full_name AS approved_by_name,
+    a.email AS approved_by_email,
+    a.phone_number AS approved_by_phone,
+
+    -- Disbursed By Details (Nullable)
+    d.full_name AS disbursed_by_name,
+    d.email AS disbursed_by_email,
+    d.phone_number AS disbursed_by_phone,
+
+    -- Updated By Details (Nullable)
+    up.full_name AS updated_by_name,
+    up.email AS updated_by_email,
+    up.phone_number AS updated_by_phone,
+
+    -- Created By Details
+    cr.full_name AS created_by_name,
+    cr.email AS created_by_email,
+    cr.phone_number AS created_by_phone
+
 FROM loans l
 JOIN products p ON l.product_id = p.id
+JOIN branches pb ON p.branch_id = pb.id  -- Fetching product branch name
 JOIN clients c ON l.client_id = c.id
+JOIN branches cb ON c.branch_id = cb.id
 JOIN users u ON l.loan_officer = u.id
+JOIN users a ON l.approved_by = a.id
+
+-- Left joins for optional fields (disbursed_by, updated_by, created_by)
+LEFT JOIN users d ON l.disbursed_by = d.id
+LEFT JOIN users up ON l.updated_by = up.id
+LEFT JOIN users cr ON l.created_by = cr.id
+
 WHERE 
     (
         COALESCE(?, '') = '' 
@@ -64,8 +168,86 @@ WHERE
         COALESCE(?, '') = '' 
         OR FIND_IN_SET(l.status, ?) > 0
     )
- ORDER BY l.created_at DESC
+ORDER BY l.created_at DESC
 LIMIT ? OFFSET ?;
+-- SELECT 
+--     l.*, 
+--     p.branch_id AS product_branch_id,
+--     p.loan_amount, 
+--     p.repay_amount, 
+--     p.interest_amount,
+
+--     c.full_name AS client_name,
+--     c.phone_number AS client_phone,
+--     c.active AS client_active,
+--     c.branch_id AS client_branch_id,
+--     cb.name AS client_branch_name,
+
+--     u.full_name AS loan_officer_name,
+--     u.email AS loan_officer_email,
+--     u.phone_number AS loan_officer_phone,
+
+--     a.full_name AS approved_by_name,
+--     a.email AS approved_by_email,
+--     a.phone_number AS approved_by_phone,
+
+--     d.full_name AS disbursed_by_name,
+--     d.email AS disbursed_by_email,
+--     d.phone_number AS disbursed_by_phone,
+
+--     up.full_name AS updated_by_name,
+--     up.email AS updated_by_email,
+--     up.phone_number AS updated_by_phone,
+
+--     cr.full_name AS created_by_name,
+--     cr.email AS created_by_email,
+--     cr.phone_number AS created_by_phone
+
+-- FROM loans l
+-- JOIN products p ON l.product_id = p.id
+-- JOIN clients c ON l.client_id = c.id
+-- JOIN branches cb ON c.branch_id = cb.id
+-- JOIN users u ON l.loan_officer = u.id
+-- JOIN users a ON l.approved_by = a.id
+
+-- -- Left joins for optional fields (disbursed_by, updated_by, created_by)
+-- LEFT JOIN users d ON l.disbursed_by = d.id
+-- LEFT JOIN users up ON l.updated_by = up.id
+-- LEFT JOIN users cr ON l.created_by = cr.id
+
+-- WHERE 
+--     (
+--         COALESCE(?, '') = '' 
+--         OR LOWER(c.full_name) LIKE ?
+--         OR LOWER(u.full_name) LIKE ?
+--     )
+--     AND (
+--         COALESCE(?, '') = '' 
+--         OR FIND_IN_SET(l.status, ?) > 0
+--     )
+-- ORDER BY l.created_at DESC
+-- LIMIT ? OFFSET ?;
+-- SELECT 
+--     l.*, 
+--     p.branch_id,
+--     c.full_name AS client_name,
+--     u.full_name AS loan_officer_name
+-- FROM loans l
+-- JOIN products p ON l.product_id = p.id
+-- JOIN clients c ON l.client_id = c.id
+-- JOIN users u ON l.loan_officer = u.id
+-- WHERE 
+--     (
+--         COALESCE(?, '') = '' 
+--         OR LOWER(c.full_name) LIKE ?
+--         OR LOWER(u.full_name) LIKE ?
+--     )
+--     AND (
+--         COALESCE(?, '') = '' 
+--         OR FIND_IN_SET(l.status, ?) > 0
+--     )
+--  ORDER BY l.created_at DESC
+-- LIMIT ? OFFSET ?;
 
 -- name: CountLoans :one
 SELECT COUNT(*) AS total_loans 

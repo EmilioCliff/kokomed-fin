@@ -29,6 +29,28 @@ type Loan struct {
 	CreatedAt          time.Time  `json:"created_at"`
 }
 
+type LoanFullData struct {
+	ID                 uint32     `json:"id"`
+	LoanPurpose        *string    `json:"loanPurpose"`
+	DueDate            *time.Time `json:"dueDate"`
+	DisbursedOn        *time.Time `json:"disbursedOn"`
+	TotalInstallments  uint32     `json:"totalInstallments"`
+	InstallmentsPeriod uint32     `json:"installmentsPeriod"`
+	Status             string     `json:"status"`
+	ProcessingFee      float64    `json:"processingFee"`
+	FeePaid            bool       `json:"feePaid"`
+	PaidAmount         float64    `json:"paidAmount"`
+	RemainingAmount float64 `json:"remainingAmount"`
+	CreatedAt          time.Time  `json:"createdAt"`
+	Product 		   ProductShort `json:"product"`
+	Client             ClientShort	`json:"client"`
+	LoanOfficer        UserShortResponse	`json:"loanOfficer"`
+	ApprovedBy         UserShortResponse	`json:"approvedBy"`
+	DisbursedBy        UserShortResponse	`json:"disbursedBy"`
+	UpdatedBy          UserShortResponse	`json:"updatedBy"`
+	CreatedBy          UserShortResponse	`json:"createdBy"`
+}
+
 type DisburseLoan struct {
 	ID          uint32    `json:"id"`
 	DisbursedBy uint32    `json:"disbursedBy"`
@@ -115,12 +137,12 @@ type UnpaidInstallmentData struct {
 }
 
 type LoansRepository interface {
-	CreateLoan(ctx context.Context, loan *Loan) (Loan, error)
+	CreateLoan(ctx context.Context, loan *Loan) (LoanFullData, error)
 	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) (uint32, error)
 	TransferLoan(ctx context.Context, officerId uint32, loanId uint32, adminId uint32) error
 	GetLoanByID(ctx context.Context, id uint32) (Loan, error)
 	GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error)
-	ListLoans(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]Loan, pkg.PaginationMetadata, error)
+	ListLoans(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]LoanFullData, pkg.PaginationMetadata, error)
 	DeleteLoan(ctx context.Context, id uint32) error
 	GetExpectedPayments(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]ExpectedPayment, pkg.PaginationMetadata, error)
 

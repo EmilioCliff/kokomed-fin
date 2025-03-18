@@ -19,6 +19,7 @@ export const loanSchema = z.object({
 	processingFee: z.number(),
 	feePaid: z.boolean(),
 	paidAmount: z.number(),
+	remainingAmount: z.number(),
 	updatedBy: userSchema,
 	createdBy: userSchema,
 	createdAt: z.string().date('Invalid date string!'),

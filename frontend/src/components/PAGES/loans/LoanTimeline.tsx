@@ -88,8 +88,8 @@ export default function LoanTimeline() {
 
 					<div className="mt-4 space-y-3">
 						{selectedEvents.length > 0 ? (
-							selectedEvents.map((event) => (
-								<LoanEventDisplay event={event} />
+							selectedEvents.map((event, index) => (
+								<LoanEventDisplay key={index} event={event} />
 							))
 						) : (
 							<p className="text-gray-500 text-center">

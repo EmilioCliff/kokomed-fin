@@ -1,14 +1,13 @@
 package handlers
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type productResponse struct {
@@ -18,9 +17,6 @@ type productResponse struct {
 	RepayAmount    float64   `json:"repayAmount"`
 	InterestAmount float64   `json:"interestAmount"`
 }
-// UpdatedBy      uint32    `json:"updated_by"`
-// UpdatedAt      time.Time `json:"updated_at"`
-// CreatedAt      time.Time `json:"created_at"`
 
 type createProductRequest struct {
 	BranchID    uint32  `binding:"required" json:"branchId"`
@@ -29,6 +25,9 @@ type createProductRequest struct {
 }
 
 func (s *Server) createProduct(ctx *gin.Context) {
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Creating Product")
+	defer span.End()
+
 	var req createProductRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
@@ -50,7 +49,9 @@ func (s *Server) createProduct(ctx *gin.Context) {
 		return
 	}
 
-	product, err := s.repo.Products.CreateProduct(ctx, &repository.Product{
+	span.SetAttributes(attribute.String("created_by", payloadData.Email))
+
+	product, err := s.repo.Products.CreateProduct(tc, &repository.Product{
 		BranchID:       req.BranchID,
 		LoanAmount:     req.LoanAmount,
 		RepayAmount:    req.RepayAmount,
@@ -63,16 +64,16 @@ func (s *Server) createProduct(ctx *gin.Context) {
 		return
 	}
 
-	v, err := s.structureProduct(&product, ctx)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// v, err := s.structureProduct(&product, ctx)
+	// if err != nil {
+	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-		return
-	}
+	// 	return
+	// }
 
 	s.cache.DelAll(ctx, "product:limit=*")
 
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, product)
 }
 
 func (s *Server) getProduct(ctx *gin.Context) {
@@ -83,25 +84,32 @@ func (s *Server) getProduct(ctx *gin.Context) {
 		return
 	}
 
-	product, err := s.repo.Products.GetProductByID(ctx, id)
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Get Product ID")
+	defer span.End()
+
+	span.SetAttributes(attribute.Int64("product_id", int64(id)))
+
+	product, err := s.repo.Products.GetProductByID(tc, id)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	v, err := s.structureProduct(&product, ctx)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// v, err := s.structureProduct(&product, ctx)
+	// if err != nil {
+	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-		return
-	}
+	// 	return
+	// }
 
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, product)
 }
 
 func (s *Server) listProducts(ctx *gin.Context) {
-	log.Println("cache miss")
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Listing Products")
+	defer span.End()
+
 	pageNoStr := ctx.DefaultQuery("page", "1")
 	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
@@ -118,6 +126,11 @@ func (s *Server) listProducts(ctx *gin.Context) {
 		return
 	}
 
+	span.SetAttributes(
+		attribute.String("page_no", pageNoStr),
+		attribute.String("page_size", pageSizeStr),
+	)
+
 	cacheParams := map[string][]string{
 		"page": {pageNoStr},
 		"limit": {pageSizeStr},
@@ -125,32 +138,33 @@ func (s *Server) listProducts(ctx *gin.Context) {
 
 	search := ctx.Query("search")
 	if search != "" {
+		span.SetAttributes(attribute.String("search", search))
 		cacheParams["search"] = []string{search}
 	}
 
-	products, pgData, err := s.repo.Products.GetAllProducts(ctx, pkg.StringPtr(search), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	products, pgData, err := s.repo.Products.GetAllProducts(tc, pkg.StringPtr(search), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	rsp := make([]productResponse, len(products))
+	// rsp := make([]productResponse, len(products))
 
-	for idx, p := range products {
-		v, err := s.structureProduct(&p, ctx)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// for idx, p := range products {
+	// 	v, err := s.structureProduct(&p, ctx)
+	// 	if err != nil {
+	// 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-			return
-		}
+	// 		return
+	// 	}
 
-		rsp[idx] = v
-	}
+	// 	rsp[idx] = v
+	// }
 
 	response := gin.H{
 		"metadata": pgData,
-		"data": rsp,
+		"data": products,
 	}
 
 	cacheKey := constructCacheKey("product", cacheParams)
@@ -165,69 +179,31 @@ func (s *Server) listProducts(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-func (s *Server) listProductsByBranch(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// func (s *Server) structureProduct(p *repository.Product, ctx *gin.Context) (productResponse, error) {
+// 	cacheKey := fmt.Sprintf("product:%v", p.ID)
+// 	var dataCached productResponse
 
-		return
-	}
+// 	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
+// 	if exists {
+// 		return dataCached, nil
+// 	}
 
-	id, err := pkg.StringToUint32(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 	branch, err := s.repo.Branches.GetBranchByID(ctx, p.BranchID)
+// 	if err != nil {
+// 		return productResponse{}, err
+// 	}
 
-		return
-	}
+// 	rsp := productResponse{
+// 		ID:             p.ID,
+// 		LoanAmount:     p.LoanAmount,
+// 		BranchName:     branch.Name,
+// 		RepayAmount:    p.RepayAmount,
+// 		InterestAmount: p.InterestAmount,
+// 		}
 
-	products, err := s.repo.Products.ListProductByBranch(ctx, id, &pkg.PaginationMetadata{CurrentPage: pageNo})
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+// 	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
+// 		return productResponse{}, err
+// 	}
 
-		return
-	}
-
-	rsp := make([]productResponse, len(products))
-
-	for idx, p := range products {
-		v, err := s.structureProduct(&p, ctx)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-			return
-		}
-
-		rsp[idx] = v
-	}
-
-	ctx.JSON(http.StatusOK, rsp)
-}
-
-func (s *Server) structureProduct(p *repository.Product, ctx *gin.Context) (productResponse, error) {
-	cacheKey := fmt.Sprintf("product:%v", p.ID)
-	var dataCached productResponse
-
-	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
-	if exists {
-		return dataCached, nil
-	}
-
-	branch, err := s.repo.Branches.GetBranchByID(ctx, p.BranchID)
-	if err != nil {
-		return productResponse{}, err
-	}
-
-	rsp := productResponse{
-		ID:             p.ID,
-		LoanAmount:     p.LoanAmount,
-		BranchName:     branch.Name,
-		RepayAmount:    p.RepayAmount,
-		InterestAmount: p.InterestAmount,
-		}
-
-	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
-		return productResponse{}, err
-	}
-
-	return rsp, nil
-}
+// 	return rsp, nil
+// }

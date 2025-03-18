@@ -9,9 +9,13 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func (s *Server) paymentCallback(ctx *gin.Context) {
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Payment Callback")
+	defer span.End()
+
 	var rq any
 	if err := ctx.ShouldBindJSON(&rq); err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
@@ -43,6 +47,15 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 		AssignedBy:    "APP",
 	}
 
+	span.SetAttributes(
+		attribute.String("transaction_id", callbackData.TransactionID),
+		attribute.String("account_number", callbackData.AccountNumber),
+		attribute.String("phone_number", callbackData.PhoneNumber),
+		attribute.String("paying_name", callbackData.PayingName),
+		attribute.Float64("amount", callbackData.Amount),
+		attribute.Bool("assigned", false),
+	)
+
 	if app, ok := req["App"].(string); ok && app != "" {
 		callbackData.TransactionSource = "INTERNAL"
 		
@@ -50,8 +63,15 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 			callbackData.AssignedBy = email
 		}
 
+		span.SetAttributes(
+			attribute.String("transaction_source", callbackData.TransactionSource),
+			attribute.String("assigned_by", callbackData.AssignedBy),
+		)
+
 	} else {
 		callbackData.TransactionSource = "MPESA"
+
+		span.SetAttributes(attribute.String("transaction_source", callbackData.TransactionSource))
 	}
 
 	if paidDate, ok := req["DatePaid"].(string); ok && paidDate != "" {
@@ -63,6 +83,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 		}
 
 		callbackData.PaidDate = pkg.TimePtr(paidDateT)
+		span.SetAttributes(attribute.String("paid_date", paidDate))
 	}
 
 	clientID, err := s.repo.Clients.GetClientIDByPhoneNumber(ctx, callbackData.AccountNumber)
@@ -76,11 +97,15 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 	
 	// if account number is wrong(non-existing) continue
 	if clientID != 0 {
+		span.SetAttributes(
+			attribute.Int64("client_id", int64(clientID)),
+			attribute.Bool("assigned", true),
+		)
 		callbackData.AssignedTo = pkg.Uint32Ptr(clientID)
 		s.cache.Del(ctx, fmt.Sprintf("client:%v", clientID))
 	}
 
-	loanId, err := s.payments.ProcessCallback(ctx, &callbackData); 
+	loanId, err := s.payments.ProcessCallback(tc, &callbackData); 
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -104,6 +129,9 @@ type paymentByAdminRequest struct {
 }
 
 func (s *Server) paymentByAdmin(ctx *gin.Context) {
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Assigning Payment to Client")
+	defer span.End()
+
 	var req paymentByAdminRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
@@ -132,7 +160,13 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 		return
 	}
 
-	loanId, err := s.payments.TriggerManualPayment(ctx, services.ManualPaymentData{
+	span.SetAttributes(
+		attribute.Int64("non_posted_id", int64(id)),
+		attribute.Int64("client_id", int64(req.ClientID)),
+		attribute.String("assigned_by", payloadData.Email),
+	)
+
+	loanId, err := s.payments.TriggerManualPayment(tc, services.ManualPaymentData{
 		NonPostedID: id,
 		ClientID:    req.ClientID,
 		AdminUserID: payloadData.UserID,

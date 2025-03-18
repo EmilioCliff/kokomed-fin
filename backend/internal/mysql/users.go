@@ -9,6 +9,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var _ repository.UserRepository = (*UserRepository)(nil)
@@ -26,7 +27,10 @@ func NewUserRepository(db *Store) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(ctx context.Context, user *repository.User) (repository.User, error) {
-	execResult, err := r.queries.CreateUser(ctx, generated.CreateUserParams{
+	tc, span := r.db.tracer.Start(ctx, "User Repo: CreateUser")
+	defer span.End()
+
+	execResult, err := r.queries.CreateUser(tc, generated.CreateUserParams{
 		FullName:     user.FullName,
 		PhoneNumber:  user.PhoneNumber,
 		Email:        user.Email,
@@ -39,6 +43,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *repository.User) 
 		CreatedBy:    user.CreatedBy, // same
 	})
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to create user")
 		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create user: %s", err.Error())
 	}
 
@@ -47,39 +52,85 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *repository.User) 
 		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
 	}
 
+	branch, err := r.queries.GetBranch(ctx, user.BranchID) 
+	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to get created user branch")
+		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get created user branch: %s", err.Error())
+	}
+
 	user.ID = uint32(id)
+	user.BranchName = &branch.Name
 
 	return *user, nil
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id uint32) (repository.User, error) {
-	user, err := r.queries.GetUser(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "User Repo: GetUserByID")
+	defer span.End()
+
+	user, err := r.queries.GetUser(tc, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.User{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get user")
 		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %s", err.Error())
 	}
 
-	return convertGeneratedUser(user), nil
+	return repository.User{
+		ID:              uint32(user.ID),
+		FullName:        user.FullName,
+		PhoneNumber:     user.PhoneNumber,
+		Email:           user.Email,
+		Password:        user.Password,
+		PasswordUpdated: user.PasswordUpdated,
+		RefreshToken:    user.RefreshToken,
+		Role:            string(user.Role),
+		BranchID:        user.BranchID,
+		UpdatedAt:       user.UpdatedAt,
+		UpdatedBy:       uint32(user.UpdatedBy),
+		CreatedBy:       uint32(user.CreatedBy),
+		BranchName: 	 &user.BranchName,
+	}, nil
 }
 
 func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (repository.User, error) {
-	user, err := r.queries.GetUserByEmail(ctx, email)
+	tc, span := r.db.tracer.Start(ctx, "User Repo: GetUserByEmail")
+	defer span.End()
+
+	user, err := r.queries.GetUserByEmail(tc, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.User{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get user")
 		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %s", err.Error())
 	}
 
-	return convertGeneratedUser(user), nil
+	return repository.User{
+		ID:              uint32(user.ID),
+		FullName:        user.FullName,
+		PhoneNumber:     user.PhoneNumber,
+		Email:           user.Email,
+		Password:        user.Password,
+		PasswordUpdated: user.PasswordUpdated,
+		RefreshToken:    user.RefreshToken,
+		Role:            string(user.Role),
+		BranchID:        user.BranchID,
+		UpdatedAt:       user.UpdatedAt,
+		UpdatedBy:       uint32(user.UpdatedBy),
+		CreatedBy:       uint32(user.CreatedBy),
+		BranchName: 	 &user.BranchName,
+	}, nil
 }
 
 func (r *UserRepository) UpdateUserPassword(ctx context.Context, email string, password string) error {
-	_, err := r.queries.UpdateUserPassword(ctx, generated.UpdateUserPasswordParams{
+	tc, span := r.db.tracer.Start(ctx, "User Repo: UpdateUserPassword")
+	defer span.End()
+
+	_, err := r.queries.UpdateUserPassword(tc, generated.UpdateUserPasswordParams{
 		Email:    email,
 		Password: password,
 	})
@@ -88,6 +139,7 @@ func (r *UserRepository) UpdateUserPassword(ctx context.Context, email string, p
 			return pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to update user password")
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update user password: %s", err.Error())
 	}
 
@@ -95,6 +147,9 @@ func (r *UserRepository) UpdateUserPassword(ctx context.Context, email string, p
 }
 
 func (r *UserRepository) ListUsers(ctx context.Context, category *repository.CategorySearch, pgData *pkg.PaginationMetadata) ([]repository.User, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "User Repo: ListUsers")
+	defer span.End()
+
 	params := generated.ListUsersByCategoryParams{
 		Column1: "",
 		FullName: "",
@@ -131,16 +186,17 @@ func (r *UserRepository) ListUsers(ctx context.Context, category *repository.Cat
 		params2.FINDINSET = *category.Role
 	}
 
-	users, err := r.queries.ListUsersByCategory(ctx, params)
+	users, err := r.queries.ListUsersByCategory(tc, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no users found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get users")
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get users: %s", err.Error())
 	}
 
-	totalUsers, err := r.queries.CountUsersByCategory(ctx, params2)
+	totalUsers, err := r.queries.CountUsersByCategory(tc, params2)
 	if err != nil {
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
 	}
@@ -169,6 +225,9 @@ func (r *UserRepository) CheckUserExistance(ctx context.Context, email string) b
 }
 
 func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.UpdateUser) (repository.User, error) {
+	tc, span := r.db.tracer.Start(ctx, "User Repo: UpdateUser")
+	defer span.End()
+
 	params := generated.UpdateUserParams{
 		ID: user.ID,
 	}
@@ -215,8 +274,9 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.Update
 		}
 	}
 
-	_, err := r.queries.UpdateUser(ctx, params)
+	_, err := r.queries.UpdateUser(tc, params)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to update user")
 		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update user: %s", err.Error())
 	}
 
@@ -224,7 +284,10 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.Update
 }
 
 func (r *UserRepository) GetReportUserAdminData(ctx context.Context, filters services.ReportFilters) ([]services.UserAdminsReportData, services.UserAdminsSummary, error) {
-	users, err := r.GetUserAdminsReportData(ctx, GetUserAdminsReportDataParams{
+	tc, span := r.db.tracer.Start(ctx, "User Repo: GetReportUserAdminData")
+	defer span.End()
+
+	users, err := r.GetUserAdminsReportData(tc, GetUserAdminsReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate:   filters.EndDate,
 	})
@@ -232,6 +295,8 @@ func (r *UserRepository) GetReportUserAdminData(ctx context.Context, filters ser
 		if err == sql.ErrNoRows {
 			return nil, services.UserAdminsSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
+
+		setSpanError(span, codes.Error, err, "failed to get report user admin data")
 		return nil, services.UserAdminsSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
 	}
 
@@ -278,7 +343,10 @@ func (r *UserRepository) GetReportUserAdminData(ctx context.Context, filters ser
 }
 
 func (r *UserRepository) GetReportUserUsersData(ctx context.Context, id uint32, filters services.ReportFilters) (services.UserUsersReportData, error) {
-	user, err := r.GetUserUsersReportData(ctx, GetUserUsersReportDataParams{
+	tc, span := r.db.tracer.Start(ctx, "User Repo: GetReportUserUsersData")
+	defer span.End()
+
+	user, err := r.GetUserUsersReportData(tc, GetUserUsersReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate:   filters.EndDate,
 		ID:        id,
@@ -287,6 +355,8 @@ func (r *UserRepository) GetReportUserUsersData(ctx context.Context, id uint32, 
 		if err == sql.ErrNoRows {
 			return services.UserUsersReportData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
+
+		setSpanError(span, codes.Error, err, "failed to get report user admin data")
 		return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
 	}
 

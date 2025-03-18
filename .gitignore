@@ -6,6 +6,7 @@ bin/
 *.dylib
 
 tmp/
+*.pem
 
 # Configs
 config.yaml

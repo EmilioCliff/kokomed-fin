@@ -72,46 +72,48 @@ SELECT SUM(amount)
         (assign_to = sqlc.narg('assign_to'))
         OR (account_number = sqlc.narg('account_number'));
 
--- SELECT 
---     np.id,
---     np.transaction_source,
---     np.transaction_number,
---     np.account_number,
---     np.phone_number,
---     np.paying_name,
---     np.amount,
---     np.paid_date,
---     np.assign_to,
---     np.assigned_by,
---     (SELECT SUM(amount) 
---      FROM non_posted 
---      WHERE 
---         (assign_to = COALESCE(sqlc.narg("assign_to"), assign_to)) 
---         OR (account_number = COALESCE(sqlc.narg("account_number"), account_number))
---     ) AS total_paid
--- FROM non_posted np
--- WHERE 
---     (np.assign_to = COALESCE(sqlc.narg("assign_to"), np.assign_to)) 
---     OR (np.account_number = COALESCE(sqlc.narg("account_number"), np.account_number))
--- ORDER BY np.paid_date DESC
--- LIMIT ? OFFSET ?;
-
 -- name: ListNonPostedByCategory :many
-SELECT *
-FROM non_posted
+SELECT 
+    np.*, 
+    -- Client Details (if assigned)
+    c.id AS client_id,
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    c.overpayment AS client_overpayment,
+    b.name AS client_branch_name
+
+FROM non_posted np
+LEFT JOIN clients c ON np.assign_to = c.id
+LEFT JOIN branches b ON c.branch_id = b.id
+
 WHERE 
     (
         COALESCE(?, '') = '' 
-        OR LOWER(paying_name) LIKE ?
-        OR LOWER(account_number) LIKE ?
-        OR LOWER(transaction_number) LIKE ?
+        OR LOWER(np.paying_name) LIKE ?
+        OR LOWER(np.account_number) LIKE ?
+        OR LOWER(np.transaction_number) LIKE ?
     )
     AND (
         COALESCE(?, '') = '' 
-        OR FIND_IN_SET(transaction_source, ?) > 0
+        OR FIND_IN_SET(np.transaction_source, ?) > 0
     )
- ORDER BY paid_date DESC
+ORDER BY np.paid_date DESC
 LIMIT ? OFFSET ?;
+-- SELECT *
+-- FROM non_posted
+-- WHERE 
+--     (
+--         COALESCE(?, '') = '' 
+--         OR LOWER(paying_name) LIKE ?
+--         OR LOWER(account_number) LIKE ?
+--         OR LOWER(transaction_number) LIKE ?
+--     )
+--     AND (
+--         COALESCE(?, '') = '' 
+--         OR FIND_IN_SET(transaction_source, ?) > 0
+--     )
+--  ORDER BY paid_date DESC
+-- LIMIT ? OFFSET ?;
 
 
 -- name: CountNonPostedByCategory :one

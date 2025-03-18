@@ -17,8 +17,92 @@ type Querier interface {
 	CountClientsByCategory(ctx context.Context, arg CountClientsByCategoryParams) (int64, error)
 	CountClientsNonPosted(ctx context.Context, arg CountClientsNonPostedParams) (int64, error)
 	CountExpectedPayments(ctx context.Context, arg CountExpectedPaymentsParams) (int64, error)
+	// SELECT
+	//     l.*,
+	//     p.branch_id AS product_branch_id,
+	//     p.loan_amount,
+	//     p.repay_amount,
+	//     p.interest_amount,
+	//     c.full_name AS client_name,
+	//     c.phone_number AS client_phone,
+	//     c.active AS client_active,
+	//     c.branch_id AS client_branch_id,
+	//     cb.name AS client_branch_name,
+	//     u.full_name AS loan_officer_name,
+	//     u.email AS loan_officer_email,
+	//     u.phone_number AS loan_officer_phone,
+	//     a.full_name AS approved_by_name,
+	//     a.email AS approved_by_email,
+	//     a.phone_number AS approved_by_phone,
+	//     d.full_name AS disbursed_by_name,
+	//     d.email AS disbursed_by_email,
+	//     d.phone_number AS disbursed_by_phone,
+	//     up.full_name AS updated_by_name,
+	//     up.email AS updated_by_email,
+	//     up.phone_number AS updated_by_phone,
+	//     cr.full_name AS created_by_name,
+	//     cr.email AS created_by_email,
+	//     cr.phone_number AS created_by_phone
+	// FROM loans l
+	// JOIN products p ON l.product_id = p.id
+	// JOIN clients c ON l.client_id = c.id
+	// JOIN branches cb ON c.branch_id = cb.id
+	// JOIN users u ON l.loan_officer = u.id
+	// JOIN users a ON l.approved_by = a.id
+	// -- Left joins for optional fields (disbursed_by, updated_by, created_by)
+	// LEFT JOIN users d ON l.disbursed_by = d.id
+	// LEFT JOIN users up ON l.updated_by = up.id
+	// LEFT JOIN users cr ON l.created_by = cr.id
+	// WHERE
+	//     (
+	//         COALESCE(?, '') = ''
+	//         OR LOWER(c.full_name) LIKE ?
+	//         OR LOWER(u.full_name) LIKE ?
+	//     )
+	//     AND (
+	//         COALESCE(?, '') = ''
+	//         OR FIND_IN_SET(l.status, ?) > 0
+	//     )
+	// ORDER BY l.created_at DESC
+	// LIMIT ? OFFSET ?;
+	// SELECT
+	//     l.*,
+	//     p.branch_id,
+	//     c.full_name AS client_name,
+	//     u.full_name AS loan_officer_name
+	// FROM loans l
+	// JOIN products p ON l.product_id = p.id
+	// JOIN clients c ON l.client_id = c.id
+	// JOIN users u ON l.loan_officer = u.id
+	// WHERE
+	//     (
+	//         COALESCE(?, '') = ''
+	//         OR LOWER(c.full_name) LIKE ?
+	//         OR LOWER(u.full_name) LIKE ?
+	//     )
+	//     AND (
+	//         COALESCE(?, '') = ''
+	//         OR FIND_IN_SET(l.status, ?) > 0
+	//     )
+	//  ORDER BY l.created_at DESC
+	// LIMIT ? OFFSET ?;
 	CountLoans(ctx context.Context, arg CountLoansParams) (int64, error)
 	CountLoansByCategory(ctx context.Context, arg CountLoansByCategoryParams) (int64, error)
+	// SELECT *
+	// FROM non_posted
+	// WHERE
+	//     (
+	//         COALESCE(?, '') = ''
+	//         OR LOWER(paying_name) LIKE ?
+	//         OR LOWER(account_number) LIKE ?
+	//         OR LOWER(transaction_number) LIKE ?
+	//     )
+	//     AND (
+	//         COALESCE(?, '') = ''
+	//         OR FIND_IN_SET(transaction_source, ?) > 0
+	//     )
+	//  ORDER BY paid_date DESC
+	// LIMIT ? OFFSET ?;
 	CountNonPostedByCategory(ctx context.Context, arg CountNonPostedByCategoryParams) (int64, error)
 	CountUnpaidInstallmentsData(ctx context.Context, arg CountUnpaidInstallmentsDataParams) (int64, error)
 	CountUsersByCategory(ctx context.Context, arg CountUsersByCategoryParams) (int64, error)
@@ -46,6 +130,8 @@ type Querier interface {
 	GetClientAdminsReportData(ctx context.Context, arg GetClientAdminsReportDataParams) ([]GetClientAdminsReportDataRow, error)
 	GetClientByPhoneNumber(ctx context.Context, phoneNumber string) (Client, error)
 	GetClientClientsReportData(ctx context.Context, arg GetClientClientsReportDataParams) (GetClientClientsReportDataRow, error)
+	// JOIN users updated ON c.updated_by = updated.id
+	GetClientFullData(ctx context.Context, id uint32) (GetClientFullDataRow, error)
 	GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error)
 	GetClientOverpayment(ctx context.Context, id uint32) (float64, error)
 	GetClientsNonPosted(ctx context.Context, arg GetClientsNonPostedParams) ([]GetClientsNonPostedRow, error)
@@ -53,19 +139,23 @@ type Querier interface {
 	GetLoan(ctx context.Context, id uint32) (Loan, error)
 	GetLoanData(ctx context.Context) ([]uint32, error)
 	GetLoanEvents(ctx context.Context) ([]GetLoanEventsRow, error)
+	// Left joins for optional fields (disbursed_by, updated_by, created_by)
+	GetLoanFullData(ctx context.Context, id uint32) (GetLoanFullDataRow, error)
 	GetLoanPaymentData(ctx context.Context, id uint32) (GetLoanPaymentDataRow, error)
 	GetLoanReportDataById(ctx context.Context, id uint32) (GetLoanReportDataByIdRow, error)
 	GetLoansReportData(ctx context.Context, arg GetLoansReportDataParams) ([]GetLoansReportDataRow, error)
 	GetNonPosted(ctx context.Context, id uint32) (NonPosted, error)
 	GetPaymentReportData(ctx context.Context, arg GetPaymentReportDataParams) ([]GetPaymentReportDataRow, error)
-	GetProduct(ctx context.Context, id uint32) (Product, error)
+	GetProduct(ctx context.Context, id uint32) (GetProductRow, error)
+	// SELECT * FROM products WHERE id = ? LIMIT 1;
 	GetProductRepayAmount(ctx context.Context, id uint32) (float64, error)
 	GetProductReportData(ctx context.Context, arg GetProductReportDataParams) ([]GetProductReportDataRow, error)
 	GetTotalPaidByIDorAccountNo(ctx context.Context, arg GetTotalPaidByIDorAccountNoParams) (interface{}, error)
 	GetUnpaidInstallmentsData(ctx context.Context, arg GetUnpaidInstallmentsDataParams) ([]GetUnpaidInstallmentsDataRow, error)
-	GetUser(ctx context.Context, id uint32) (User, error)
+	GetUser(ctx context.Context, id uint32) (GetUserRow, error)
 	GetUserAdminsReportData(ctx context.Context, arg GetUserAdminsReportDataParams) ([]GetUserAdminsReportDataRow, error)
-	GetUserByEmail(ctx context.Context, email string) (User, error)
+	// SELECT * FROM users WHERE id = ? LIMIT 1;
+	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserUsersReportData(ctx context.Context, arg GetUserUsersReportDataParams) (GetUserUsersReportDataRow, error)
 	HelperClient(ctx context.Context) ([]HelperClientRow, error)
 	HelperProduct(ctx context.Context) ([]HelperProductRow, error)
@@ -81,35 +171,13 @@ type Querier interface {
 	ListClientsByCategory(ctx context.Context, arg ListClientsByCategoryParams) ([]ListClientsByCategoryRow, error)
 	ListExpectedPayments(ctx context.Context, arg ListExpectedPaymentsParams) ([]ListExpectedPaymentsRow, error)
 	ListInstallmentsByLoan(ctx context.Context, loanID uint32) ([]Installment, error)
+	// Left joins for optional fields (disbursed_by, updated_by, created_by)
 	ListLoans(ctx context.Context, arg ListLoansParams) ([]ListLoansRow, error)
 	ListLoansByClient(ctx context.Context, arg ListLoansByClientParams) ([]Loan, error)
 	ListLoansByLoanOfficer(ctx context.Context, arg ListLoansByLoanOfficerParams) ([]Loan, error)
 	ListLoansByStatus(ctx context.Context, arg ListLoansByStatusParams) ([]Loan, error)
 	ListNonDisbursedLoans(ctx context.Context, arg ListNonDisbursedLoansParams) ([]Loan, error)
-	// SELECT
-	//     np.id,
-	//     np.transaction_source,
-	//     np.transaction_number,
-	//     np.account_number,
-	//     np.phone_number,
-	//     np.paying_name,
-	//     np.amount,
-	//     np.paid_date,
-	//     np.assign_to,
-	//     np.assigned_by,
-	//     (SELECT SUM(amount)
-	//      FROM non_posted
-	//      WHERE
-	//         (assign_to = COALESCE(sqlc.narg("assign_to"), assign_to))
-	//         OR (account_number = COALESCE(sqlc.narg("account_number"), account_number))
-	//     ) AS total_paid
-	// FROM non_posted np
-	// WHERE
-	//     (np.assign_to = COALESCE(sqlc.narg("assign_to"), np.assign_to))
-	//     OR (np.account_number = COALESCE(sqlc.narg("account_number"), np.account_number))
-	// ORDER BY np.paid_date DESC
-	// LIMIT ? OFFSET ?;
-	ListNonPostedByCategory(ctx context.Context, arg ListNonPostedByCategoryParams) ([]NonPosted, error)
+	ListNonPostedByCategory(ctx context.Context, arg ListNonPostedByCategoryParams) ([]ListNonPostedByCategoryRow, error)
 	ListNonPostedByTransactionSource(ctx context.Context, arg ListNonPostedByTransactionSourceParams) ([]NonPosted, error)
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error)
 	ListProductsByBranch(ctx context.Context, arg ListProductsByBranchParams) ([]Product, error)

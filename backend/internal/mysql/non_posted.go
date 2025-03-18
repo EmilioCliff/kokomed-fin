@@ -9,6 +9,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var _ repository.NonPostedRepository = (*NonPostedRepository)(nil)
@@ -26,6 +27,9 @@ func NewNonPostedRepository(db *Store) *NonPostedRepository {
 }
 
 func (r *NonPostedRepository) CreateNonPosted(ctx context.Context, nonPosted *repository.NonPosted) (repository.NonPosted, error) {
+	tc, span := r.db.tracer.Start(ctx, "NonPosted Repo: CreateNonPosted")
+	defer span.End()
+
 	params := generated.CreateNonPostedParams{
 		TransactionSource: generated.NonPostedTransactionSource(nonPosted.TransactionSource),
 		TransactionNumber: nonPosted.TransactionNumber,
@@ -44,8 +48,9 @@ func (r *NonPostedRepository) CreateNonPosted(ctx context.Context, nonPosted *re
 		}
 	}
 
-	execResult, err := r.queries.CreateNonPosted(ctx, params)
+	execResult, err := r.queries.CreateNonPosted(tc, params)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to create non posted")
 		return repository.NonPosted{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create non posted: %s", err.Error())
 	}
 
@@ -60,12 +65,16 @@ func (r *NonPostedRepository) CreateNonPosted(ctx context.Context, nonPosted *re
 }
 
 func (r *NonPostedRepository) GetNonPosted(ctx context.Context, id uint32) (repository.NonPosted, error) {
-	nonPosted, err := r.queries.GetNonPosted(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "NonPosted Repo: GetNonPosted")
+	defer span.End()
+
+	nonPosted, err := r.queries.GetNonPosted(tc, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.NonPosted{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no non posted found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get non posted")
 		return repository.NonPosted{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get non posted: %s", err.Error())
 	}
 
@@ -73,6 +82,9 @@ func (r *NonPostedRepository) GetNonPosted(ctx context.Context, id uint32) (repo
 }
 
 func (r *NonPostedRepository) ListNonPosted(ctx context.Context, category *repository.NonPostedCategory, pgData *pkg.PaginationMetadata) ([]repository.NonPosted, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "NonPosted Repo: ListNonPosted")
+	defer span.End()
+
 	params := generated.ListNonPostedByCategoryParams{
 		Column1: "",
 		PayingName: "",
@@ -113,16 +125,17 @@ func (r *NonPostedRepository) ListNonPosted(ctx context.Context, category *repos
 		params2.FINDINSET = *category.Sources
 	}
 
-	nonPosteds, err := r.queries.ListNonPostedByCategory(ctx, params)
+	nonPosteds, err := r.queries.ListNonPostedByCategory(tc, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no non posted found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to list non posted")
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list non posted: %s", err.Error())
 	}
 
-	totalNonPosted, err := r.queries.CountNonPostedByCategory(ctx, params2)
+	totalNonPosted, err := r.queries.CountNonPostedByCategory(tc, params2)
 	if err != nil {
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
 	}
@@ -130,14 +143,50 @@ func (r *NonPostedRepository) ListNonPosted(ctx context.Context, category *repos
 	rslt := make([]repository.NonPosted, len(nonPosteds))
 
 	for i, nonPosted := range nonPosteds {
-		rslt[i] = convertGenerateNonPosted(nonPosted)
+		rsp := repository.NonPosted{
+			ID:                nonPosted.ID,
+			TransactionSource: string(nonPosted.TransactionSource),
+			TransactionNumber: nonPosted.TransactionNumber,
+			AccountNumber:     nonPosted.AccountNumber,
+			PhoneNumber:       nonPosted.PhoneNumber,
+			PayingName:        nonPosted.PayingName,
+			Amount:            nonPosted.Amount,
+			PaidDate:          nonPosted.PaidDate,
+			AssignedBy: 	   nonPosted.AssignedBy,
+		}
+
+		if nonPosted.AssignTo.Valid {
+			value := uint32(nonPosted.AssignTo.Int32)
+			rsp.AssignedTo = &value
+
+			overpayment, err := pkg.StringToFloat64(nonPosted.ClientOverpayment.String)
+			if err != nil {
+				setSpanError(span, codes.Error, err, "failed to convert string to float64")
+				return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert string to float64: %s", err.Error())
+			}
+
+			rsp.AssignedClient = repository.ClientShort{
+				ID: uint32(nonPosted.ClientID.Int32),
+				FullName: nonPosted.ClientName.String,
+				PhoneNumber: nonPosted.ClientPhone.String,
+				Overpayment: overpayment,
+				BranchName: nonPosted.ClientBranchName.String,
+			}
+		}
+
+		
+
+		rslt[i] = rsp
 	}
 
 	return rslt, pkg.CreatePaginationMetadata(uint32(totalNonPosted), pgData.PageSize, pgData.CurrentPage), nil
 }
 
 func (r *NonPostedRepository) ListUnassignedNonPosted(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.NonPosted, error) {
-	nonPosteds, err := r.queries.ListUnassignedNonPosted(ctx, generated.ListUnassignedNonPostedParams{
+	tc, span := r.db.tracer.Start(ctx, "NonPosted Repo: ListUnassignedNonPosted")
+	defer span.End()
+
+	nonPosteds, err := r.queries.ListUnassignedNonPosted(tc, generated.ListUnassignedNonPostedParams{
 		Limit:  int32(pgData.PageSize),
 		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	})
@@ -146,6 +195,7 @@ func (r *NonPostedRepository) ListUnassignedNonPosted(ctx context.Context, pgDat
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no non posted found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to list non posted")
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list non posted: %s", err.Error())
 	}
 
@@ -163,7 +213,10 @@ func (r *NonPostedRepository) ListNonPostedByTransactionSource(
 	transactionSource string,
 	pgData *pkg.PaginationMetadata,
 ) ([]repository.NonPosted, error) {
-	nonPosteds, err := r.queries.ListNonPostedByTransactionSource(ctx, generated.ListNonPostedByTransactionSourceParams{
+	tc, span := r.db.tracer.Start(ctx, "NonPosted Repo: ListNonPostedByTransactionSource")
+	defer span.End()
+
+	nonPosteds, err := r.queries.ListNonPostedByTransactionSource(tc, generated.ListNonPostedByTransactionSourceParams{
 		TransactionSource: generated.NonPostedTransactionSource(strings.ToUpper(transactionSource)),
 		Limit:             int32(pgData.PageSize),
 		Offset:            int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
@@ -173,6 +226,7 @@ func (r *NonPostedRepository) ListNonPostedByTransactionSource(
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no non posted found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to list non posted")
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list non posted: %s", err.Error())
 	}
 
@@ -186,8 +240,12 @@ func (r *NonPostedRepository) ListNonPostedByTransactionSource(
 }
 
 func (r *NonPostedRepository) DeleteNonPosted(ctx context.Context, id uint32) error {
-	err := r.queries.DeleteNonPosted(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "NonPosted Repo: DeleteNonPosted")
+	defer span.End()
+
+	err := r.queries.DeleteNonPosted(tc, id)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to delete non posted")
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete non posted: %s", err.Error())
 	}
 
@@ -195,7 +253,10 @@ func (r *NonPostedRepository) DeleteNonPosted(ctx context.Context, id uint32) er
 }
 
 func (r *NonPostedRepository) GetReportPaymentData(ctx context.Context, filters services.ReportFilters) ([]services.PaymentReportData, services.PaymentSummary, error) {
-	nonPosteds, err := r.queries.GetPaymentReportData(ctx, generated.GetPaymentReportDataParams{
+	tc, span := r.db.tracer.Start(ctx, "NonPosted Repo: GetReportPaymentData")
+	defer span.End()
+
+	nonPosteds, err := r.queries.GetPaymentReportData(tc, generated.GetPaymentReportDataParams{
 		FromPaidDate: filters.StartDate,
 		ToPaidDate:   filters.EndDate,
 	})
@@ -204,6 +265,7 @@ func (r *NonPostedRepository) GetReportPaymentData(ctx context.Context, filters 
 			return nil, services.PaymentSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no non-posted payments found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get report payment data")
 		return nil, services.PaymentSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report payment data: %s", err.Error())
 	}
 
@@ -261,6 +323,9 @@ func (r *NonPostedRepository) GetReportPaymentData(ctx context.Context, filters 
 }
 
 func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32, phoneNumber string, pgData *pkg.PaginationMetadata) (repository.ClientNonPosted, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "NonPosted Repo: GetClientNonPosted")
+	defer span.End()
+
 	var client generated.Client
 	var loan generated.GetActiveLoanDetailsRow
 	var installments []generated.Installment
@@ -271,7 +336,7 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 	var err error
 	
 	if id != 0 {
-		client, err = r.queries.GetClient(ctx, id)
+		client, err = r.queries.GetClient(tc, id)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				clientPresent = false
@@ -282,7 +347,7 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 		clientPresent = true
 	} else {
 		if phoneNumber != "" {
-			client, err = r.queries.GetClientByPhoneNumber(ctx, phoneNumber)
+			client, err = r.queries.GetClientByPhoneNumber(tc, phoneNumber)
 			if err != nil {
 				if err == sql.ErrNoRows {
 					clientPresent = false
@@ -333,7 +398,7 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 		}
 	}
 
-	nonPosteds, err := r.queries.GetClientsNonPosted(ctx, params)
+	nonPosteds, err := r.queries.GetClientsNonPosted(tc, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			clientHasNonPosted = false
@@ -343,18 +408,18 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 	}
 	clientHasNonPosted = true
 
-	totalNonPosted, err := r.queries.CountClientsNonPosted(ctx, params3)
+	totalNonPosted, err := r.queries.CountClientsNonPosted(tc, params3)
 	if err != nil {
 		return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err)
 	}
 
-	totalPaid, err := r.queries.GetTotalPaidByIDorAccountNo(ctx, params2)
+	totalPaid, err := r.queries.GetTotalPaidByIDorAccountNo(tc, params2)
 	if err != nil {
 		return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total payment: %s", err)
 	}
 
 	if clientPresent {
-		loan, err = r.queries.GetActiveLoanDetails(ctx, client.ID)
+		loan, err = r.queries.GetActiveLoanDetails(tc, client.ID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				clientHasActiveLoan = false
@@ -366,7 +431,7 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 	}
 
 	if clientHasActiveLoan {
-		installments, err = r.queries.ListInstallmentsByLoan(ctx, loan.ID)
+		installments, err = r.queries.ListInstallmentsByLoan(tc, loan.ID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "loan has no  installemt!!!")
@@ -378,7 +443,7 @@ func (r *NonPostedRepository) GetClientNonPosted(ctx context.Context, id uint32,
 
 	rslt := repository.ClientNonPosted{}
 	if clientPresent {
-		branch, _ := r.queries.GetBranch(ctx, client.BranchID)
+		branch, _ := r.queries.GetBranch(tc, client.BranchID)
 		rslt.ClientDetails.ID = client.ID
 		rslt.ClientDetails.FullName = client.FullName
 		rslt.ClientDetails.PhoneNumber = client.PhoneNumber

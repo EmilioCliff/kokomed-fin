@@ -11,6 +11,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type userResponse struct {
@@ -40,6 +41,16 @@ func (s *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Creating User")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("full_name", fmt.Sprintf("%s %s",req.Firstname, req.Lastname)),
+		attribute.String("phone_number", req.PhoneNumber),
+		attribute.String("email", req.Email),
+		attribute.String("role", req.Role),
+	)
+
 	password := fmt.Sprintf("%s.%s.%v", req.Firstname, req.Role, req.PhoneNumber[len(req.PhoneNumber)-3:])
 	log.Print(password)
 
@@ -64,7 +75,9 @@ func (s *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := s.repo.Users.CreateUser(ctx, &repository.User{
+	span.SetAttributes(attribute.String("created_by", payloadData.Email))
+
+	user, err := s.repo.Users.CreateUser(tc, &repository.User{
 		FullName:     req.Firstname + " " + req.Lastname,
 		PhoneNumber:  req.PhoneNumber,
 		Email:        req.Email,
@@ -84,16 +97,9 @@ func (s *Server) createUser(ctx *gin.Context) {
 
 	// TODO: send verification email to user
 
-	v, err := s.convertGeneratedUser(ctx, &user)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
 	s.cache.DelAll(ctx, "user:limit=*")
 
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, user)
 }
 
 type loginUserRequest struct {
@@ -121,8 +127,11 @@ func (s *Server) forgotPassword(ctx *gin.Context) {
 		return
 	}
 
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Forgot Password")
+	defer span.End()
+
 	// check if user exists in db
-	exists := s.repo.Users.CheckUserExistance(ctx, req.Email)
+	exists := s.repo.Users.CheckUserExistance(tc, req.Email)
 	if !exists {
 		ctx.JSON(http.StatusNotFound, errorResponse(pkg.Errorf(pkg.NOT_FOUND_ERROR, "user not found")))
 
@@ -149,7 +158,10 @@ func (s *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := s.repo.Users.GetUserByEmail(ctx, req.Email)
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Login User")
+	defer span.End()
+
+	user, err := s.repo.Users.GetUserByEmail(tc, req.Email)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -187,14 +199,7 @@ func (s *Server) loginUser(ctx *gin.Context) {
 
 	ctx.SetCookie("refreshToken", refreshToken, int(s.config.REFRESH_TOKEN_DURATION), "/", "", true, true)
 
-	_, err = s.repo.Users.UpdateUser(ctx, &repository.UpdateUser{ID: user.ID, RefreshToken: pkg.StringPtr(refreshToken)})
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	v, err := s.convertGeneratedUser(ctx, &user)
+	_, err = s.repo.Users.UpdateUser(tc, &repository.UpdateUser{ID: user.ID, RefreshToken: pkg.StringPtr(refreshToken)})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -202,7 +207,7 @@ func (s *Server) loginUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, loginUserResponse{
-		UserData:              v,
+		UserData:              convertGeneratedUser(&user),
 		AccessToken:           accesstoken,
 		RefreshToken:          refreshToken,
 		AccessTokenExpiresAt:  time.Now().Add(s.config.TOKEN_DURATION),
@@ -220,6 +225,9 @@ type updateUserCredentialsRequest struct {
 }
 
 func (s *Server) updateUserCredentials(ctx *gin.Context) {
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Update User Credentials")
+	defer span.End()
+
 	var req updateUserCredentialsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
@@ -246,7 +254,7 @@ func (s *Server) updateUserCredentials(ctx *gin.Context) {
 		return
 	}
 
-	err = s.repo.Users.UpdateUserPassword(ctx, payload.Email, hashpassword)
+	err = s.repo.Users.UpdateUserPassword(tc, payload.Email, hashpassword)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -299,25 +307,31 @@ func (s *Server) getUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := s.repo.Users.GetUserByID(ctx, id)
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Get User")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("id", ctx.Param("id")))
+
+	user, err := s.repo.Users.GetUserByID(tc, id)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	v, err := s.convertGeneratedUser(ctx, &user)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// v, err := s.convertGeneratedUser(ctx, &user)
+	// if err != nil {
+	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-		return
-	}
+	// 	return
+	// }
 
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, user)
 }
 
 func (s *Server) listUsers(ctx *gin.Context) {
-	log.Println("cache miss")
+	tc, span := s.tracer.Start(ctx.Request.Context(), "List Users")
+	defer span.End()
 
 	pageNoStr := ctx.DefaultQuery("page", "1")
 	pageNo, err := pkg.StringToUint32(pageNoStr)
@@ -335,6 +349,11 @@ func (s *Server) listUsers(ctx *gin.Context) {
 		return
 	}
 
+	span.SetAttributes(
+		attribute.String("page_no", pageNoStr),
+		attribute.String("page_size", pageSizeStr),
+	)
+
 	params := repository.CategorySearch{}
 	cacheParams := map[string][]string{
 		"page": {pageNoStr},
@@ -343,6 +362,7 @@ func (s *Server) listUsers(ctx *gin.Context) {
 
 	name := ctx.Query("search")
 	if name != "" {
+		span.SetAttributes(attribute.String("search", name))
 		params.Search = pkg.StringPtr(name)
 		cacheParams["search"] = []string{name}
 	}
@@ -355,33 +375,34 @@ func (s *Server) listUsers(ctx *gin.Context) {
 			roles[i] = strings.TrimSpace(roles[i])
 		}
 
+		span.SetAttributes(attribute.String("role", role))
 		params.Role = pkg.StringPtr(strings.Join(roles, ","))
 		cacheParams["role"] = []string{strings.Join(roles, ",")}
 	}
 
-	users, metadata, err := s.repo.Users.ListUsers(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	users, metadata, err := s.repo.Users.ListUsers(tc, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	rsp := make([]userResponse, len(users))
+	// rsp := make([]userResponse, len(users))
 
-	for idx, u := range users {
-		v, err := s.convertGeneratedUser(ctx, &u)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// for idx, u := range users {
+	// 	v, err := s.convertGeneratedUser(ctx, &u)
+	// 	if err != nil {
+	// 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-			return
-		}
+	// 		return
+	// 	}
 
-		rsp[idx] = v
-	}
+	// 	rsp[idx] = v
+	// }
 
 	response := gin.H{
 		"metadata": metadata,
-		"data": rsp,
+		"data": users,
 	}
 
 	cacheKey := constructCacheKey("user", cacheParams)
@@ -402,6 +423,9 @@ type updateUserRequest struct {
 }
 
 func (s *Server) updateUser(ctx *gin.Context) {
+	tc, span := s.tracer.Start(ctx.Request.Context(), "Update User")
+	defer span.End()
+
 	var req updateUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
@@ -430,6 +454,11 @@ func (s *Server) updateUser(ctx *gin.Context) {
 		return
 	}
 
+	span.SetAttributes(
+		attribute.String("id", ctx.Param("id")),
+		attribute.String("updated_by", payloadData.Email),
+	)
+
 	params := repository.UpdateUser{
 		ID: id,
 		UpdatedBy: pkg.Uint32Ptr(payloadData.UserID),
@@ -437,61 +466,75 @@ func (s *Server) updateUser(ctx *gin.Context) {
 	}
 
 	if req.Role != "" {
+		span.SetAttributes(attribute.String("role", req.Role))
 		params.Role = pkg.StringPtr(req.Role)
 	}
 
 	if req.BranchID != 0 {
+		span.SetAttributes(attribute.Int64("branch_id", int64(req.BranchID)))
 		params.BranchID = pkg.Uint32Ptr(req.BranchID)
 	}
 
-	user, err := s.repo.Users.UpdateUser(ctx, &params)
+	user, err := s.repo.Users.UpdateUser(tc, &params)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	v, err := s.convertGeneratedUser(ctx, &user)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// v, err := s.convertGeneratedUser(ctx, &user)
+	// if err != nil {
+	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-		return
-	}
+	// 	return
+	// }
 
 	s.cache.Del(ctx, fmt.Sprintf("user:%d", id))
 	s.cache.DelAll(ctx, "user:limit=*")
 
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, user)
 }
 
-func (s *Server) convertGeneratedUser(ctx *gin.Context, user *repository.User) (userResponse, error) {
-	cacheKey := fmt.Sprintf("user:%v", user.ID)
-	var dataCached userResponse
+// func (s *Server) convertGeneratedUser(ctx *gin.Context, user *repository.User) (userResponse, error) {
+// 	cacheKey := fmt.Sprintf("user:%v", user.ID)
+// 	var dataCached userResponse
 
-	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
-	if exists {
-		return dataCached, nil
-	}
+// 	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
+// 	if exists {
+// 		return dataCached, nil
+// 	}
 
-	branch, err := s.repo.Branches.GetBranchByID(ctx, user.BranchID)
-	if err != nil {
-		return userResponse{}, err
-	}
+// 	branch, err := s.repo.Branches.GetBranchByID(ctx, user.BranchID)
+// 	if err != nil {
+// 		return userResponse{}, err
+// 	}
 
-	rsp := userResponse{
+// 	rsp := userResponse{
+// 		ID:          user.ID,
+// 		Fullname:    user.FullName,
+// 		Email:       user.Email,
+// 		PhoneNumber: user.PhoneNumber,
+// 		Role:        user.Role,
+// 		BranchName:  branch.Name,
+// 		CreatedAt:   user.CreatedAt,
+// 		// RefreshToken: user.RefreshToken,
+// 	}
+
+// 	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
+// 		return userResponse{}, err
+// 	}
+
+// 	return rsp, nil
+// }
+
+func convertGeneratedUser(user *repository.User) userResponse {
+	return userResponse{
 		ID:          user.ID,
 		Fullname:    user.FullName,
 		Email:       user.Email,
 		PhoneNumber: user.PhoneNumber,
 		Role:        user.Role,
-		BranchName:  branch.Name,
+		BranchName:  *user.BranchName,
 		CreatedAt:   user.CreatedAt,
-		// RefreshToken: user.RefreshToken,
 	}
-
-	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
-		return userResponse{}, err
-	}
-
-	return rsp, nil
 }

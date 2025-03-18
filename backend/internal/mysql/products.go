@@ -8,6 +8,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var _ repository.ProductRepository = (*ProductRepository)(nil)
@@ -25,6 +26,9 @@ func NewProductRepository(db *Store) *ProductRepository {
 }
 
 func (r *ProductRepository) GetAllProducts(ctx context.Context, search *string, pgData *pkg.PaginationMetadata) ([]repository.Product, pkg.PaginationMetadata, error) {
+	tc, span := r.db.tracer.Start(ctx, "Product Repo: GetAllProducts")
+	defer span.End()
+
 	params := generated.ListProductsByCategoryParams {
 		Column1: "",
 		Name: "",
@@ -55,8 +59,9 @@ func (r *ProductRepository) GetAllProducts(ctx context.Context, search *string, 
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get products: %s", err.Error())
 	}
 
-	totalProducts, err := r.queries.CountLoansByCategory(ctx, params2)
+	totalProducts, err := r.queries.CountLoansByCategory(tc, params2)
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to get total products")
 		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total products: %s", err.Error())
 	}
 
@@ -79,20 +84,37 @@ func (r *ProductRepository) GetAllProducts(ctx context.Context, search *string, 
 }
 
 func (r *ProductRepository) GetProductByID(ctx context.Context, id uint32) (repository.Product, error) {
-	product, err := r.queries.GetProduct(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "Product Repo: GetProductByID")
+	defer span.End()
+
+	product, err := r.queries.GetProduct(tc, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.Product{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no product found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get product")
 		return repository.Product{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get product: %s", err.Error())
 	}
 
-	return convertGeneratedProducts(product), nil
+	return repository.Product{
+		ID:             product.ID,
+		BranchID:       product.BranchID,
+		LoanAmount:     product.LoanAmount,
+		RepayAmount:    product.RepayAmount,
+		InterestAmount: product.InterestAmount,
+		UpdatedBy:      product.UpdatedBy,
+		UpdatedAt:      product.UpdatedAt,
+		CreatedAt:      product.CreatedAt,
+		BranchName: 	&product.BranchName,
+	}, nil
 }
 
 func (r *ProductRepository) ListProductByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]repository.Product, error) {
-	products, err := r.queries.ListProductsByBranch(ctx, generated.ListProductsByBranchParams{
+	tc, span := r.db.tracer.Start(ctx, "Product Repo: ListProductByBranch")
+	defer span.End()
+
+	products, err := r.queries.ListProductsByBranch(tc, generated.ListProductsByBranchParams{
 		BranchID: branchID,
 		Limit:    int32(pgData.PageSize),
 		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
@@ -102,6 +124,7 @@ func (r *ProductRepository) ListProductByBranch(ctx context.Context, branchID ui
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no products found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get products")
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get products: %s", err.Error())
 	}
 
@@ -115,7 +138,10 @@ func (r *ProductRepository) ListProductByBranch(ctx context.Context, branchID ui
 }
 
 func (r *ProductRepository) CreateProduct(ctx context.Context, product *repository.Product) (repository.Product, error) {
-	execRslt, err := r.queries.CreateProduct(ctx, generated.CreateProductParams{
+	tc, span := r.db.tracer.Start(ctx, "Product Repo: CreateProduct")
+	defer span.End()
+
+	execRslt, err := r.queries.CreateProduct(tc, generated.CreateProductParams{
 		BranchID:       product.BranchID,
 		LoanAmount:     product.LoanAmount,
 		RepayAmount:    product.RepayAmount,
@@ -123,6 +149,7 @@ func (r *ProductRepository) CreateProduct(ctx context.Context, product *reposito
 		UpdatedBy:      product.UpdatedBy,
 	})
 	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to create product")
 		return repository.Product{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create product: %s", err.Error())
 	}
 
@@ -131,18 +158,29 @@ func (r *ProductRepository) CreateProduct(ctx context.Context, product *reposito
 		return repository.Product{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
 	}
 
+	branch, err := r.queries.GetBranch(ctx, product.BranchID) 
+	if err != nil {
+		setSpanError(span, codes.Error, err, "failed to get created product branch")
+		return repository.Product{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get created product branch: %s", err.Error())
+	}
+
 	product.ID = uint32(id)
+	product.BranchName = &branch.Name
 
 	return *product, nil
 }
 
 func (r *ProductRepository) DeleteProduct(ctx context.Context, id uint32) error {
-	err := r.queries.DeleteProduct(ctx, id)
+	tc, span := r.db.tracer.Start(ctx, "Product Repo: DeleteProduct")
+	defer span.End()
+
+	err := r.queries.DeleteProduct(tc, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return pkg.Errorf(pkg.NOT_FOUND_ERROR, "no product found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to delete product")
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete product: %s", err.Error())
 	}
 
@@ -150,7 +188,10 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, id uint32) error 
 }
 
 func (r *ProductRepository) GetReportProductData(ctx context.Context, filters services.ReportFilters) ([]services.ProductReportData, services.ProductSummary, error) {
-	products, err := r.GetProductReportData(ctx, GetProductReportDataParams{
+	tc, span := r.db.tracer.Start(ctx, "Product Repo: GetReportProductData")
+	defer span.End()
+
+	products, err := r.GetProductReportData(tc, GetProductReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate: filters.EndDate,
 	})
@@ -159,6 +200,7 @@ func (r *ProductRepository) GetReportProductData(ctx context.Context, filters se
 			return nil, services.ProductSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no product found")
 		}
 
+		setSpanError(span, codes.Error, err, "failed to get report product data")
 		return nil, services.ProductSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report product data: %s", err.Error())
 	}
 

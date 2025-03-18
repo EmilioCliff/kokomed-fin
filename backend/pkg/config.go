@@ -1,13 +1,19 @@
 package pkg
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
+	"google.golang.org/grpc/credentials"
 )
 
 type Config struct {
+	SERVER_NAME				string		  `mapstructure:"SERVER_NAME"`
 	CONFIG_PATH				string		  `mapstructure:"CONFIG_PATH"`
 	HTTP_PORT               string        `mapstructure:"HTTP_PORT"`
 	MYSQL_USER              string        `mapstructure:"MYSQL_USER"`
@@ -76,4 +82,23 @@ func setDefaults() {
 	viper.SetDefault("EMAIL_SENDER_ADDRESS", "")
 	viper.SetDefault("REDIS_ADDRESS", "")
 	viper.SetDefault("REDIS_PASSWORD", "")
+}
+
+
+func LoadTLSCredentials(filepath string) (credentials.TransportCredentials, error) {
+	pemServerCA, err := os.ReadFile(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemServerCA) {
+		return nil, fmt.Errorf("failed to add server CA's certificate")
+	}
+
+	config := &tls.Config{
+		RootCAs: certPool,
+	}
+
+	return credentials.NewTLS(config), nil
 }

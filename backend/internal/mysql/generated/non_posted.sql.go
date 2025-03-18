@@ -58,6 +58,8 @@ func (q *Queries) CountClientsNonPosted(ctx context.Context, arg CountClientsNon
 }
 
 const countNonPostedByCategory = `-- name: CountNonPostedByCategory :one
+
+
 SELECT COUNT(*) AS total_non_posted 
 FROM non_posted
 WHERE 
@@ -82,6 +84,23 @@ type CountNonPostedByCategoryParams struct {
 	FINDINSET         string      `json:"FIND_IN_SET"`
 }
 
+// SELECT *
+// FROM non_posted
+// WHERE
+//
+//	   (
+//	       COALESCE(?, '') = ''
+//	       OR LOWER(paying_name) LIKE ?
+//	       OR LOWER(account_number) LIKE ?
+//	       OR LOWER(transaction_number) LIKE ?
+//	   )
+//	   AND (
+//	       COALESCE(?, '') = ''
+//	       OR FIND_IN_SET(transaction_source, ?) > 0
+//	   )
+//	ORDER BY paid_date DESC
+//
+// LIMIT ? OFFSET ?;
 func (q *Queries) CountNonPostedByCategory(ctx context.Context, arg CountNonPostedByCategoryParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, countNonPostedByCategory,
 		arg.Column1,
@@ -349,21 +368,31 @@ func (q *Queries) ListAllNonPostedByTransactionSource(ctx context.Context, trans
 }
 
 const listNonPostedByCategory = `-- name: ListNonPostedByCategory :many
+SELECT 
+    np.id, np.transaction_number, np.account_number, np.phone_number, np.paying_name, np.amount, np.assign_to, np.paid_date, np.transaction_source, np.assigned_by, 
+    -- Client Details (if assigned)
+    c.id AS client_id,
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    c.overpayment AS client_overpayment,
+    b.name AS client_branch_name
 
-SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date, transaction_source, assigned_by
-FROM non_posted
+FROM non_posted np
+LEFT JOIN clients c ON np.assign_to = c.id
+LEFT JOIN branches b ON c.branch_id = b.id
+
 WHERE 
     (
         COALESCE(?, '') = '' 
-        OR LOWER(paying_name) LIKE ?
-        OR LOWER(account_number) LIKE ?
-        OR LOWER(transaction_number) LIKE ?
+        OR LOWER(np.paying_name) LIKE ?
+        OR LOWER(np.account_number) LIKE ?
+        OR LOWER(np.transaction_number) LIKE ?
     )
     AND (
         COALESCE(?, '') = '' 
-        OR FIND_IN_SET(transaction_source, ?) > 0
+        OR FIND_IN_SET(np.transaction_source, ?) > 0
     )
- ORDER BY paid_date DESC
+ORDER BY np.paid_date DESC
 LIMIT ? OFFSET ?
 `
 
@@ -378,34 +407,25 @@ type ListNonPostedByCategoryParams struct {
 	Offset            int32       `json:"offset"`
 }
 
-// SELECT
-//
-//	np.id,
-//	np.transaction_source,
-//	np.transaction_number,
-//	np.account_number,
-//	np.phone_number,
-//	np.paying_name,
-//	np.amount,
-//	np.paid_date,
-//	np.assign_to,
-//	np.assigned_by,
-//	(SELECT SUM(amount)
-//	 FROM non_posted
-//	 WHERE
-//	    (assign_to = COALESCE(sqlc.narg("assign_to"), assign_to))
-//	    OR (account_number = COALESCE(sqlc.narg("account_number"), account_number))
-//	) AS total_paid
-//
-// FROM non_posted np
-// WHERE
-//
-//	(np.assign_to = COALESCE(sqlc.narg("assign_to"), np.assign_to))
-//	OR (np.account_number = COALESCE(sqlc.narg("account_number"), np.account_number))
-//
-// ORDER BY np.paid_date DESC
-// LIMIT ? OFFSET ?;
-func (q *Queries) ListNonPostedByCategory(ctx context.Context, arg ListNonPostedByCategoryParams) ([]NonPosted, error) {
+type ListNonPostedByCategoryRow struct {
+	ID                uint32                     `json:"id"`
+	TransactionNumber string                     `json:"transaction_number"`
+	AccountNumber     string                     `json:"account_number"`
+	PhoneNumber       string                     `json:"phone_number"`
+	PayingName        string                     `json:"paying_name"`
+	Amount            float64                    `json:"amount"`
+	AssignTo          sql.NullInt32              `json:"assign_to"`
+	PaidDate          time.Time                  `json:"paid_date"`
+	TransactionSource NonPostedTransactionSource `json:"transaction_source"`
+	AssignedBy        string                     `json:"assigned_by"`
+	ClientID          sql.NullInt32              `json:"client_id"`
+	ClientName        sql.NullString             `json:"client_name"`
+	ClientPhone       sql.NullString             `json:"client_phone"`
+	ClientOverpayment sql.NullString             `json:"client_overpayment"`
+	ClientBranchName  sql.NullString             `json:"client_branch_name"`
+}
+
+func (q *Queries) ListNonPostedByCategory(ctx context.Context, arg ListNonPostedByCategoryParams) ([]ListNonPostedByCategoryRow, error) {
 	rows, err := q.db.QueryContext(ctx, listNonPostedByCategory,
 		arg.Column1,
 		arg.PayingName,
@@ -420,9 +440,9 @@ func (q *Queries) ListNonPostedByCategory(ctx context.Context, arg ListNonPosted
 		return nil, err
 	}
 	defer rows.Close()
-	items := []NonPosted{}
+	items := []ListNonPostedByCategoryRow{}
 	for rows.Next() {
-		var i NonPosted
+		var i ListNonPostedByCategoryRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TransactionNumber,
@@ -434,6 +454,11 @@ func (q *Queries) ListNonPostedByCategory(ctx context.Context, arg ListNonPosted
 			&i.PaidDate,
 			&i.TransactionSource,
 			&i.AssignedBy,
+			&i.ClientID,
+			&i.ClientName,
+			&i.ClientPhone,
+			&i.ClientOverpayment,
+			&i.ClientBranchName,
 		); err != nil {
 			return nil, err
 		}
