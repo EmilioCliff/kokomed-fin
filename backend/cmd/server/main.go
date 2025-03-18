@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// create a grpc client for sending telementry data to otel collector
-	conn, err := grpc.NewClient("localhost:4317", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("alloy:4317", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}
