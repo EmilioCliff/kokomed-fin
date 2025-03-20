@@ -30,7 +30,7 @@ type openTelemetry struct {
 func NewOpenTelemetry() (services.OtelService, error) {
 	res, err := resource.New(context.Background(),
 		resource.WithAttributes(
-			semconv.ServiceName("kokomed-fin"),
+			semconv.ServiceName("Backend"),
 			semconv.ContainerName("backend"),
 			semconv.ServiceVersion("v0.0.1"),
 		),
