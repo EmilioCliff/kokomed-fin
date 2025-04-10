@@ -49,6 +49,7 @@ WHERE
         COALESCE(?, '') = '' 
         OR FIND_IN_SET(transaction_source, ?) > 0
     )
+    AND paid_date BETWEEN ? AND ?
 `
 
 type CountNonPostedByCategoryParams struct {
@@ -58,6 +59,8 @@ type CountNonPostedByCategoryParams struct {
 	TransactionNumber string      `json:"transaction_number"`
 	Column5           interface{} `json:"column_5"`
 	FINDINSET         string      `json:"FIND_IN_SET"`
+	FromPaidDate      time.Time   `json:"from_paid_date"`
+	ToPaidDate        time.Time   `json:"to_paid_date"`
 }
 
 func (q *Queries) CountNonPostedByCategory(ctx context.Context, arg CountNonPostedByCategoryParams) (int64, error) {
@@ -68,6 +71,8 @@ func (q *Queries) CountNonPostedByCategory(ctx context.Context, arg CountNonPost
 		arg.TransactionNumber,
 		arg.Column5,
 		arg.FINDINSET,
+		arg.FromPaidDate,
+		arg.ToPaidDate,
 	)
 	var total_non_posted int64
 	err := row.Scan(&total_non_posted)
@@ -241,6 +246,7 @@ WHERE
         COALESCE(?, '') = '' 
         OR FIND_IN_SET(transaction_source, ?) > 0
     )
+    AND paid_date BETWEEN ? AND ?
  ORDER BY paid_date DESC
 LIMIT ? OFFSET ?
 `
@@ -252,6 +258,8 @@ type ListNonPostedByCategoryParams struct {
 	TransactionNumber string      `json:"transaction_number"`
 	Column5           interface{} `json:"column_5"`
 	FINDINSET         string      `json:"FIND_IN_SET"`
+	FromPaidDate      time.Time   `json:"from_paid_date"`
+	ToPaidDate        time.Time   `json:"to_paid_date"`
 	Limit             int32       `json:"limit"`
 	Offset            int32       `json:"offset"`
 }
@@ -264,6 +272,8 @@ func (q *Queries) ListNonPostedByCategory(ctx context.Context, arg ListNonPosted
 		arg.TransactionNumber,
 		arg.Column5,
 		arg.FINDINSET,
+		arg.FromPaidDate,
+		arg.ToPaidDate,
 		arg.Limit,
 		arg.Offset,
 	)

@@ -13,13 +13,18 @@ import (
 )
 
 type TaskProcessor struct {
-	server      *asynq.Server
-	sender      pkg.EmailSender
-	repo   		*mysql.MySQLRepo
-	maker  		pkg.JWTMaker
+	server *asynq.Server
+	sender pkg.EmailSender
+	repo   *mysql.MySQLRepo
+	maker  pkg.JWTMaker
 }
 
-func NewTaskProcessor(redisOpt asynq.RedisClientOpt, sender pkg.EmailSender, repo *mysql.MySQLRepo, maker pkg.JWTMaker) *TaskProcessor {
+func NewTaskProcessor(
+	redisOpt asynq.RedisClientOpt,
+	sender pkg.EmailSender,
+	repo *mysql.MySQLRepo,
+	maker pkg.JWTMaker,
+) *TaskProcessor {
 	server := asynq.NewServer(redisOpt, asynq.Config{
 		Queues: map[string]int{
 			services.QueueCritical: 10,
@@ -28,14 +33,14 @@ func NewTaskProcessor(redisOpt asynq.RedisClientOpt, sender pkg.EmailSender, rep
 		},
 		RetryDelayFunc: CustomRetryDelayFunc,
 		ErrorHandler:   asynq.ErrorHandlerFunc(ReportError),
+		LogLevel:       asynq.WarnLevel,
 	})
 
-
 	return &TaskProcessor{
-		server:      server,
+		server: server,
 		sender: sender,
-		repo: repo,
-		maker: maker,
+		repo:   repo,
+		maker:  maker,
 	}
 }
 
@@ -47,7 +52,7 @@ func (processor *TaskProcessor) Start() error {
 	return processor.server.Start(mux)
 }
 
-func (processor *TaskProcessor) Stop()  {
+func (processor *TaskProcessor) Stop() {
 	processor.server.Shutdown()
 	log.Println("Task processor stopped successfully.")
 }

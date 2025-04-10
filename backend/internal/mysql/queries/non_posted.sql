@@ -51,6 +51,7 @@ WHERE
         COALESCE(?, '') = '' 
         OR FIND_IN_SET(transaction_source, ?) > 0
     )
+    AND paid_date BETWEEN ? AND ?
  ORDER BY paid_date DESC
 LIMIT ? OFFSET ?;
 
@@ -68,4 +69,5 @@ WHERE
     AND (
         COALESCE(?, '') = '' 
         OR FIND_IN_SET(transaction_source, ?) > 0
-    );
+    )
+    AND paid_date BETWEEN ? AND ?;

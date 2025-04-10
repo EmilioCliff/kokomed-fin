@@ -8,7 +8,8 @@ import (
 )
 
 type Config struct {
-	CONFIG_PATH				string		  `mapstructure:"CONFIG_PATH"`
+	CONFIG_PATH             string        `mapstructure:"CONFIG_PATH"`
+	ENVIRONMENT             string        `mapstructure:"ENVIRONMENT"`
 	HTTP_PORT               string        `mapstructure:"HTTP_PORT"`
 	MYSQL_USER              string        `mapstructure:"MYSQL_USER"`
 	MYSQL_PASSWORD          string        `mapstructure:"MYSQL_PASSWORD"`
@@ -22,19 +23,19 @@ type Config struct {
 	PASSWORD_COST           int           `mapstructure:"PASSWORD_COST"`
 	RSA_PRIVATE_KEY         string        `mapstructure:"RSA_PRIVATE_KEY"`
 	RSA_PUBLIC_KEY          string        `mapstructure:"RSA_PUBLIC_KEY"`
-	EMAIL_SENDER_PASSWORD	string	`mapstructure:"EMAIL_SENDER_PASSWORD"`
-	EMAIL_SENDER_NAME	string	`mapstructure:"EMAIL_SENDER_NAME"`
-	EMAIL_SENDER_ADDRESS	string	`mapstructure:"EMAIL_SENDER_ADDRESS"`
-	REDIS_ADDRESS	string	`mapstructure:"REDIS_ADDRESS"`
-	REDIS_PASSWORD	string	`mapstructure:"REDIS_PASSWORD"`
-	MPESA_CONSUMER_KEY string `mapstructure:"MPESA_CONSUMER_KEY"`
-	MPESA_CONSUMER_SECRET string `mapstructure:"MPESA_CONSUMER_SECRET"`
-	MPESA_SHORT_CODE string `mapstructure:"MPESA_SHORT_CODE"`
-	MPESA_PASSKEY string `mapstructure:"MPESA_PASSKEY"`
+	EMAIL_SENDER_PASSWORD   string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
+	EMAIL_SENDER_NAME       string        `mapstructure:"EMAIL_SENDER_NAME"`
+	EMAIL_SENDER_ADDRESS    string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
+	REDIS_ADDRESS           string        `mapstructure:"REDIS_ADDRESS"`
+	REDIS_PASSWORD          string        `mapstructure:"REDIS_PASSWORD"`
+	MPESA_CONSUMER_KEY      string        `mapstructure:"MPESA_CONSUMER_KEY"`
+	MPESA_CONSUMER_SECRET   string        `mapstructure:"MPESA_CONSUMER_SECRET"`
+	MPESA_SHORT_CODE        string        `mapstructure:"MPESA_SHORT_CODE"`
+	MPESA_PASSKEY           string        `mapstructure:"MPESA_PASSKEY"`
 }
 
 // Loads app configuration from .env file.
-func LoadConfig(path ,name, configType string) (Config, error) {
+func LoadConfig(path, name, configType string) (Config, error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName(name)
 	viper.SetConfigType(configType)

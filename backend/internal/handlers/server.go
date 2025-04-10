@@ -27,12 +27,24 @@ type Server struct {
 	repo   *mysql.MySQLRepo
 
 	payments services.PaymentService
-	worker services.WorkerService
-	cache services.CacheService
-	report services.ReportService
+	worker   services.WorkerService
+	cache    services.CacheService
+	report   services.ReportService
 }
 
-func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, payment *payments.PaymentService, worker services.WorkerService, cache services.CacheService, report services.ReportService) *Server {
+func NewServer(
+	config pkg.Config,
+	maker pkg.JWTMaker,
+	repo *mysql.MySQLRepo,
+	payment *payments.PaymentService,
+	worker services.WorkerService,
+	cache services.CacheService,
+	report services.ReportService,
+) *Server {
+	if config.ENVIRONMENT == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	r := gin.Default()
 
 	s := &Server{
@@ -40,9 +52,9 @@ func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, pay
 		config:   config,
 		maker:    maker,
 		repo:     repo,
-		worker: worker,
-		cache: cache,
-		report: report,
+		worker:   worker,
+		cache:    cache,
+		report:   report,
 		payments: payment,
 		ln:       nil,
 	}
@@ -54,7 +66,7 @@ func NewServer(config pkg.Config, maker pkg.JWTMaker, repo *mysql.MySQLRepo, pay
 
 func (s *Server) setUpRoutes() {
 	s.router.Use(CORSmiddleware())
-	
+
 	v1 := s.router.Group("/api/v1")
 	v1Auth := s.router.Group("/api/v1")
 
@@ -118,7 +130,6 @@ func (s *Server) setUpRoutes() {
 	authRoute.PATCH("/payment/:id/assign", s.paymentByAdmin)
 
 	// payment of from credit to repay some loan(overpayment to pay loan)
-
 
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)

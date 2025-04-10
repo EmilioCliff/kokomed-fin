@@ -20,18 +20,42 @@ import { paymentColumns } from './payment';
 import { paymentSources } from '@/data/loan';
 import { useAuth } from '@/hooks/useAuth';
 import { role } from '@/lib/types';
+import { DateRangePicker } from '@/components/UI/DateRangePicker';
 
 function PaymentsPage() {
 	const [formOpen, setFormOpen] = useState(false);
-	const { pageIndex, pageSize, filter, search, updateTableContext } =
-		useTable();
+	const {
+		pageIndex,
+		pageSize,
+		filter,
+		search,
+		fromDate,
+		toDate,
+		updateTableContext,
+	} = useTable();
 	const { decoded } = useAuth();
 
 	const debouncedInput = useDebounce({ value: search, delay: 500 });
 
 	const { isLoading, error, data } = useQuery({
-		queryKey: ['payments', pageIndex, pageSize, filter, debouncedInput],
-		queryFn: () => getPayments(pageIndex, pageSize, filter, debouncedInput),
+		queryKey: [
+			'payments',
+			pageIndex,
+			pageSize,
+			filter,
+			fromDate,
+			toDate,
+			debouncedInput,
+		],
+		queryFn: () =>
+			getPayments(
+				pageIndex,
+				pageSize,
+				filter,
+				fromDate,
+				toDate,
+				debouncedInput,
+			),
 		staleTime: 5 * 1000,
 		placeholderData: keepPreviousData,
 	});
@@ -52,6 +76,9 @@ function PaymentsPage() {
 
 	return (
 		<div className="px-4">
+			<div className="flex justify-end mb-4">
+				<DateRangePicker />
+			</div>
 			<div className="flex justify-between items-center mb-4">
 				<h1 className="text-3xl font-bold">Payments</h1>
 				{decoded?.role === role.ADMIN && (

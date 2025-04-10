@@ -5,6 +5,8 @@ bin/
 *.so
 *.dylib
 
+cert/
+
 tmp/
 
 # Configs

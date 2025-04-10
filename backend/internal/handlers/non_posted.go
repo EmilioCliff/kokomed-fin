@@ -13,16 +13,16 @@ import (
 )
 
 type nonPostedResponse struct {
-	ID                uint32            `json:"id"`
-	TransactionSource string            `json:"transactionSource"`
-	TransactionNumber string            `json:"transactionNumber"`
-	AccountNumber     string            `json:"accountNumber"`
-	PhoneNumber       string            `json:"phoneNumber"`
-	PayingName        string            `json:"payingName"`
-	Amount            float64           `json:"amount"`
-	PaidDate          time.Time         `json:"paidDate"`
+	ID                uint32              `json:"id"`
+	TransactionSource string              `json:"transactionSource"`
+	TransactionNumber string              `json:"transactionNumber"`
+	AccountNumber     string              `json:"accountNumber"`
+	PhoneNumber       string              `json:"phoneNumber"`
+	PayingName        string              `json:"payingName"`
+	Amount            float64             `json:"amount"`
+	PaidDate          time.Time           `json:"paidDate"`
 	AssignedTo        clientShortResponse `json:"assignedTo"`
-	Assigned bool	`json:"assigned"`
+	Assigned          bool                `json:"assigned"`
 }
 
 func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
@@ -43,10 +43,39 @@ func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
 		return
 	}
 
+	fromDateStr := ctx.DefaultQuery("from", "01/01/2025")
+	fromDate, err := time.Parse("01/02/2006", fromDateStr)
+	if err != nil {
+		ctx.JSON(
+			http.StatusInternalServerError,
+			errorResponse(
+				pkg.Errorf(pkg.INTERNAL_ERROR, "error parsing from date: %s", err.Error()),
+			),
+		)
+
+		return
+	}
+
+	toDateStr := ctx.DefaultQuery("to", time.Now().Format("01/02/2006"))
+	toDate, err := time.Parse("01/02/2006", toDateStr)
+	if err != nil {
+		ctx.JSON(
+			http.StatusInternalServerError,
+			errorResponse(
+				pkg.Errorf(pkg.INTERNAL_ERROR, "error parsing from date: %s", err.Error()),
+			),
+		)
+
+		return
+	}
+	toDate = toDate.Add(24 * time.Hour)
+
 	params := repository.NonPostedCategory{}
 	cacheParams := map[string][]string{
-		"page": {pageNoStr},
-		"limit": {pageSizeStr},
+		"page":     {pageNoStr},
+		"limit":    {pageSizeStr},
+		"fromDate": {fromDateStr},
+		"toDate":   {toDateStr},
 	}
 
 	search := ctx.Query("search")
@@ -58,16 +87,25 @@ func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
 	source := ctx.Query("source")
 	if source != "" {
 		sources := strings.Split(source, ",")
-		
+
 		for i := range sources {
 			sources[i] = strings.TrimSpace(sources[i])
 		}
-		
+
 		params.Sources = pkg.StringPtr(strings.Join(sources, ","))
 		cacheParams["source"] = []string{strings.Join(sources, ",")}
 	}
 
-	payments, metadata, err := s.repo.NonPosted.ListNonPosted(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	payments, metadata, err := s.repo.NonPosted.ListNonPosted(
+		ctx,
+		&params,
+		&pkg.PaginationMetadata{
+			CurrentPage: pageNo,
+			PageSize:    pageSize,
+			FromDate:    &fromDate,
+			ToDate:      &toDate,
+		},
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -89,14 +127,17 @@ func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
 
 	response := gin.H{
 		"metadata": metadata,
-		"data": rsp,
+		"data":     rsp,
 	}
 
 	cacheKey := constructCacheKey("non-posted/all", cacheParams)
 
 	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+		ctx.JSON(
+			http.StatusInternalServerError,
+			pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err),
+		)
 
 		return
 	}
@@ -114,7 +155,10 @@ func (s *Server) listNonPostedByTransactionSource(ctx *gin.Context) {
 
 	query := ctx.Param("type")
 	if query == "" || (query != "mpesa" && query != "internal") {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid transaction_type")))
+		ctx.JSON(
+			http.StatusBadRequest,
+			errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid transaction_type")),
+		)
 
 		return
 	}
@@ -154,7 +198,10 @@ func (s *Server) listUnassignedNonPostedPayments(ctx *gin.Context) {
 		return
 	}
 
-	payments, err := s.repo.NonPosted.ListUnassignedNonPosted(ctx, &pkg.PaginationMetadata{CurrentPage: pageNo})
+	payments, err := s.repo.NonPosted.ListUnassignedNonPosted(
+		ctx,
+		&pkg.PaginationMetadata{CurrentPage: pageNo},
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -238,7 +285,10 @@ func (s *Server) getNonPostedPayment(ctx *gin.Context) {
 // 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 // }
 
-func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (nonPostedResponse, error) {
+func (s *Server) structureNonPosted(
+	p *repository.NonPosted,
+	ctx *gin.Context,
+) (nonPostedResponse, error) {
 	cacheKey := fmt.Sprintf("non-posted:%v", p.ID)
 	var dataCached nonPostedResponse
 
@@ -246,7 +296,7 @@ func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (
 	if exists {
 		return dataCached, nil
 	}
-	
+
 	v := nonPostedResponse{
 		ID:                p.ID,
 		TransactionSource: string(p.TransactionSource),
@@ -260,7 +310,7 @@ func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (
 
 	if p.AssignedTo != nil {
 		v.Assigned = true
-		
+
 		client, err := s.repo.Clients.GetClient(ctx, *p.AssignedTo)
 		if err != nil {
 			log.Println(*p.AssignedTo)
@@ -274,11 +324,11 @@ func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context) (
 
 		v.AssignedTo = clientShortResponse{
 			ID:          client.ID,
-			FullName: client.FullName,
+			FullName:    client.FullName,
 			PhoneNumber: client.PhoneNumber,
 			Overpayment: client.Overpayment,
-			DueAmount: client.DueAmount,
-			BranchName: branch.Name,
+			DueAmount:   client.DueAmount,
+			BranchName:  branch.Name,
 		}
 	}
 

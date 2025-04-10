@@ -6,12 +6,16 @@ const getPayments = async (
 	pageNumber: number,
 	pageSize: number,
 	filter: tableFilterType,
+	from: string,
+	to: string,
 	search: string,
 ) => {
 	try {
 		let baseUrl = `/non-posted/all?limit=${pageSize}&page=${
 			pageNumber + 1
 		}`;
+		baseUrl = baseUrl + `&from=${encodeURIComponent(from)}`;
+		baseUrl = baseUrl + `&to=${encodeURIComponent(to)}`;
 
 		if (search) {
 			baseUrl = baseUrl + `&search=${encodeURIComponent(search)}`;

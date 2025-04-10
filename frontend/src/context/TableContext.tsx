@@ -1,6 +1,7 @@
 import { createContext, FC, useState } from 'react';
 import { contextWrapperProps } from '@/lib/types';
 import { tableFilterType, pagination } from '@/lib/types';
+import { format } from 'date-fns';
 
 const defaultContext: TableContextType = {
 	search: '',
@@ -9,6 +10,8 @@ const defaultContext: TableContextType = {
 	pageSize: 10,
 	rowsCount: 0,
 	selectedRow: null,
+	fromDate: '01/01/2025',
+	toDate: format(new Date(), 'P'),
 	setSearch: () => {},
 	setFilter: () => {},
 	setPageIndex: () => {},
@@ -16,6 +19,7 @@ const defaultContext: TableContextType = {
 	setRowsCount: () => {},
 	setSelectedRow: () => {},
 	resetTableState: () => {},
+	setTimeRange: () => {},
 	updateTableContext: () => {},
 };
 
@@ -26,6 +30,8 @@ export interface TableContextType {
 	pageSize: number;
 	selectedRow: any;
 	rowsCount: number;
+	fromDate: string;
+	toDate: string;
 	setSearch: (value: string) => void;
 	setFilter: React.Dispatch<React.SetStateAction<tableFilterType>>;
 	setPageIndex: (value: number) => void;
@@ -33,6 +39,7 @@ export interface TableContextType {
 	setRowsCount: (value: number) => void;
 	setSelectedRow: (value: any) => void;
 	resetTableState: () => void;
+	setTimeRange: (from: string, to: string) => void;
 	updateTableContext: (value: pagination | undefined) => void;
 }
 
@@ -48,6 +55,8 @@ export const TableContextWrapper: FC<contextWrapperProps> = ({ children }) => {
 	const [pageSize, setPageSize] = useState(defaultContext.pageSize);
 	const [rowsCount, setRowsCount] = useState(defaultContext.rowsCount);
 	const [selectedRow, setSelectedRow] = useState(defaultContext.selectedRow);
+	const [fromDate, setFromDate] = useState(defaultContext.fromDate);
+	const [toDate, setToDate] = useState(defaultContext.toDate);
 
 	const resetTableState = () => {
 		setSearch(defaultContext.search);
@@ -55,6 +64,12 @@ export const TableContextWrapper: FC<contextWrapperProps> = ({ children }) => {
 		setPageIndex(defaultContext.pageIndex);
 		setPageSize(defaultContext.pageSize);
 		setSelectedRow(defaultContext.selectedRow);
+		setTimeRange(defaultContext.fromDate, defaultContext.toDate);
+	};
+
+	const setTimeRange = (from: string, to: string) => {
+		setFromDate(from);
+		setToDate(to);
 	};
 
 	const updateTableContext = (pagination: pagination | undefined) => {
@@ -72,6 +87,8 @@ export const TableContextWrapper: FC<contextWrapperProps> = ({ children }) => {
 				pageSize,
 				rowsCount,
 				selectedRow,
+				fromDate,
+				toDate,
 				setSearch,
 				setFilter,
 				setPageIndex,
@@ -79,6 +96,7 @@ export const TableContextWrapper: FC<contextWrapperProps> = ({ children }) => {
 				setRowsCount,
 				setSelectedRow,
 				resetTableState,
+				setTimeRange,
 				updateTableContext,
 			}}
 		>
