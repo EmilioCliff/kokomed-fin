@@ -24,17 +24,21 @@ func NewProductRepository(db *Store) *ProductRepository {
 	}
 }
 
-func (r *ProductRepository) GetAllProducts(ctx context.Context, search *string, pgData *pkg.PaginationMetadata) ([]repository.Product, pkg.PaginationMetadata, error) {
-	params := generated.ListProductsByCategoryParams {
+func (r *ProductRepository) GetAllProducts(
+	ctx context.Context,
+	search *string,
+	pgData *pkg.PaginationMetadata,
+) ([]repository.Product, pkg.PaginationMetadata, error) {
+	params := generated.ListProductsByCategoryParams{
 		Column1: "",
-		Name: "",
-		Limit:  int32(pgData.PageSize),
-		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+		Name:    "",
+		Limit:   int32(pgData.PageSize),
+		Offset:  int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	}
 
 	params2 := generated.CountLoansByCategoryParams{
 		Column1: "",
-		Name: "",
+		Name:    "",
 	}
 
 	if search != nil {
@@ -49,15 +53,26 @@ func (r *ProductRepository) GetAllProducts(ctx context.Context, search *string, 
 	products, err := r.queries.ListProductsByCategory(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no products found")
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+				pkg.NOT_FOUND_ERROR,
+				"no products found",
+			)
 		}
 
-		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get products: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get products: %s",
+			err.Error(),
+		)
 	}
 
 	totalProducts, err := r.queries.CountLoansByCategory(ctx, params2)
 	if err != nil {
-		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total products: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get total products: %s",
+			err.Error(),
+		)
 	}
 
 	result := make([]repository.Product, len(products))
@@ -65,7 +80,7 @@ func (r *ProductRepository) GetAllProducts(ctx context.Context, search *string, 
 		result[i] = repository.Product{
 			ID:             product.ID,
 			BranchID:       product.BranchID,
-			BranchName: 	&product.BranchName,
+			BranchName:     &product.BranchName,
 			LoanAmount:     product.LoanAmount,
 			RepayAmount:    product.RepayAmount,
 			InterestAmount: product.InterestAmount,
@@ -75,23 +90,48 @@ func (r *ProductRepository) GetAllProducts(ctx context.Context, search *string, 
 		}
 	}
 
-	return result, pkg.CreatePaginationMetadata(uint32(totalProducts), pgData.PageSize, pgData.CurrentPage), nil
+	return result, pkg.CreatePaginationMetadata(
+		uint32(totalProducts),
+		pgData.PageSize,
+		pgData.CurrentPage,
+	), nil
 }
 
-func (r *ProductRepository) GetProductByID(ctx context.Context, id uint32) (repository.Product, error) {
+func (r *ProductRepository) GetProductByID(
+	ctx context.Context,
+	id uint32,
+) (repository.Product, error) {
 	product, err := r.queries.GetProduct(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.Product{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no product found")
 		}
 
-		return repository.Product{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get product: %s", err.Error())
+		return repository.Product{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get product: %s",
+			err.Error(),
+		)
 	}
 
-	return convertGeneratedProducts(product), nil
+	return repository.Product{
+		ID:             product.ID,
+		BranchID:       product.BranchID,
+		LoanAmount:     product.LoanAmount,
+		RepayAmount:    product.RepayAmount,
+		InterestAmount: product.InterestAmount,
+		UpdatedBy:      product.UpdatedBy,
+		UpdatedAt:      product.UpdatedAt,
+		CreatedAt:      product.CreatedAt,
+		BranchName:     &product.BranchName,
+	}, nil
 }
 
-func (r *ProductRepository) ListProductByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]repository.Product, error) {
+func (r *ProductRepository) ListProductByBranch(
+	ctx context.Context,
+	branchID uint32,
+	pgData *pkg.PaginationMetadata,
+) ([]repository.Product, error) {
 	products, err := r.queries.ListProductsByBranch(ctx, generated.ListProductsByBranchParams{
 		BranchID: branchID,
 		Limit:    int32(pgData.PageSize),
@@ -114,7 +154,10 @@ func (r *ProductRepository) ListProductByBranch(ctx context.Context, branchID ui
 	return result, nil
 }
 
-func (r *ProductRepository) CreateProduct(ctx context.Context, product *repository.Product) (repository.Product, error) {
+func (r *ProductRepository) CreateProduct(
+	ctx context.Context,
+	product *repository.Product,
+) (repository.Product, error) {
 	execRslt, err := r.queries.CreateProduct(ctx, generated.CreateProductParams{
 		BranchID:       product.BranchID,
 		LoanAmount:     product.LoanAmount,
@@ -123,15 +166,33 @@ func (r *ProductRepository) CreateProduct(ctx context.Context, product *reposito
 		UpdatedBy:      product.UpdatedBy,
 	})
 	if err != nil {
-		return repository.Product{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create product: %s", err.Error())
+		return repository.Product{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to create product: %s",
+			err.Error(),
+		)
 	}
 
 	id, err := execRslt.LastInsertId()
 	if err != nil {
-		return repository.Product{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
+		return repository.Product{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get last insert id: %s",
+			err.Error(),
+		)
+	}
+
+	branch, err := r.queries.GetBranch(ctx, product.BranchID)
+	if err != nil {
+		return repository.Product{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get created product branch: %s",
+			err.Error(),
+		)
 	}
 
 	product.ID = uint32(id)
+	product.BranchName = &branch.Name
 
 	return *product, nil
 }
@@ -149,50 +210,60 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, id uint32) error 
 	return nil
 }
 
-func (r *ProductRepository) GetReportProductData(ctx context.Context, filters services.ReportFilters) ([]services.ProductReportData, services.ProductSummary, error) {
+func (r *ProductRepository) GetReportProductData(
+	ctx context.Context,
+	filters services.ReportFilters,
+) ([]services.ProductReportData, services.ProductSummary, error) {
 	products, err := r.GetProductReportData(ctx, GetProductReportDataParams{
 		StartDate: filters.StartDate,
-		EndDate: filters.EndDate,
+		EndDate:   filters.EndDate,
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, services.ProductSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no product found")
+			return nil, services.ProductSummary{}, pkg.Errorf(
+				pkg.NOT_FOUND_ERROR,
+				"no product found",
+			)
 		}
 
-		return nil, services.ProductSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report product data: %s", err.Error())
+		return nil, services.ProductSummary{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get report product data: %s",
+			err.Error(),
+		)
 	}
 
 	rslt := make([]services.ProductReportData, len(products))
 
-    var totalActiveLoanAmount int64
-    var mostPopularProduct string
-    var maxLoans int64
+	var totalActiveLoanAmount int64
+	var mostPopularProduct string
+	var maxLoans int64
 	for i, product := range products {
 		totalActiveLoanAmount += product.ActiveLoans
-        
-        if product.TotalLoansIssued > maxLoans {
-            maxLoans = product.TotalLoansIssued
-            mostPopularProduct = product.ProductName
-        }
+
+		if product.TotalLoansIssued > maxLoans {
+			maxLoans = product.TotalLoansIssued
+			mostPopularProduct = product.ProductName
+		}
 
 		rslt[i] = services.ProductReportData{
-			ProductName: product.ProductName,
-			LoansIssued: product.TotalLoansIssued,
-			ActiveLoans: product.ActiveLoans,
-			CompletedLoans: product.CompletedLoans,
-			DefaultedLoans: product.DefaultedLoans,
-			AmountDisbursed: pkg.InterfaceFloat64(product.TotalAmountDisbursed),
-			AmountRepaid: pkg.InterfaceFloat64(product.TotalAmountRepaid),
+			ProductName:       product.ProductName,
+			LoansIssued:       product.TotalLoansIssued,
+			ActiveLoans:       product.ActiveLoans,
+			CompletedLoans:    product.CompletedLoans,
+			DefaultedLoans:    product.DefaultedLoans,
+			AmountDisbursed:   pkg.InterfaceFloat64(product.TotalAmountDisbursed),
+			AmountRepaid:      pkg.InterfaceFloat64(product.TotalAmountRepaid),
 			OutstandingAmount: pkg.InterfaceFloat64(product.TotalOutstandingAmount),
-			DefaultRate: pkg.InterfaceFloat64(product.DefaultRate),
+			DefaultRate:       pkg.InterfaceFloat64(product.DefaultRate),
 		}
 	}
 
 	summary := services.ProductSummary{
-		TotalProducts: int64(len(products)),
+		TotalProducts:         int64(len(products)),
 		TotalActiveLoanAmount: totalActiveLoanAmount,
-		MostPopularProduct: mostPopularProduct,
-		MaxLoans: maxLoans,
+		MostPopularProduct:    mostPopularProduct,
+		MaxLoans:              maxLoans,
 	}
 
 	return rslt, summary, nil

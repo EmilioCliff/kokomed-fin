@@ -29,11 +29,33 @@ type Loan struct {
 	CreatedAt          time.Time  `json:"created_at"`
 }
 
+type LoanFullData struct {
+	ID                 uint32            `json:"id"`
+	LoanPurpose        *string           `json:"loanPurpose"`
+	DueDate            *time.Time        `json:"dueDate"`
+	DisbursedOn        *time.Time        `json:"disbursedOn"`
+	TotalInstallments  uint32            `json:"totalInstallments"`
+	InstallmentsPeriod uint32            `json:"installmentsPeriod"`
+	Status             string            `json:"status"`
+	ProcessingFee      float64           `json:"processingFee"`
+	FeePaid            bool              `json:"feePaid"`
+	PaidAmount         float64           `json:"paidAmount"`
+	RemainingAmount    float64           `json:"remainingAmount"`
+	CreatedAt          time.Time         `json:"createdAt"`
+	Product            ProductShort      `json:"product"`
+	Client             ClientShort       `json:"client"`
+	LoanOfficer        UserShortResponse `json:"loanOfficer"`
+	ApprovedBy         UserShortResponse `json:"approvedBy"`
+	DisbursedBy        UserShortResponse `json:"disbursedBy"`
+	UpdatedBy          UserShortResponse `json:"updatedBy"`
+	CreatedBy          UserShortResponse `json:"createdBy"`
+}
+
 type DisburseLoan struct {
-	ID          uint32    `json:"id"`
-	DisbursedBy uint32    `json:"disbursedBy"`
-	Status *string `json:"status"`
-	FeePaid *bool 	`json:"feePaid"`
+	ID          uint32     `json:"id"`
+	DisbursedBy uint32     `json:"disbursedBy"`
+	Status      *string    `json:"status"`
+	FeePaid     *bool      `json:"feePaid"`
 	DisbursedOn *time.Time `json:"disbursedOn"`
 }
 
@@ -44,14 +66,14 @@ type UpdateLoan struct {
 }
 
 type Installment struct {
-	ID              uint32    `json:"id"`
-	LoanID          uint32    `json:"loanId"`
-	InstallmentNo   uint32    `json:"installmentNo"`
-	Amount          float64   `json:"amount"`
-	RemainingAmount float64   `json:"remainingAmount"`
-	Paid            bool      `json:"paid"`
-	PaidAt          string `json:"paidAt"`
-	DueDate         string `json:"dueDate"`
+	ID              uint32  `json:"id"`
+	LoanID          uint32  `json:"loanId"`
+	InstallmentNo   uint32  `json:"installmentNo"`
+	Amount          float64 `json:"amount"`
+	RemainingAmount float64 `json:"remainingAmount"`
+	Paid            bool    `json:"paid"`
+	PaidAt          string  `json:"paidAt"`
+	DueDate         string  `json:"dueDate"`
 }
 
 type UpdateInstallment struct {
@@ -62,52 +84,92 @@ type UpdateInstallment struct {
 }
 
 type Category struct {
-	BranchID    *uint32 `json:"branch_id"`
-	Search *string `json:"string"`
-	Statuses *string 	`json:"statuses"`
+	BranchID *uint32 `json:"branch_id"`
+	Search   *string `json:"string"`
+	Statuses *string `json:"statuses"`
 }
 
 type LoanEvent struct {
-	ID       string  `json:"id"`
-	LoanID uint32 `json:"loanId"`
-	ClientName   string  `json:"clientName"`
-	LoanAmount   float64 `json:"loanAmount"`
-	Date      *string `json:"date"`   
-	PaymentDue   *float64 `json:"paymentDue,omitempty"` 
-	Type         string  `json:"type"` 
-	AllDay bool `json:"allDay"`
-	Title string `json:"title"`
+	ID         string   `json:"id"`
+	LoanID     uint32   `json:"loanId"`
+	ClientName string   `json:"clientName"`
+	LoanAmount float64  `json:"loanAmount"`
+	Date       *string  `json:"date"`
+	PaymentDue *float64 `json:"paymentDue,omitempty"`
+	Type       string   `json:"type"`
+	AllDay     bool     `json:"allDay"`
+	Title      string   `json:"title"`
 }
 
 type ExpectedPayment struct {
-	LoanId uint32	`json:"loanId"`
-	BranchName string	`json:"branchName"`
-	ClientName string	`json:"clientName"`
-	LoanOfficerName string	`json:"loanOfficerName"`
-	LoanAmount float64	`json:"loanAmount"`
-	RepayAmount float64	`json:"repayAmount"`
-	TotalUnpaid float64	`json:"totalUnpaid"`
-	DueDate string	`json:"dueDate"`
+	LoanId          uint32  `json:"loanId"`
+	BranchName      string  `json:"branchName"`
+	ClientName      string  `json:"clientName"`
+	LoanOfficerName string  `json:"loanOfficerName"`
+	LoanAmount      float64 `json:"loanAmount"`
+	RepayAmount     float64 `json:"repayAmount"`
+	TotalUnpaid     float64 `json:"totalUnpaid"`
+	DueDate         string  `json:"dueDate"`
+}
+
+type LoanShort struct {
+	ID           uint32        `json:"id"`
+	LoanAmount   float64       `json:"loanAmount"`
+	RepayAmount  float64       `json:"repayAmount"`
+	DisbursedOn  string        `json:"disbursedOn"`
+	DueDate      string        `json:"dueDate"`
+	PaidAmount   float64       `json:"paidAmount"`
+	Installments []Installment `json:"installments"`
+}
+
+type UnpaidInstallmentData struct {
+	InstallmentNumber uint32  `json:"installmentNumber"`
+	RemainingAmount   float64 `json:"remainingAmount"`
+	DueDate           string  `json:"dueDate"`
+	LoanOfficer       string  `json:"loanOfficer"`
+	LoanId            uint32  `json:"loanId"`
+	ProductName       string  `json:"productName"`
+	ClientId          uint32  `json:"clientId"`
+	FullName          string  `json:"fullName"`
+	PhoneNumber       string  `json:"phoneNumber"`
+	ClientBranch      string  `json:"clientBranch"`
+	TotalDueAmount    float64 `json:"totalDueAmount"`
 }
 
 type LoansRepository interface {
-	CreateLoan(ctx context.Context, loan *Loan) (Loan, error)
+	CreateLoan(ctx context.Context, loan *Loan) (LoanFullData, error)
 	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) (uint32, error)
 	TransferLoan(ctx context.Context, officerId uint32, loanId uint32, adminId uint32) error
 	GetLoanByID(ctx context.Context, id uint32) (Loan, error)
 	GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error)
-	ListLoans(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]Loan, pkg.PaginationMetadata, error)
+	ListLoans(
+		ctx context.Context,
+		category *Category,
+		pgData *pkg.PaginationMetadata,
+	) ([]LoanFullData, pkg.PaginationMetadata, error)
 	DeleteLoan(ctx context.Context, id uint32) error
-	GetExpectedPayments(ctx context.Context, category *Category, pgData *pkg.PaginationMetadata) ([]ExpectedPayment, pkg.PaginationMetadata, error)
+	GetExpectedPayments(
+		ctx context.Context,
+		category *Category,
+		pgData *pkg.PaginationMetadata,
+	) ([]ExpectedPayment, pkg.PaginationMetadata, error)
 
 	// use client overpayment to pay loan
 
 	GetLoanInstallments(ctx context.Context, id uint32) ([]Installment, error)
 	GetInstallment(ctx context.Context, id uint32) (Installment, error)
 	UpdateInstallment(ctx context.Context, installment *UpdateInstallment) (Installment, error)
+	ListUnpaidInstallmentsData(
+		ctx context.Context,
+		category *Category,
+		pgData *pkg.PaginationMetadata,
+	) ([]UnpaidInstallmentData, pkg.PaginationMetadata, error)
 
-	GetReportLoanData(ctx context.Context, filters services.ReportFilters) ([]services.LoanReportData, services.LoanSummary, error)
-	GetReportLoanByIdData(ctx context.Context,id uint32) (services.LoanReportDataById, error)
+	GetReportLoanData(
+		ctx context.Context,
+		filters services.ReportFilters,
+	) ([]services.LoanReportData, services.LoanSummary, error)
+	GetReportLoanByIdData(ctx context.Context, id uint32) (services.LoanReportDataById, error)
 
 	GetLoanEvents(ctx context.Context) ([]LoanEvent, error)
 }

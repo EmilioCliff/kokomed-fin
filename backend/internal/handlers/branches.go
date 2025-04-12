@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"time"
 
@@ -53,7 +52,6 @@ func (s *Server) getBranch(ctx *gin.Context) {
 }
 
 func (s *Server) listBranches(ctx *gin.Context) {
-	log.Println("cache miss")
 	pageNoStr := ctx.DefaultQuery("page", "1")
 	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
@@ -71,7 +69,7 @@ func (s *Server) listBranches(ctx *gin.Context) {
 	}
 
 	cacheParams := map[string][]string{
-		"page": {pageNoStr},
+		"page":  {pageNoStr},
 		"limit": {pageSizeStr},
 	}
 
@@ -80,7 +78,11 @@ func (s *Server) listBranches(ctx *gin.Context) {
 		cacheParams["search"] = []string{search}
 	}
 
-	branches, metadata, err := s.repo.Branches.ListBranches(ctx, pkg.StringPtr(search), &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	branches, metadata, err := s.repo.Branches.ListBranches(
+		ctx,
+		pkg.StringPtr(search),
+		&pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize},
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -89,14 +91,17 @@ func (s *Server) listBranches(ctx *gin.Context) {
 
 	response := gin.H{
 		"metadata": metadata,
-		"data": branches,
+		"data":     branches,
 	}
 
 	cacheKey := constructCacheKey("branch", cacheParams)
 
 	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+		ctx.JSON(
+			http.StatusInternalServerError,
+			pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err),
+		)
 
 		return
 	}

@@ -123,6 +123,120 @@ func (q *Queries) GetClient(ctx context.Context, id uint32) (Client, error) {
 	return i, err
 }
 
+const getClientByPhoneNumber = `-- name: GetClientByPhoneNumber :one
+SELECT id, full_name, phone_number, id_number, dob, gender, active, branch_id, assigned_staff, overpayment, updated_by, updated_at, created_by, created_at FROM clients WHERE phone_number = ? LIMIT 1
+`
+
+func (q *Queries) GetClientByPhoneNumber(ctx context.Context, phoneNumber string) (Client, error) {
+	row := q.db.QueryRowContext(ctx, getClientByPhoneNumber, phoneNumber)
+	var i Client
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.PhoneNumber,
+		&i.IDNumber,
+		&i.Dob,
+		&i.Gender,
+		&i.Active,
+		&i.BranchID,
+		&i.AssignedStaff,
+		&i.Overpayment,
+		&i.UpdatedBy,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getClientFullData = `-- name: GetClientFullData :one
+SELECT 
+    c.id AS client_id,
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    c.id_number,
+    c.dob,
+    c.gender,
+    c.active,
+    c.overpayment,
+    b.name AS branch_name,
+    c.created_at AS client_created_at,
+    -- c.due_amount AS client_due_amount,
+
+    -- Assigned Staff
+    assigned.id AS assigned_user_id,
+    assigned.full_name AS assigned_user_name,
+    assigned.phone_number AS assigned_user_phone,
+    assigned.email AS assigned_user_email,
+    assigned.role AS assigned_user_role,
+
+    -- Created By
+    created.id AS created_by_id,
+    created.full_name AS created_by_name,
+    created.phone_number AS created_by_phone,
+    created.email AS created_by_email,
+    created.role AS created_by_role
+
+FROM clients c
+JOIN branches b ON c.branch_id = b.id
+JOIN users assigned ON c.assigned_staff = assigned.id
+JOIN users created ON c.created_by = created.id
+
+WHERE c.id = ?
+`
+
+type GetClientFullDataRow struct {
+	ClientID          uint32         `json:"client_id"`
+	ClientName        string         `json:"client_name"`
+	ClientPhone       string         `json:"client_phone"`
+	IDNumber          sql.NullString `json:"id_number"`
+	Dob               sql.NullTime   `json:"dob"`
+	Gender            ClientsGender  `json:"gender"`
+	Active            bool           `json:"active"`
+	Overpayment       float64        `json:"overpayment"`
+	BranchName        string         `json:"branch_name"`
+	ClientCreatedAt   time.Time      `json:"client_created_at"`
+	AssignedUserID    uint32         `json:"assigned_user_id"`
+	AssignedUserName  string         `json:"assigned_user_name"`
+	AssignedUserPhone string         `json:"assigned_user_phone"`
+	AssignedUserEmail string         `json:"assigned_user_email"`
+	AssignedUserRole  UsersRole      `json:"assigned_user_role"`
+	CreatedByID       uint32         `json:"created_by_id"`
+	CreatedByName     string         `json:"created_by_name"`
+	CreatedByPhone    string         `json:"created_by_phone"`
+	CreatedByEmail    string         `json:"created_by_email"`
+	CreatedByRole     UsersRole      `json:"created_by_role"`
+}
+
+// JOIN users updated ON c.updated_by = updated.id
+func (q *Queries) GetClientFullData(ctx context.Context, id uint32) (GetClientFullDataRow, error) {
+	row := q.db.QueryRowContext(ctx, getClientFullData, id)
+	var i GetClientFullDataRow
+	err := row.Scan(
+		&i.ClientID,
+		&i.ClientName,
+		&i.ClientPhone,
+		&i.IDNumber,
+		&i.Dob,
+		&i.Gender,
+		&i.Active,
+		&i.Overpayment,
+		&i.BranchName,
+		&i.ClientCreatedAt,
+		&i.AssignedUserID,
+		&i.AssignedUserName,
+		&i.AssignedUserPhone,
+		&i.AssignedUserEmail,
+		&i.AssignedUserRole,
+		&i.CreatedByID,
+		&i.CreatedByName,
+		&i.CreatedByPhone,
+		&i.CreatedByEmail,
+		&i.CreatedByRole,
+	)
+	return i, err
+}
+
 const getClientIDByPhoneNumber = `-- name: GetClientIDByPhoneNumber :one
 SELECT id FROM clients WHERE phone_number = ? LIMIT 1
 `
@@ -327,11 +441,34 @@ SELECT
     c.branch_id, c.assigned_staff, c.overpayment, c.updated_by, 
     c.updated_at, c.created_at, c.created_by, 
     b.name AS branch_name,
-    COALESCE(SUM(DISTINCT COALESCE(p.repay_amount, 0) - COALESCE(l.paid_amount, 0)), 0) AS dueAmount
+    COALESCE(SUM(DISTINCT COALESCE(p.repay_amount, 0) - COALESCE(l.paid_amount, 0)), 0) AS dueAmount,
+    -- Assigned User Details
+    assigned.id AS assigned_user_id,
+    assigned.full_name AS assigned_user_name,
+    assigned.phone_number AS assigned_user_phone,
+    assigned.email AS assigned_user_email,
+    assigned.role AS assigned_user_role,
+
+    -- UpdatedBy User Details
+    updated.id AS updated_user_id,
+    updated.full_name AS updated_user_name,
+    updated.phone_number AS updated_user_phone,
+    updated.email AS updated_user_email,
+    updated.role AS updated_user_role,
+
+    -- Created By User Details
+    created.id AS created_user_id,
+    created.full_name AS created_user_name,
+    created.phone_number AS created_user_phone,
+    created.email AS created_user_email,
+    created.role AS created_user_role
 FROM clients c
 JOIN branches b ON c.branch_id = b.id
 LEFT JOIN loans l ON c.id = l.client_id AND l.status = 'ACTIVE'
 LEFT JOIN products p ON l.product_id = p.id
+LEFT JOIN users assigned ON c.assigned_staff = assigned.id
+LEFT JOIN users updated ON c.updated_by = updated.id
+LEFT JOIN users created ON c.created_by = created.id
 WHERE 
     (
         COALESCE(?, '') = '' 
@@ -344,7 +481,10 @@ WHERE
 GROUP BY 
     c.id, c.full_name, c.phone_number, c.id_number, c.dob, c.gender, c.active, 
     c.branch_id, c.assigned_staff, c.overpayment, c.updated_by, 
-    c.updated_at, c.created_at, c.created_by, b.name
+    c.updated_at, c.created_at, c.created_by, b.name,
+    assigned.id, assigned.full_name, assigned.phone_number, assigned.email, assigned.role,
+    updated.id, updated.full_name, updated.phone_number, updated.email, updated.role,
+    created.id, created.full_name, created.phone_number, created.email, created.role
 ORDER BY c.created_at DESC
 LIMIT ? OFFSET ?
 `
@@ -359,22 +499,37 @@ type ListClientsByCategoryParams struct {
 }
 
 type ListClientsByCategoryRow struct {
-	ID            uint32         `json:"id"`
-	FullName      string         `json:"full_name"`
-	PhoneNumber   string         `json:"phone_number"`
-	IDNumber      sql.NullString `json:"id_number"`
-	Dob           sql.NullTime   `json:"dob"`
-	Gender        ClientsGender  `json:"gender"`
-	Active        bool           `json:"active"`
-	BranchID      uint32         `json:"branch_id"`
-	AssignedStaff uint32         `json:"assigned_staff"`
-	Overpayment   float64        `json:"overpayment"`
-	UpdatedBy     uint32         `json:"updated_by"`
-	UpdatedAt     time.Time      `json:"updated_at"`
-	CreatedAt     time.Time      `json:"created_at"`
-	CreatedBy     uint32         `json:"created_by"`
-	BranchName    string         `json:"branch_name"`
-	Dueamount     interface{}    `json:"dueamount"`
+	ID                uint32         `json:"id"`
+	FullName          string         `json:"full_name"`
+	PhoneNumber       string         `json:"phone_number"`
+	IDNumber          sql.NullString `json:"id_number"`
+	Dob               sql.NullTime   `json:"dob"`
+	Gender            ClientsGender  `json:"gender"`
+	Active            bool           `json:"active"`
+	BranchID          uint32         `json:"branch_id"`
+	AssignedStaff     uint32         `json:"assigned_staff"`
+	Overpayment       float64        `json:"overpayment"`
+	UpdatedBy         uint32         `json:"updated_by"`
+	UpdatedAt         time.Time      `json:"updated_at"`
+	CreatedAt         time.Time      `json:"created_at"`
+	CreatedBy         uint32         `json:"created_by"`
+	BranchName        string         `json:"branch_name"`
+	Dueamount         interface{}    `json:"dueamount"`
+	AssignedUserID    sql.NullInt32  `json:"assigned_user_id"`
+	AssignedUserName  sql.NullString `json:"assigned_user_name"`
+	AssignedUserPhone sql.NullString `json:"assigned_user_phone"`
+	AssignedUserEmail sql.NullString `json:"assigned_user_email"`
+	AssignedUserRole  NullUsersRole  `json:"assigned_user_role"`
+	UpdatedUserID     sql.NullInt32  `json:"updated_user_id"`
+	UpdatedUserName   sql.NullString `json:"updated_user_name"`
+	UpdatedUserPhone  sql.NullString `json:"updated_user_phone"`
+	UpdatedUserEmail  sql.NullString `json:"updated_user_email"`
+	UpdatedUserRole   NullUsersRole  `json:"updated_user_role"`
+	CreatedUserID     sql.NullInt32  `json:"created_user_id"`
+	CreatedUserName   sql.NullString `json:"created_user_name"`
+	CreatedUserPhone  sql.NullString `json:"created_user_phone"`
+	CreatedUserEmail  sql.NullString `json:"created_user_email"`
+	CreatedUserRole   NullUsersRole  `json:"created_user_role"`
 }
 
 func (q *Queries) ListClientsByCategory(ctx context.Context, arg ListClientsByCategoryParams) ([]ListClientsByCategoryRow, error) {
@@ -411,6 +566,21 @@ func (q *Queries) ListClientsByCategory(ctx context.Context, arg ListClientsByCa
 			&i.CreatedBy,
 			&i.BranchName,
 			&i.Dueamount,
+			&i.AssignedUserID,
+			&i.AssignedUserName,
+			&i.AssignedUserPhone,
+			&i.AssignedUserEmail,
+			&i.AssignedUserRole,
+			&i.UpdatedUserID,
+			&i.UpdatedUserName,
+			&i.UpdatedUserPhone,
+			&i.UpdatedUserEmail,
+			&i.UpdatedUserRole,
+			&i.CreatedUserID,
+			&i.CreatedUserName,
+			&i.CreatedUserPhone,
+			&i.CreatedUserEmail,
+			&i.CreatedUserRole,
 		); err != nil {
 			return nil, err
 		}
@@ -467,7 +637,6 @@ func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) (sql
 }
 
 const updateClientOverpayment = `-- name: UpdateClientOverpayment :execresult
-
 UPDATE clients
 SET overpayment = overpayment + ?
 WHERE 
@@ -482,12 +651,6 @@ type UpdateClientOverpaymentParams struct {
 	ClientID    uint32  `json:"client_id"`
 }
 
-// -- name: UpdateClientOverpayment :execresult
-// UPDATE clients
-//
-//	SET overpayment = overpayment + sqlc.arg("overpayment")
-//
-// WHERE phone_number = sqlc.arg("phone_number");
 func (q *Queries) UpdateClientOverpayment(ctx context.Context, arg UpdateClientOverpaymentParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, updateClientOverpayment,
 		arg.Overpayment,

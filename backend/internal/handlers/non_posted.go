@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -23,10 +21,10 @@ type nonPostedResponse struct {
 	PaidDate          time.Time           `json:"paidDate"`
 	AssignedTo        clientShortResponse `json:"assignedTo"`
 	Assigned          bool                `json:"assigned"`
+	AssignedBy        string              `json:"assignedBy"`
 }
 
 func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
-	log.Println("cache miss")
 	pageNoStr := ctx.DefaultQuery("page", "1")
 	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
@@ -115,14 +113,7 @@ func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
 	rsp := make([]nonPostedResponse, len(payments))
 
 	for idx, p := range payments {
-		v, err := s.structureNonPosted(&p, ctx)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-			return
-		}
-
-		rsp[idx] = v
+		rsp[idx] = structureNonPosted(&p)
 	}
 
 	response := gin.H{
@@ -145,28 +136,40 @@ func (s *Server) listAllNonPostedPayments(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-func (s *Server) listNonPostedByTransactionSource(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
+type listClientsNonPostedReq struct {
+	ID          uint32 `json:"id"`
+	PhoneNumber string `json:"phoneNumber"`
+}
+
+func (s *Server) listClientsNonPosted(ctx *gin.Context) {
+	var req listClientsNonPostedReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	query := ctx.Param("type")
-	if query == "" || (query != "mpesa" && query != "internal") {
-		ctx.JSON(
-			http.StatusBadRequest,
-			errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid transaction_type")),
-		)
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
 
 		return
 	}
 
-	payments, err := s.repo.NonPosted.ListNonPostedByTransactionSource(
+	rslt, pgData, err := s.repo.NonPosted.GetClientNonPosted(
 		ctx,
-		query,
-		&pkg.PaginationMetadata{CurrentPage: pageNo},
+		req.ID,
+		req.PhoneNumber,
+		&pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize},
 	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
@@ -174,130 +177,14 @@ func (s *Server) listNonPostedByTransactionSource(ctx *gin.Context) {
 		return
 	}
 
-	rsp := make([]nonPostedResponse, len(payments))
-
-	for idx, p := range payments {
-		v, err := s.structureNonPosted(&p, ctx)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-			return
-		}
-
-		rsp[idx] = v
-	}
-
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": pgData,
+		"data":     rslt,
+	})
 }
 
-func (s *Server) listUnassignedNonPostedPayments(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	payments, err := s.repo.NonPosted.ListUnassignedNonPosted(
-		ctx,
-		&pkg.PaginationMetadata{CurrentPage: pageNo},
-	)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	rsp := make([]nonPostedResponse, len(payments))
-
-	for idx, p := range payments {
-		v, err := s.structureNonPosted(&p, ctx)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-			return
-		}
-
-		rsp[idx] = v
-	}
-
-	ctx.JSON(http.StatusOK, rsp)
-}
-
-func (s *Server) getNonPostedPayment(ctx *gin.Context) {
-	id, err := pkg.StringToUint32(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	payment, err := s.repo.NonPosted.GetNonPosted(ctx, id)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	v, err := s.structureNonPosted(&payment, ctx)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	ctx.JSON(http.StatusOK, v)
-}
-
-// type assignNonPostedPaymentRequest struct {
-// 	ClientID uint32  `binding:"required" json:"client_id"`
-// 	AdminID  uint32  `binding:"required" json:"admin_id"`
-// 	Amount   float64 `binding:"required" json:"amount"`
-// }
-
-// func (s *Server) assignNonPostedPayment(ctx *gin.Context) {
-// 	var req assignNonPostedPaymentRequest
-// 	if err := ctx.ShouldBindJSON(&req); err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
-
-// 		return
-// 	}
-
-// 	id, err := pkg.StringToUint32(ctx.Param("id"))
-// 	if err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-// 		return
-// 	}
-
-// 	err = s.payments.TriggerManualPayment(ctx, services.ManualPaymentData{
-// 		LoanID:      id,
-// 		ClientID:    req.ClientID,
-// 		Amount:      req.Amount,
-// 		AdminUserID: req.AdminID,
-// 	})
-// 	if err != nil {
-// 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-// 		return
-// 	}
-
-// 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
-// }
-
-func (s *Server) structureNonPosted(
-	p *repository.NonPosted,
-	ctx *gin.Context,
-) (nonPostedResponse, error) {
-	cacheKey := fmt.Sprintf("non-posted:%v", p.ID)
-	var dataCached nonPostedResponse
-
-	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
-	if exists {
-		return dataCached, nil
-	}
-
-	v := nonPostedResponse{
+func structureNonPosted(p *repository.NonPosted) nonPostedResponse {
+	rsp := nonPostedResponse{
 		ID:                p.ID,
 		TransactionSource: string(p.TransactionSource),
 		TransactionNumber: p.TransactionNumber,
@@ -306,35 +193,72 @@ func (s *Server) structureNonPosted(
 		PayingName:        p.PayingName,
 		Amount:            p.Amount,
 		PaidDate:          p.PaidDate,
+		AssignedBy:        p.AssignedBy,
 	}
 
-	if p.AssignedTo != nil {
-		v.Assigned = true
-
-		client, err := s.repo.Clients.GetClient(ctx, *p.AssignedTo)
-		if err != nil {
-			log.Println(*p.AssignedTo)
-			return nonPostedResponse{}, err
-		}
-
-		branch, err := s.repo.Branches.GetBranchByID(ctx, client.BranchID)
-		if err != nil {
-			return nonPostedResponse{}, err
-		}
-
-		v.AssignedTo = clientShortResponse{
-			ID:          client.ID,
-			FullName:    client.FullName,
-			PhoneNumber: client.PhoneNumber,
-			Overpayment: client.Overpayment,
-			DueAmount:   client.DueAmount,
-			BranchName:  branch.Name,
+	if p.AssignedTo != nil && p.AssignedClient.ID > 0 {
+		rsp.Assigned = true
+		rsp.AssignedTo = clientShortResponse{
+			ID:          p.AssignedClient.ID,
+			FullName:    p.AssignedClient.FullName,
+			PhoneNumber: p.AssignedClient.PhoneNumber,
+			Overpayment: p.AssignedClient.Overpayment,
+			BranchName:  p.AssignedClient.BranchName,
 		}
 	}
 
-	if err := s.cache.Set(ctx, cacheKey, v, 3*time.Minute); err != nil {
-		return nonPostedResponse{}, err
-	}
-
-	return v, nil
+	return rsp
 }
+
+// func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context)
+// (nonPostedResponse, error) {
+// 	cacheKey := fmt.Sprintf("non-posted:%v", p.ID)
+// 	var dataCached nonPostedResponse
+
+// 	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
+// 	if exists {
+// 		return dataCached, nil
+// 	}
+
+// 	v := nonPostedResponse{
+// 		ID:                p.ID,
+// 		TransactionSource: string(p.TransactionSource),
+// 		TransactionNumber: p.TransactionNumber,
+// 		AccountNumber:     p.AccountNumber,
+// 		PhoneNumber:       p.PhoneNumber,
+// 		PayingName:        p.PayingName,
+// 		Amount:            p.Amount,
+// 		PaidDate:          p.PaidDate,
+// 		AssignedBy: 	   p.AssignedBy,
+// 	}
+
+// 	if p.AssignedTo != nil {
+// 		v.Assigned = true
+
+// 		client, err := s.repo.Clients.GetClient(ctx, *p.AssignedTo)
+// 		if err != nil {
+// 			log.Println(*p.AssignedTo)
+// 			return nonPostedResponse{}, err
+// 		}
+
+// 		branch, err := s.repo.Branches.GetBranchByID(ctx, client.BranchID)
+// 		if err != nil {
+// 			return nonPostedResponse{}, err
+// 		}
+
+// 		v.AssignedTo = clientShortResponse{
+// 			ID:          client.ID,
+// 			FullName: client.FullName,
+// 			PhoneNumber: client.PhoneNumber,
+// 			Overpayment: client.Overpayment,
+// 			DueAmount: client.DueAmount,
+// 			BranchName: branch.Name,
+// 		}
+// 	}
+
+// 	if err := s.cache.Set(ctx, cacheKey, v, 3*time.Minute); err != nil {
+// 		return nonPostedResponse{}, err
+// 	}
+
+// 	return v, nil
+// }

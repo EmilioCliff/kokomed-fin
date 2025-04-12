@@ -27,7 +27,10 @@ func NewClientRepository(db *Store) *ClientRepository {
 	}
 }
 
-func (r *ClientRepository) CreateClient(ctx context.Context, client *repository.Client) (repository.Client, error) {
+func (r *ClientRepository) CreateClient(
+	ctx context.Context,
+	client *repository.Client,
+) (repository.ClientFullData, error) {
 	params := generated.CreateClientParams{
 		FullName:      client.FullName,
 		PhoneNumber:   client.PhoneNumber,
@@ -54,22 +57,53 @@ func (r *ClientRepository) CreateClient(ctx context.Context, client *repository.
 
 	execResult, err := r.queries.CreateClient(ctx, params)
 	if err != nil {
-		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create client: %s", err.Error())
+		return repository.ClientFullData{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to create client: %s",
+			err.Error(),
+		)
 	}
 
 	id, err := execResult.LastInsertId()
 	if err != nil {
-		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
+		return repository.ClientFullData{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get last insert id: %s",
+			err.Error(),
+		)
 	}
 
 	client.ID = uint32(id)
 
-	return *client, nil
+	return r.GetClientFullData(ctx, client.ID)
 }
 
-func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.UpdateClient) (error) {
+func (r *ClientRepository) GetClientFullData(
+	ctx context.Context,
+	id uint32,
+) (repository.ClientFullData, error) {
+	client, err := r.queries.GetClientFullData(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return repository.ClientFullData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "client not found")
+		}
+
+		return repository.ClientFullData{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get client full data: %s",
+			err.Error(),
+		)
+	}
+
+	return convertClientFullData(client), nil
+}
+
+func (r *ClientRepository) UpdateClient(
+	ctx context.Context,
+	client *repository.UpdateClient,
+) error {
 	params := generated.UpdateClientParams{
-		ID: client.ID,
+		ID:        client.ID,
 		UpdatedBy: client.UpdatedBy,
 	}
 
@@ -90,7 +124,7 @@ func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.
 	if client.Active != nil {
 		params.Active = sql.NullBool{
 			Valid: true,
-			Bool: *client.Active,
+			Bool:  *client.Active,
 		}
 	}
 
@@ -106,33 +140,46 @@ func (r *ClientRepository) UpdateClient(ctx context.Context, client *repository.
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update client: %s", err.Error())
 	}
 
-	return  nil
+	return nil
 }
 
-func (r *ClientRepository) UpdateClientOverpayment(ctx context.Context, phoneNumber string, overpayment float64) error {
+// used during transactions
+func (r *ClientRepository) UpdateClientOverpayment(
+	ctx context.Context,
+	phoneNumber string,
+	overpayment float64,
+) error {
 	_, err := r.queries.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
 		PhoneNumber: phoneNumber,
 		Overpayment: overpayment,
 	})
 	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update client overpayment: %s", err.Error())
+		return pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to update client overpayment: %s",
+			err.Error(),
+		)
 	}
 
 	return nil
 }
 
-func (r *ClientRepository) ListClients(ctx context.Context, category *repository.ClientCategorySearch, pgData *pkg.PaginationMetadata) ([]repository.Client, pkg.PaginationMetadata, error) {
+func (r *ClientRepository) ListClients(
+	ctx context.Context,
+	category *repository.ClientCategorySearch,
+	pgData *pkg.PaginationMetadata,
+) ([]repository.ClientFullData, pkg.PaginationMetadata, error) {
 	params := generated.ListClientsByCategoryParams{
-		Column1: "",
-		FullName: "",
+		Column1:     "",
+		FullName:    "",
 		PhoneNumber: "",
-		Limit:    int32(pgData.PageSize),
-		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+		Limit:       int32(pgData.PageSize),
+		Offset:      int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	}
 
 	params2 := generated.CountClientsByCategoryParams{
-		Column1: "",
-		FullName: "",
+		Column1:     "",
+		FullName:    "",
 		PhoneNumber: "",
 	}
 
@@ -150,39 +197,48 @@ func (r *ClientRepository) ListClients(ctx context.Context, category *repository
 	if category.Active != nil {
 		params.Active = sql.NullBool{
 			Valid: category.Active != nil,
-			Bool: *category.Active,
+			Bool:  *category.Active,
 		}
 		params2.Active = sql.NullBool{
 			Valid: category.Active != nil,
-			Bool: *category.Active,
+			Bool:  *category.Active,
 		}
 	}
 
 	clients, err := r.queries.ListClientsByCategory(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no clients found")
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+				pkg.NOT_FOUND_ERROR,
+				"no clients found",
+			)
 		}
 
-		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list clients: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to list clients: %s",
+			err.Error(),
+		)
 	}
 
 	totalClients, err := r.queries.CountClientsByCategory(ctx, params2)
 	if err != nil {
-		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get total loans: %s",
+			err.Error(),
+		)
 	}
 
-	result := make([]repository.Client, len(clients))
+	result := make([]repository.ClientFullData, len(clients))
 	for i, client := range clients {
 		var dob *time.Time
-
 		if client.Dob.Valid {
 			value := client.Dob.Time
 			dob = &value
 		}
 
 		var idNo *string
-
 		if client.IDNumber.Valid {
 			value := client.IDNumber.String
 			idNo = &value
@@ -191,43 +247,73 @@ func (r *ClientRepository) ListClients(ctx context.Context, category *repository
 		dueAmountBtye, _ := client.Dueamount.([]byte)
 		dueAmount, _ := strconv.ParseFloat(string(dueAmountBtye), 64)
 
-		result[i] = repository.Client{
-			ID:            client.ID,
-			FullName:      client.FullName,
-			PhoneNumber:   client.PhoneNumber,
-			IdNumber:      idNo,
-			Dob:           dob,
-			Gender:        string(client.Gender),
-			Active:        client.Active,
-			BranchID:      client.BranchID,
-			AssignedStaff: client.AssignedStaff,
-			Overpayment:   client.Overpayment,
-			UpdatedBy:     client.UpdatedBy,
-			UpdatedAt:     client.UpdatedAt,
-			CreatedBy:     client.CreatedBy,
-			CreatedAt:     client.CreatedAt,
-			BranchName: &client.BranchName,
-			DueAmount: dueAmount,
+		result[i] = repository.ClientFullData{
+			ID:          client.ID,
+			FullName:    client.FullName,
+			PhoneNumber: client.PhoneNumber,
+			IDNumber:    idNo,
+			DOB:         dob,
+			Gender:      string(client.Gender),
+			Active:      client.Active,
+			AssignedStaff: repository.UserShortResponse{
+				ID:          uint32(client.AssignedUserID.Int32),
+				FullName:    client.AssignedUserName.String,
+				PhoneNumber: client.AssignedUserPhone.String,
+				Email:       client.AssignedUserEmail.String,
+				Role:        string(client.AssignedUserRole.UsersRole),
+			},
+			Overpayment: client.Overpayment,
+			UpdatedBy: repository.UserShortResponse{
+				ID:          uint32(client.UpdatedUserID.Int32),
+				FullName:    client.UpdatedUserName.String,
+				PhoneNumber: client.UpdatedUserPhone.String,
+				Email:       client.UpdatedUserEmail.String,
+				Role:        string(client.UpdatedUserRole.UsersRole),
+			},
+			UpdatedAt: client.UpdatedAt,
+			CreatedBy: repository.UserShortResponse{
+				ID:          uint32(client.CreatedUserID.Int32),
+				FullName:    client.CreatedUserName.String,
+				PhoneNumber: client.CreatedUserPhone.String,
+				Email:       client.CreatedUserEmail.String,
+				Role:        string(client.CreatedUserRole.UsersRole),
+			},
+			CreatedAt:  client.CreatedAt,
+			BranchName: client.BranchName,
+			DueAmount:  dueAmount,
 		}
 	}
 
-	return result, pkg.CreatePaginationMetadata(uint32(totalClients), pgData.PageSize, pgData.CurrentPage), nil
+	return result, pkg.CreatePaginationMetadata(
+		uint32(totalClients),
+		pgData.PageSize,
+		pgData.CurrentPage,
+	), nil
 }
 
-func (r *ClientRepository) GetClient(ctx context.Context, clientID uint32) (repository.Client, error) {
-	client, err := r.queries.GetClient(ctx, clientID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return repository.Client{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "client not found")
-		}
+// func (r *ClientRepository) GetClient(ctx context.Context, clientID uint32)
+// (repository.ClientFullData, error) {
+// 	ctx, span := r.db.tracer.Start(ctx, "Client Repo: GetClient")
+// 	defer span.End()
 
-		return repository.Client{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s", err.Error())
-	}
+// 	client, err := r.queries.GetClient(ctx, clientID)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			return repository.ClientFullData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "client not found")
+// 		}
 
-	return convertGeneratedClient(client), nil
-}
+// 		setSpanError(span, codes.Error, err, "failed to get client")
+// 		return repository.ClientFullData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s",
+// err.Error())
+// 	}
 
-func (r *ClientRepository) GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error) {
+// 	return convertGeneratedClient(client), nil
+// }
+
+func (r *ClientRepository) GetClientIDByPhoneNumber(
+	ctx context.Context,
+	phoneNumber string,
+) (uint32, error) {
 	id, err := r.queries.GetClientIDByPhoneNumber(ctx, phoneNumber)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -240,7 +326,11 @@ func (r *ClientRepository) GetClientIDByPhoneNumber(ctx context.Context, phoneNu
 	return id, nil
 }
 
-func (r *ClientRepository) ListClientsByBranch(ctx context.Context, branchID uint32, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {
+func (r *ClientRepository) ListClientsByBranch(
+	ctx context.Context,
+	branchID uint32,
+	pgData *pkg.PaginationMetadata,
+) ([]repository.Client, error) {
 	clients, err := r.queries.ListClientsByBranch(ctx, generated.ListClientsByBranchParams{
 		Limit:    int32(pgData.PageSize),
 		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
@@ -262,12 +352,19 @@ func (r *ClientRepository) ListClientsByBranch(ctx context.Context, branchID uin
 	return result, nil
 }
 
-func (r *ClientRepository) ListClientsByActiveStatus(ctx context.Context, active bool, pgData *pkg.PaginationMetadata) ([]repository.Client, error) {
-	clients, err := r.queries.ListClientsByActiveStatus(ctx, generated.ListClientsByActiveStatusParams{
-		Limit:  int32(pgData.PageSize),
-		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
-		Active: active,
-	})
+func (r *ClientRepository) ListClientsByActiveStatus(
+	ctx context.Context,
+	active bool,
+	pgData *pkg.PaginationMetadata,
+) ([]repository.Client, error) {
+	clients, err := r.queries.ListClientsByActiveStatus(
+		ctx,
+		generated.ListClientsByActiveStatusParams{
+			Limit:  int32(pgData.PageSize),
+			Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+			Active: active,
+		},
+	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no clients found")
@@ -284,7 +381,10 @@ func (r *ClientRepository) ListClientsByActiveStatus(ctx context.Context, active
 	return result, nil
 }
 
-func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters services.ReportFilters) ([]services.ClientAdminsReportData, services.ClientSummary, error) {
+func (r *ClientRepository) GetReportClientAdminData(
+	ctx context.Context,
+	filters services.ReportFilters,
+) ([]services.ClientAdminsReportData, services.ClientSummary, error) {
 	clients, err := r.GetClientAdminsReportData(ctx, GetClientAdminsReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate:   filters.EndDate,
@@ -294,7 +394,11 @@ func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters
 			return nil, services.ClientSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no client found")
 		}
 
-		return nil, services.ClientSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report client admin data: %s", err.Error())
+		return nil, services.ClientSummary{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get report client admin data: %s",
+			err.Error(),
+		)
 	}
 
 	rslt := make([]services.ClientAdminsReportData, len(clients))
@@ -310,20 +414,20 @@ func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters
 		totalOwedAmount := pkg.InterfaceFloat64(client.TotalOwed)
 
 		rslt[i] = services.ClientAdminsReportData{
-			Name:            client.Name,
-			BranchName:      client.BranchName.String,
-			TotalLoanGiven:  client.TotalLoanGiven,
-			DefaultedLoans:  client.DefaultedLoans,
-			ActiveLoans:     client.ActiveLoans,
-			CompletedLoans:  client.CompletedLoans,
-			InactiveLoans:   client.InactiveLoans,
-			Overpayment:     client.Overpayment,
-			PhoneNumber:     client.PhoneNumber,
-			TotalPaid:       totalPaidAmount,
-			TotalDisbursed:  totalDisbursedAmount,
-			TotalOwed:       totalOwedAmount,
-			RateScore:       pkg.InterfaceFloat64(client.RateScore),
-			DefaultRate:     pkg.InterfaceFloat64(client.DefaultRate),
+			Name:           client.Name,
+			BranchName:     client.BranchName.String,
+			TotalLoanGiven: client.TotalLoanGiven,
+			DefaultedLoans: client.DefaultedLoans,
+			ActiveLoans:    client.ActiveLoans,
+			CompletedLoans: client.CompletedLoans,
+			InactiveLoans:  client.InactiveLoans,
+			Overpayment:    client.Overpayment,
+			PhoneNumber:    client.PhoneNumber,
+			TotalPaid:      totalPaidAmount,
+			TotalDisbursed: totalDisbursedAmount,
+			TotalOwed:      totalOwedAmount,
+			RateScore:      pkg.InterfaceFloat64(client.RateScore),
+			DefaultRate:    pkg.InterfaceFloat64(client.DefaultRate),
 		}
 		totalClients++
 		totalDisbursed += totalDisbursedAmount
@@ -353,18 +457,29 @@ func (r *ClientRepository) GetReportClientAdminData(ctx context.Context, filters
 	return rslt, summary, nil
 }
 
-func (r *ClientRepository) GetReportClientClientsData(ctx context.Context,id uint32, filters services.ReportFilters) (services.ClientClientsReportData, error) {
+func (r *ClientRepository) GetReportClientClientsData(
+	ctx context.Context,
+	id uint32,
+	filters services.ReportFilters,
+) (services.ClientClientsReportData, error) {
 	client, err := r.GetClientClientsReportData(ctx, GetClientClientsReportDataParams{
 		StartDate: filters.StartDate,
-		EndDate: filters.EndDate,
-		ID: id,
+		EndDate:   filters.EndDate,
+		ID:        id,
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return services.ClientClientsReportData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no client found")
+			return services.ClientClientsReportData{}, pkg.Errorf(
+				pkg.NOT_FOUND_ERROR,
+				"no client found",
+			)
 		}
 
-		return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report client admin data: %s", err.Error())
+		return services.ClientClientsReportData{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get report client admin data: %s",
+			err.Error(),
+		)
 	}
 
 	return convertClientReportData(client)
@@ -403,17 +518,67 @@ func convertGeneratedClient(client generated.Client) repository.Client {
 	}
 }
 
-func convertClientReportData(row GetClientClientsReportDataRow) (services.ClientClientsReportData, error) {
+func convertClientFullData(client generated.GetClientFullDataRow) repository.ClientFullData {
+	var dob *time.Time
+	if client.Dob.Valid {
+		value := client.Dob.Time
+		dob = &value
+	}
+
+	var idNo *string
+	if client.IDNumber.Valid {
+		value := client.IDNumber.String
+		idNo = &value
+	}
+
+	return repository.ClientFullData{
+		ID:          client.ClientID,
+		FullName:    client.ClientName,
+		PhoneNumber: client.ClientPhone,
+		IDNumber:    idNo,
+		DOB:         dob,
+		Gender:      string(client.Gender),
+		Active:      client.Active,
+		BranchName:  client.BranchName,
+		Overpayment: client.Overpayment,
+		CreatedAt:   client.ClientCreatedAt,
+		AssignedStaff: repository.UserShortResponse{
+			ID:          client.AssignedUserID,
+			FullName:    client.AssignedUserName,
+			PhoneNumber: client.AssignedUserPhone,
+			Email:       client.AssignedUserEmail,
+			Role:        string(client.AssignedUserRole),
+		},
+		CreatedBy: repository.UserShortResponse{
+			ID:          client.CreatedByID,
+			FullName:    client.CreatedByName,
+			PhoneNumber: client.CreatedByPhone,
+			Email:       client.CreatedByEmail,
+			Role:        string(client.CreatedByRole),
+		},
+	}
+}
+
+func convertClientReportData(
+	row GetClientClientsReportDataRow,
+) (services.ClientClientsReportData, error) {
 	var loans []services.ClientClientReportDataLoans
 	if row.Loans != nil {
 		loansByte, ok := row.Loans.([]byte)
 		if !ok {
-			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert loans to bytes")
+			return services.ClientClientsReportData{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"failed to convert loans to bytes",
+			)
 		}
 
 		err := json.Unmarshal(loansByte, &loans)
 		if err != nil {
-			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling loans: %v", err)
+			return services.ClientClientsReportData{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"error unmarshalling loans: %v",
+				err,
+			)
 		}
 	}
 
@@ -421,15 +586,21 @@ func convertClientReportData(row GetClientClientsReportDataRow) (services.Client
 	if row.Payments != nil {
 		paymentsByte, ok := row.Payments.([]byte)
 		if !ok {
-			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert payments to bytes")
+			return services.ClientClientsReportData{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"failed to convert payments to bytes",
+			)
 		}
 
-		err := json.Unmarshal(paymentsByte, &payments) 
+		err := json.Unmarshal(paymentsByte, &payments)
 		if err != nil {
-			return services.ClientClientsReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling payments: ", err)
+			return services.ClientClientsReportData{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"error unmarshalling payments: ",
+				err,
+			)
 		}
 	}
-
 
 	rsp := services.ClientClientsReportData{
 		Name:          row.Name,
@@ -443,7 +614,9 @@ func convertClientReportData(row GetClientClientsReportDataRow) (services.Client
 		Payments:      payments,
 	}
 
-	if !row.Active { rsp.Active = "inactive"}
+	if !row.Active {
+		rsp.Active = "inactive"
+	}
 	if row.Dob.Valid {
 		rsp.Dob = &row.Dob.Time
 	}

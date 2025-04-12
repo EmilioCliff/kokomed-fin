@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -40,8 +39,9 @@ func (s *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	password := fmt.Sprintf("%s.%s.%v", req.Firstname, req.Role, req.PhoneNumber[len(req.PhoneNumber)-3:])
-	log.Print(password)
+	password := fmt.Sprintf("%s.%s.%v", req.Firstname, req.Role,
+		req.PhoneNumber[len(req.PhoneNumber)-3:])
+	// log.Print(password)
 
 	hashPassword, err := pkg.GenerateHashPassword(password, s.config.PASSWORD_COST)
 	if err != nil {
@@ -84,16 +84,9 @@ func (s *Server) createUser(ctx *gin.Context) {
 
 	// TODO: send verification email to user
 
-	v, err := s.convertGeneratedUser(ctx, &user)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
 	s.cache.DelAll(ctx, "user:limit=*")
 
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, user)
 }
 
 type loginUserRequest struct {
@@ -124,7 +117,10 @@ func (s *Server) forgotPassword(ctx *gin.Context) {
 	// check if user exists in db
 	exists := s.repo.Users.CheckUserExistance(ctx, req.Email)
 	if !exists {
-		ctx.JSON(http.StatusNotFound, errorResponse(pkg.Errorf(pkg.NOT_FOUND_ERROR, "user not found")))
+		ctx.JSON(
+			http.StatusNotFound,
+			errorResponse(pkg.Errorf(pkg.NOT_FOUND_ERROR, "user not found")),
+		)
 
 		return
 	}
@@ -165,36 +161,55 @@ func (s *Server) loginUser(ctx *gin.Context) {
 
 	err = pkg.ComparePasswordAndHash(user.Password, req.Password)
 	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid password")))
+		ctx.JSON(
+			pkg.ErrorToStatusCode(err),
+			errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid password")),
+		)
 
 		return
 	}
 
 	// generate access token and update refresh token
-	accesstoken, err := s.maker.CreateToken(user.Email, user.ID, user.BranchID, user.Role, s.config.TOKEN_DURATION)
+	accesstoken, err := s.maker.CreateToken(
+		user.Email,
+		user.ID,
+		user.BranchID,
+		user.Role,
+		s.config.TOKEN_DURATION,
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	refreshToken, err := s.maker.CreateToken(user.Email, user.ID, user.BranchID, user.Role, s.config.REFRESH_TOKEN_DURATION)
+	refreshToken, err := s.maker.CreateToken(
+		user.Email,
+		user.ID,
+		user.BranchID,
+		user.Role,
+		s.config.REFRESH_TOKEN_DURATION,
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	ctx.SetCookie("refreshToken", refreshToken, int(s.config.REFRESH_TOKEN_DURATION), "/", "", true, true)
+	ctx.SetCookie(
+		"refreshToken",
+		refreshToken,
+		int(s.config.REFRESH_TOKEN_DURATION),
+		"/",
+		"",
+		true,
+		true,
+	)
 
-	_, err = s.repo.Users.UpdateUser(ctx, &repository.UpdateUser{ID: user.ID, RefreshToken: pkg.StringPtr(refreshToken)})
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	v, err := s.convertGeneratedUser(ctx, &user)
+	_, err = s.repo.Users.UpdateUser(
+		ctx,
+		&repository.UpdateUser{ID: user.ID, RefreshToken: pkg.StringPtr(refreshToken)},
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -202,7 +217,7 @@ func (s *Server) loginUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, loginUserResponse{
-		UserData:              v,
+		UserData:              convertGeneratedUser(&user),
 		AccessToken:           accesstoken,
 		RefreshToken:          refreshToken,
 		AccessTokenExpiresAt:  time.Now().Add(s.config.TOKEN_DURATION),
@@ -273,12 +288,21 @@ func (s *Server) refreshToken(ctx *gin.Context) {
 	}
 
 	if payload.RegisteredClaims.ExpiresAt.Time.Before(time.Now()) {
-		ctx.JSON(http.StatusNotExtended, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "refresh token is expired")))
+		ctx.JSON(
+			http.StatusNotExtended,
+			errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "refresh token is expired")),
+		)
 
 		return
 	}
 
-	accesstoken, err := s.maker.CreateToken(payload.Email, payload.UserID, payload.BranchID, payload.Role, s.config.TOKEN_DURATION)
+	accesstoken, err := s.maker.CreateToken(
+		payload.Email,
+		payload.UserID,
+		payload.BranchID,
+		payload.Role,
+		s.config.TOKEN_DURATION,
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -286,8 +310,8 @@ func (s *Server) refreshToken(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, loginUserResponse{
-		AccessToken:           accesstoken,
-		AccessTokenExpiresAt:  time.Now().Add(s.config.TOKEN_DURATION),
+		AccessToken:          accesstoken,
+		AccessTokenExpiresAt: time.Now().Add(s.config.TOKEN_DURATION),
 	})
 }
 
@@ -306,19 +330,17 @@ func (s *Server) getUser(ctx *gin.Context) {
 		return
 	}
 
-	v, err := s.convertGeneratedUser(ctx, &user)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// v, err := s.convertGeneratedUser(ctx, &user)
+	// if err != nil {
+	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-		return
-	}
+	// 	return
+	// }
 
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, user)
 }
 
 func (s *Server) listUsers(ctx *gin.Context) {
-	log.Println("cache miss")
-
 	pageNoStr := ctx.DefaultQuery("page", "1")
 	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
@@ -337,7 +359,7 @@ func (s *Server) listUsers(ctx *gin.Context) {
 
 	params := repository.CategorySearch{}
 	cacheParams := map[string][]string{
-		"page": {pageNoStr},
+		"page":  {pageNoStr},
 		"limit": {pageSizeStr},
 	}
 
@@ -359,36 +381,43 @@ func (s *Server) listUsers(ctx *gin.Context) {
 		cacheParams["role"] = []string{strings.Join(roles, ",")}
 	}
 
-	users, metadata, err := s.repo.Users.ListUsers(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	users, metadata, err := s.repo.Users.ListUsers(
+		ctx,
+		&params,
+		&pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize},
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	rsp := make([]userResponse, len(users))
+	// rsp := make([]userResponse, len(users))
 
-	for idx, u := range users {
-		v, err := s.convertGeneratedUser(ctx, &u)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// for idx, u := range users {
+	// 	v, err := s.convertGeneratedUser(ctx, &u)
+	// 	if err != nil {
+	// 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-			return
-		}
+	// 		return
+	// 	}
 
-		rsp[idx] = v
-	}
+	// 	rsp[idx] = v
+	// }
 
 	response := gin.H{
 		"metadata": metadata,
-		"data": rsp,
+		"data":     users,
 	}
 
 	cacheKey := constructCacheKey("user", cacheParams)
 
 	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+		ctx.JSON(
+			http.StatusInternalServerError,
+			pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err),
+		)
 
 		return
 	}
@@ -397,8 +426,8 @@ func (s *Server) listUsers(ctx *gin.Context) {
 }
 
 type updateUserRequest struct {
-	Role      string `json:"role"`
-	BranchID  uint32 `json:"branchId"`
+	Role     string `json:"role"`
+	BranchID uint32 `json:"branchId"`
 }
 
 func (s *Server) updateUser(ctx *gin.Context) {
@@ -425,13 +454,16 @@ func (s *Server) updateUser(ctx *gin.Context) {
 
 	id, err := pkg.StringToUint32(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+		ctx.JSON(
+			pkg.ErrorToStatusCode(err),
+			errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())),
+		)
 
 		return
 	}
 
 	params := repository.UpdateUser{
-		ID: id,
+		ID:        id,
 		UpdatedBy: pkg.Uint32Ptr(payloadData.UserID),
 		UpdatedAt: pkg.TimePtr(time.Now()),
 	}
@@ -451,47 +483,60 @@ func (s *Server) updateUser(ctx *gin.Context) {
 		return
 	}
 
-	v, err := s.convertGeneratedUser(ctx, &user)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// v, err := s.convertGeneratedUser(ctx, &user)
+	// if err != nil {
+	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-		return
-	}
+	// 	return
+	// }
 
 	s.cache.Del(ctx, fmt.Sprintf("user:%d", id))
 	s.cache.DelAll(ctx, "user:limit=*")
 
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, user)
 }
 
-func (s *Server) convertGeneratedUser(ctx *gin.Context, user *repository.User) (userResponse, error) {
-	cacheKey := fmt.Sprintf("user:%v", user.ID)
-	var dataCached userResponse
+// func (s *Server) convertGeneratedUser(ctx *gin.Context, user *repository.User) (userResponse,
+// error) {
+// 	cacheKey := fmt.Sprintf("user:%v", user.ID)
+// 	var dataCached userResponse
 
-	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
-	if exists {
-		return dataCached, nil
-	}
+// 	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
+// 	if exists {
+// 		return dataCached, nil
+// 	}
 
-	branch, err := s.repo.Branches.GetBranchByID(ctx, user.BranchID)
-	if err != nil {
-		return userResponse{}, err
-	}
+// 	branch, err := s.repo.Branches.GetBranchByID(ctx, user.BranchID)
+// 	if err != nil {
+// 		return userResponse{}, err
+// 	}
 
-	rsp := userResponse{
+// 	rsp := userResponse{
+// 		ID:          user.ID,
+// 		Fullname:    user.FullName,
+// 		Email:       user.Email,
+// 		PhoneNumber: user.PhoneNumber,
+// 		Role:        user.Role,
+// 		BranchName:  branch.Name,
+// 		CreatedAt:   user.CreatedAt,
+// 		// RefreshToken: user.RefreshToken,
+// 	}
+
+// 	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
+// 		return userResponse{}, err
+// 	}
+
+// 	return rsp, nil
+// }
+
+func convertGeneratedUser(user *repository.User) userResponse {
+	return userResponse{
 		ID:          user.ID,
 		Fullname:    user.FullName,
 		Email:       user.Email,
 		PhoneNumber: user.PhoneNumber,
 		Role:        user.Role,
-		BranchName:  branch.Name,
+		BranchName:  *user.BranchName,
 		CreatedAt:   user.CreatedAt,
-		// RefreshToken: user.RefreshToken,
 	}
-
-	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
-		return userResponse{}, err
-	}
-
-	return rsp, nil
 }

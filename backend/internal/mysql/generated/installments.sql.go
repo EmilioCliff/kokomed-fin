@@ -11,6 +11,35 @@ import (
 	"time"
 )
 
+const countUnpaidInstallmentsData = `-- name: CountUnpaidInstallmentsData :one
+SELECT COUNT(*) AS total_unpaid_installments
+FROM installments i
+JOIN loans l ON i.loan_id = l.id
+JOIN clients c ON l.client_id = c.id
+
+WHERE 
+    (i.paid = FALSE OR i.remaining_amount > 0) 
+    AND i.due_date <= CURDATE()
+    AND (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(c.phone_number) LIKE ?
+    )
+`
+
+type CountUnpaidInstallmentsDataParams struct {
+	Column1     interface{} `json:"column_1"`
+	FullName    string      `json:"full_name"`
+	PhoneNumber string      `json:"phone_number"`
+}
+
+func (q *Queries) CountUnpaidInstallmentsData(ctx context.Context, arg CountUnpaidInstallmentsDataParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUnpaidInstallmentsData, arg.Column1, arg.FullName, arg.PhoneNumber)
+	var total_unpaid_installments int64
+	err := row.Scan(&total_unpaid_installments)
+	return total_unpaid_installments, err
+}
+
 const createInstallment = `-- name: CreateInstallment :execresult
 INSERT INTO installments (loan_id, installment_number, amount_due, remaining_amount, due_date) 
 VALUES (
@@ -54,6 +83,111 @@ func (q *Queries) GetInstallment(ctx context.Context, id uint32) (Installment, e
 		&i.DueDate,
 	)
 	return i, err
+}
+
+const getUnpaidInstallmentsData = `-- name: GetUnpaidInstallmentsData :many
+SELECT 
+    i.installment_number,
+    i.remaining_amount,
+    i.due_date,
+    u.full_name AS loan_officer,
+
+    l.id AS loan_id,
+    p.loan_amount,
+    p.repay_amount,
+    b.name AS product_branchName,
+    b2.name AS client_branchName,
+    
+    c.id AS client_id,
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    l.paid_amount AS loan_paid_amount
+FROM installments i
+JOIN loans l ON i.loan_id = l.id
+JOIN users u ON u.id = l.loan_officer
+JOIN clients c ON l.client_id = c.id
+JOIN branches b2 ON u.branch_id = b2.id
+JOIN products p ON l.product_id = p.id
+JOIN branches b ON p.branch_id = b.id
+
+WHERE 
+    (i.paid = FALSE OR i.remaining_amount > 0) 
+    AND i.due_date <= CURDATE()
+    AND (
+        COALESCE(?, '') = '' 
+        OR LOWER(c.full_name) LIKE ?
+        OR LOWER(c.phone_number) LIKE ?
+    )
+
+ORDER BY i.due_date DESC
+LIMIT ? OFFSET ?
+`
+
+type GetUnpaidInstallmentsDataParams struct {
+	Column1     interface{} `json:"column_1"`
+	FullName    string      `json:"full_name"`
+	PhoneNumber string      `json:"phone_number"`
+	Limit       int32       `json:"limit"`
+	Offset      int32       `json:"offset"`
+}
+
+type GetUnpaidInstallmentsDataRow struct {
+	InstallmentNumber uint32    `json:"installment_number"`
+	RemainingAmount   float64   `json:"remaining_amount"`
+	DueDate           time.Time `json:"due_date"`
+	LoanOfficer       string    `json:"loan_officer"`
+	LoanID            uint32    `json:"loan_id"`
+	LoanAmount        float64   `json:"loan_amount"`
+	RepayAmount       float64   `json:"repay_amount"`
+	ProductBranchname string    `json:"product_branchname"`
+	ClientBranchname  string    `json:"client_branchname"`
+	ClientID          uint32    `json:"client_id"`
+	ClientName        string    `json:"client_name"`
+	ClientPhone       string    `json:"client_phone"`
+	LoanPaidAmount    float64   `json:"loan_paid_amount"`
+}
+
+func (q *Queries) GetUnpaidInstallmentsData(ctx context.Context, arg GetUnpaidInstallmentsDataParams) ([]GetUnpaidInstallmentsDataRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUnpaidInstallmentsData,
+		arg.Column1,
+		arg.FullName,
+		arg.PhoneNumber,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUnpaidInstallmentsDataRow{}
+	for rows.Next() {
+		var i GetUnpaidInstallmentsDataRow
+		if err := rows.Scan(
+			&i.InstallmentNumber,
+			&i.RemainingAmount,
+			&i.DueDate,
+			&i.LoanOfficer,
+			&i.LoanID,
+			&i.LoanAmount,
+			&i.RepayAmount,
+			&i.ProductBranchname,
+			&i.ClientBranchname,
+			&i.ClientID,
+			&i.ClientName,
+			&i.ClientPhone,
+			&i.LoanPaidAmount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listInstallmentsByLoan = `-- name: ListInstallmentsByLoan :many

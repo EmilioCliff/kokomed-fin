@@ -9,12 +9,11 @@ import (
 )
 
 func (s *Server) getDashboardData(ctx *gin.Context) {
-	// get inactiveLoans
 	data, err := s.repo.Helpers.GetDashboardData(ctx)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-		return 
+		return
 	}
 
 	ctx.JSON(http.StatusOK, data)
@@ -28,7 +27,7 @@ func (s *Server) getLoanFormData(ctx *gin.Context) {
 		products, err = s.repo.Helpers.GetProductData(ctx)
 		if err != nil {
 			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-	
+
 			return
 		}
 	}
@@ -39,18 +38,18 @@ func (s *Server) getLoanFormData(ctx *gin.Context) {
 		clients, err = s.repo.Helpers.GetClientData(ctx)
 		if err != nil {
 			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-	
+
 			return
 		}
 	}
-	
+
 	var users []repository.LoanOfficerData
 	user := ctx.Query("user")
 	if user != "" {
 		users, err = s.repo.Helpers.GetLoanOfficerData(ctx)
 		if err != nil {
 			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-	
+
 			return
 		}
 	}
@@ -61,7 +60,7 @@ func (s *Server) getLoanFormData(ctx *gin.Context) {
 		branches, err = s.repo.Helpers.GetBranchData(ctx)
 		if err != nil {
 			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-	
+
 			return
 		}
 	}
@@ -72,18 +71,18 @@ func (s *Server) getLoanFormData(ctx *gin.Context) {
 		loans, err = s.repo.Helpers.GetLoanData(ctx)
 		if err != nil {
 			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-	
+
 			return
 		}
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"product":     products,
-		"client":      clients,
-		"user": users,
-		"branch": branches,
-		"loan": loans,
-})
+		"product": products,
+		"client":  clients,
+		"user":    users,
+		"branch":  branches,
+		"loan":    loans,
+	})
 }
 
 func (s *Server) getLoanEvents(ctx *gin.Context) {
@@ -96,5 +95,52 @@ func (s *Server) getLoanEvents(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"data": events,
+	})
+}
+
+type getClientNonPostedReq struct {
+	ID          uint32 `json:"id"`
+	PhoneNumber string `json:"phoneNumber"`
+}
+
+func (s *Server) getClientNonPosted(ctx *gin.Context) {
+	var req getClientNonPostedReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	rslt, pgData, err := s.repo.Helpers.GetClientNonPayments(
+		ctx,
+		req.ID,
+		req.PhoneNumber,
+		&pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize},
+	)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"metadata": pgData,
+		"data":     rslt,
 	})
 }

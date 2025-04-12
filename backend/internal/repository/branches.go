@@ -14,9 +14,16 @@ type Branch struct {
 
 type BranchRepository interface {
 	CreateBranch(ctx context.Context, branch *Branch) (Branch, error)
-	ListBranches(ctx context.Context, search *string, pgData *pkg.PaginationMetadata) ([]Branch, pkg.PaginationMetadata, error)
+	ListBranches(
+		ctx context.Context,
+		search *string,
+		pgData *pkg.PaginationMetadata,
+	) ([]Branch, pkg.PaginationMetadata, error)
 	GetBranchByID(ctx context.Context, id uint32) (Branch, error)
 	UpdateBranch(ctx context.Context, name string, id uint32) (Branch, error)
 
-	GetReportBranchData(ctx context.Context, filters services.ReportFilters) ([]services.BranchReportData, services.BranchSummary, error)
+	GetReportBranchData(
+		ctx context.Context,
+		filters services.ReportFilters,
+	) ([]services.BranchReportData, services.BranchSummary, error)
 }

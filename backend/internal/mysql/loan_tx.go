@@ -3,7 +3,6 @@ package mysql
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
@@ -11,15 +10,26 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
-func (r *LoanRepository) CreateLoan(ctx context.Context, loan *repository.Loan) (repository.Loan, error) {
+func (r *LoanRepository) CreateLoan(
+	ctx context.Context,
+	loan *repository.Loan,
+) (repository.LoanFullData, error) {
+	// check if client has alread an active loan
 	if loan.DueDate != nil && loan.DisbursedBy != nil && loan.DisbursedOn != nil {
 		hasActiveLoan, err := r.queries.CheckActiveLoanForClient(ctx, loan.ClientID)
 		if err != nil {
-			return repository.Loan{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to check if client has an active loan: %s", err.Error())
+			return repository.LoanFullData{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"failed to check if client has an active loan: %s",
+				err.Error(),
+			)
 		}
 
 		if hasActiveLoan {
-			return repository.Loan{}, pkg.Errorf(pkg.ALREADY_EXISTS_ERROR, "client already has an active loan")
+			return repository.LoanFullData{}, pkg.Errorf(
+				pkg.ALREADY_EXISTS_ERROR,
+				"client already has an active loan",
+			)
 		}
 	}
 
@@ -75,7 +85,7 @@ func (r *LoanRepository) CreateLoan(ctx context.Context, loan *repository.Loan) 
 
 		// create loan installments if loan is disbursed already(loan is ACTIVE)
 		if params.Status == generated.LoansStatusACTIVE {
-			if err := helperCreateInstallation(ctx, q, loan.ID, loan.ProductID, params.TotalInstallments, params.InstallmentsPeriod); err != nil {
+			if err := helperCreateInstallation(ctx, q, *loan.DisbursedOn, loan.ID, loan.ProductID, params.TotalInstallments, params.InstallmentsPeriod); err != nil {
 				return err
 			}
 		}
@@ -83,13 +93,25 @@ func (r *LoanRepository) CreateLoan(ctx context.Context, loan *repository.Loan) 
 		return nil
 	})
 	if err != nil {
-		return repository.Loan{}, err
+		return repository.LoanFullData{}, err
 	}
 
-	return *loan, nil
+	updateLoan, err := r.queries.GetLoanFullData(ctx, loan.ID)
+	if err != nil {
+		return repository.LoanFullData{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get created loan: %s",
+			err.Error(),
+		)
+	}
+
+	return convertGetLoanFullDataRowToRepo(&updateLoan), nil
 }
 
-func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *repository.DisburseLoan) (uint32, error) {
+func (r *LoanRepository) DisburseLoan(
+	ctx context.Context,
+	disburseLoan *repository.DisburseLoan,
+) (uint32, error) {
 	loan, err := r.GetLoanByID(ctx, disburseLoan.ID)
 	if err != nil {
 		return 0, err
@@ -97,11 +119,14 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 
 	hasActiveLoan, err := r.queries.CheckActiveLoanForClient(ctx, loan.ClientID)
 	if err != nil {
-		return 0, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to check if client has an active loan: %s", err.Error())
+		return 0, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to check if client has an active loan: %s",
+			err.Error(),
+		)
 	}
 
 	if disburseLoan.DisbursedOn != nil {
-		log.Println("Checking if has active loan")
 		if hasActiveLoan {
 			return 0, pkg.Errorf(pkg.ALREADY_EXISTS_ERROR, "client already has an active loan")
 		}
@@ -117,13 +142,16 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 		}
 
 		if disburseLoan.DisbursedOn != nil {
-			log.Println("Disbursing loan")
 			params.DisbursedOn = sql.NullTime{
 				Valid: true,
 				Time:  *disburseLoan.DisbursedOn,
 			}
 
-			dueDate := (*disburseLoan.DisbursedOn).AddDate(0, 0, int(loan.InstallmentsPeriod)*int(loan.TotalInstallments))
+			dueDate := (*disburseLoan.DisbursedOn).AddDate(
+				0,
+				0,
+				int(loan.InstallmentsPeriod)*int(loan.TotalInstallments),
+			)
 
 			params.DueDate = sql.NullTime{
 				Valid: true,
@@ -132,18 +160,16 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 		}
 
 		if disburseLoan.Status != nil {
-			log.Println("changing status")
 			params.Status = generated.NullLoansStatus{
-				Valid: true,
+				Valid:       true,
 				LoansStatus: generated.LoansStatus(*disburseLoan.Status),
 			}
 		}
 
 		if disburseLoan.FeePaid != nil {
-			log.Println("changing fee paid")
 			params.FeePaid = sql.NullBool{
 				Valid: true,
-				Bool: true,
+				Bool:  true,
 			}
 		}
 
@@ -153,8 +179,9 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 		}
 
 		// here we will create installments if and only if the status was changed to active
-		if disburseLoan.Status != nil && generated.LoansStatus(*disburseLoan.Status) == generated.LoansStatusACTIVE {
-			if err = helperCreateInstallation(ctx, q, loan.ID, loan.ProductID, loan.TotalInstallments, loan.InstallmentsPeriod); err != nil {
+		if disburseLoan.Status != nil &&
+			generated.LoansStatus(*disburseLoan.Status) == generated.LoansStatusACTIVE {
+			if err = helperCreateInstallation(ctx, q, *disburseLoan.DisbursedOn, loan.ID, loan.ProductID, loan.TotalInstallments, loan.InstallmentsPeriod); err != nil {
 				return err
 			}
 		}
@@ -168,14 +195,19 @@ func (r *LoanRepository) DisburseLoan(ctx context.Context, disburseLoan *reposit
 	return loan.ClientID, nil
 }
 
-func helperCreateInstallation(ctx context.Context, q *generated.Queries, loanID, productID, totalInstallment, intallmentPeriod uint32) error {
+func helperCreateInstallation(
+	ctx context.Context,
+	q *generated.Queries,
+	disbursedDate time.Time,
+	loanID, productID, totalInstallment, intallmentPeriod uint32,
+) error {
 	repayAmout, err := q.GetProductRepayAmount(ctx, productID)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get product repay amount: %s", err.Error())
 	}
 
 	installmentAmount := repayAmout / float64(totalInstallment)
-	firstDueDate := time.Now().AddDate(0, 0, int(intallmentPeriod))
+	firstDueDate := disbursedDate.AddDate(0, 0, int(intallmentPeriod))
 
 	for i := 0; i < int(totalInstallment); i++ {
 		dueDate := firstDueDate.AddDate(0, 0, i*int(intallmentPeriod))
@@ -193,4 +225,85 @@ func helperCreateInstallation(ctx context.Context, q *generated.Queries, loanID,
 	}
 
 	return nil
+}
+
+func convertGetLoanFullDataRowToRepo(loan *generated.GetLoanFullDataRow) repository.LoanFullData {
+	rsp := repository.LoanFullData{
+		ID: loan.ID,
+		Product: repository.ProductShort{
+			ID:             loan.ProductID,
+			BranchName:     loan.ProductBranchName, // You might need to join the product's branch name if required
+			LoanAmount:     loan.LoanAmount,
+			RepayAmount:    loan.RepayAmount,
+			InterestAmount: loan.InterestAmount,
+		},
+		Client: repository.ClientShort{
+			ID:          loan.ClientID,
+			FullName:    loan.ClientName,
+			PhoneNumber: loan.ClientPhone,
+			Active:      loan.ClientActive,
+			BranchName:  loan.ClientBranchName,
+		},
+		LoanOfficer: repository.UserShortResponse{
+			ID:          loan.LoanOfficer,
+			FullName:    loan.LoanOfficerName,
+			Email:       loan.LoanOfficerEmail,
+			PhoneNumber: loan.LoanOfficerPhone,
+		},
+		LoanPurpose: pkg.StringPtr(""),
+		DueDate:     &time.Time{},
+		ApprovedBy: repository.UserShortResponse{
+			ID:          loan.ApprovedBy,
+			FullName:    loan.ApprovedByName,
+			Email:       loan.ApprovedByEmail,
+			PhoneNumber: loan.ApprovedByPhone,
+		},
+		DisbursedOn:        &time.Time{},
+		TotalInstallments:  loan.TotalInstallments,
+		InstallmentsPeriod: loan.InstallmentsPeriod,
+		Status:             string(loan.Status),
+		ProcessingFee:      loan.ProcessingFee,
+		FeePaid:            loan.FeePaid,
+		PaidAmount:         loan.PaidAmount,
+		RemainingAmount:    loan.RepayAmount - loan.PaidAmount,
+		CreatedBy: repository.UserShortResponse{
+			ID:          loan.CreatedBy,
+			FullName:    loan.CreatedByName.String,
+			Email:       loan.CreatedByEmail.String,
+			PhoneNumber: loan.CreatedByPhone.String,
+		},
+		CreatedAt: loan.CreatedAt,
+	}
+
+	if loan.DueDate.Valid {
+		rsp.DueDate = &loan.DueDate.Time
+	}
+
+	if loan.DisbursedOn.Valid {
+		rsp.DisbursedOn = &loan.DisbursedOn.Time
+	}
+
+	if loan.LoanPurpose.Valid {
+		rsp.LoanPurpose = &loan.LoanPurpose.String
+	}
+
+	if loan.UpdatedBy.Valid {
+		rsp.UpdatedBy = repository.UserShortResponse{
+			ID:          uint32(loan.UpdatedBy.Int32),
+			FullName:    loan.UpdatedByName.String,
+			Email:       loan.UpdatedByEmail.String,
+			PhoneNumber: loan.UpdatedByPhone.String,
+		}
+	}
+
+	if loan.DisbursedBy.Valid {
+		rsp.DisbursedBy = repository.UserShortResponse{
+			ID:          uint32(loan.DisbursedBy.Int32),
+			FullName:    loan.DisbursedByName.String,
+			Email:       loan.DisbursedByEmail.String,
+			PhoneNumber: loan.DisbursedByPhone.String,
+		}
+	}
+
+	return rsp
 }

@@ -73,6 +73,7 @@ func (s *Server) setUpRoutes() {
 	// protected routes
 	authRoute := v1Auth.Use(authMiddleware(s.maker))
 
+	// cached routes
 	cachedRoutes := authRoute.Use(redisCacheMiddleware(s.cache))
 
 	// health check
@@ -92,22 +93,17 @@ func (s *Server) setUpRoutes() {
 	// clients routes
 	authRoute.POST("/client", s.createClient)
 	cachedRoutes.GET("/client", s.listClients)
-	authRoute.GET("/client/branch/:id", s.listClientsByBranch)
-	authRoute.GET("/client/status", s.listClientsByActive) // use query params
 	authRoute.GET("/client/:id", s.getClient)
 	authRoute.PATCH("/client/:id", s.updateClient)
 
 	// product routes
 	authRoute.POST("/product", s.createProduct)
 	cachedRoutes.GET("/product", s.listProducts)
-	authRoute.GET("/product/branch/:id", s.listProductsByBranch)
 	authRoute.GET("/product/:id", s.getProduct)
 
 	// non-posted routes
 	cachedRoutes.GET("/non-posted/all", s.listAllNonPostedPayments)
-	authRoute.GET("/non-posted/unassigned", s.listUnassignedNonPostedPayments)
-	authRoute.GET("/non-posted/by-id/:id", s.getNonPostedPayment)
-	authRoute.GET("/non-posted/by-type/:type", s.listNonPostedByTransactionSource)
+	authRoute.POST("/non-posted/clients", s.listClientsNonPosted)
 
 	// branches routes
 	cachedRoutes.GET("/branch", s.listBranches)
@@ -118,25 +114,22 @@ func (s *Server) setUpRoutes() {
 	// loans routes
 	authRoute.POST("/loan", s.createLoan)
 	authRoute.PATCH("/loan/:id/disburse", s.disburseLoan)
-	authRoute.PATCH("/loan/:id/assign", s.transferLoanOfficer)
-	authRoute.GET("/loan/:id", s.getLoan)
 	authRoute.GET("/loan/:id/installments", s.getLoanInstallments)
 	cachedRoutes.GET("/loan", s.listLoansByCategory)
 	cachedRoutes.GET("/loan/expected-payments", s.listExpectedPayments)
+	cachedRoutes.GET("/loan/unpaid-installments", s.listUnpaidInstallmentsData)
 
 	// payments routes
 	v1.POST("/payment/callback", s.paymentCallback)
 	v1.POST("/payment/validation", s.validationCallback)
 	authRoute.PATCH("/payment/:id/assign", s.paymentByAdmin)
 
-	// payment of from credit to repay some loan(overpayment to pay loan)
-
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)
 	authRoute.GET("/helper/formData", s.getLoanFormData)
 	authRoute.GET("/helper/loanEvents", s.getLoanEvents)
 	authRoute.GET("/mpesa/token", s.getMPESAAccesToken)
-	// cachedRoutes.GET("/helper/loanEvents", s.getLoanEvents)
+	authRoute.POST("/helper/client-payments", s.getClientNonPosted)
 
 	// reports routes
 	authRoute.POST("/report", s.generateReport)

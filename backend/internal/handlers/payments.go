@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,7 +26,6 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 
 	amountFlt, err := strconv.ParseFloat(req["TransAmount"].(string), 64)
 	if err != nil {
-		log.Println(err)
 		ctx.JSON(http.StatusOK, gin.H{
 			"ResultCode": 400,
 			"ResultDesc": "Rejected",
@@ -39,7 +37,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 	callbackData := services.MpesaCallbackData{
 		TransactionID: req["TransID"].(string),
 		AccountNumber: req["BillRefNumber"].(string),
-		PhoneNumber:   "***",							// safaricom hidden number
+		PhoneNumber:   "***", // safaricom hidden number
 		PayingName:    req["FirstName"].(string),
 		Amount:        amountFlt,
 		AssignedBy:    "APP",
@@ -47,11 +45,10 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 
 	if app, ok := req["App"].(string); ok && app != "" {
 		callbackData.TransactionSource = "INTERNAL"
-		
+
 		if email, ok := req["Email"].(string); ok && email != "" {
 			callbackData.AssignedBy = email
 		}
-
 	} else {
 		callbackData.TransactionSource = "MPESA"
 	}
@@ -59,7 +56,10 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 	if paidDate, ok := req["DatePaid"].(string); ok && paidDate != "" {
 		paidDateT, err := time.Parse("2006-01-02", paidDate)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid disburse_on date format")))
+			ctx.JSON(
+				http.StatusBadRequest,
+				errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid disburse_on date format")),
+			)
 
 			return
 		}
@@ -71,18 +71,18 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 	if err != nil {
 		if pkg.ErrorCode(err) != pkg.NOT_FOUND_ERROR {
 			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-			
+
 			return
 		}
 	}
-	
+
 	// if account number is wrong(non-existing) continue
 	if clientID != 0 {
 		callbackData.AssignedTo = pkg.Uint32Ptr(clientID)
 		s.cache.Del(ctx, fmt.Sprintf("client:%v", clientID))
 	}
 
-	loanId, err := s.payments.ProcessCallback(ctx, &callbackData); 
+	loanId, err := s.payments.ProcessCallback(ctx, &callbackData)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -178,7 +178,10 @@ func (s *Server) getMPESAAccesToken(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, err := pkg.GenerateAccessToken(s.config.MPESA_CONSUMER_KEY, s.config.MPESA_CONSUMER_SECRET)
+	accessToken, err := pkg.GenerateAccessToken(
+		s.config.MPESA_CONSUMER_KEY,
+		s.config.MPESA_CONSUMER_SECRET,
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 

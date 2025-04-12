@@ -167,7 +167,41 @@ func (r *NonPostedRepository) ListNonPosted(
 	rslt := make([]repository.NonPosted, len(nonPosteds))
 
 	for i, nonPosted := range nonPosteds {
-		rslt[i] = convertGenerateNonPosted(nonPosted)
+		rsp := repository.NonPosted{
+			ID:                nonPosted.ID,
+			TransactionSource: string(nonPosted.TransactionSource),
+			TransactionNumber: nonPosted.TransactionNumber,
+			AccountNumber:     nonPosted.AccountNumber,
+			PhoneNumber:       nonPosted.PhoneNumber,
+			PayingName:        nonPosted.PayingName,
+			Amount:            nonPosted.Amount,
+			PaidDate:          nonPosted.PaidDate,
+			AssignedBy:        nonPosted.AssignedBy,
+		}
+
+		if nonPosted.AssignTo.Valid {
+			value := uint32(nonPosted.AssignTo.Int32)
+			rsp.AssignedTo = &value
+
+			overpayment, err := pkg.StringToFloat64(nonPosted.ClientOverpayment.String)
+			if err != nil {
+				return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+					pkg.INTERNAL_ERROR,
+					"failed to convert string to float64: %s",
+					err.Error(),
+				)
+			}
+
+			rsp.AssignedClient = repository.ClientShort{
+				ID:          uint32(nonPosted.ClientID.Int32),
+				FullName:    nonPosted.ClientName.String,
+				PhoneNumber: nonPosted.ClientPhone.String,
+				Overpayment: overpayment,
+				BranchName:  nonPosted.ClientBranchName.String,
+			}
+		}
+
+		rslt[i] = rsp
 	}
 
 	return rslt, pkg.CreatePaginationMetadata(
@@ -322,6 +356,184 @@ func (r *NonPostedRepository) GetReportPaymentData(
 	return rslt, summary, nil
 }
 
+func (r *NonPostedRepository) GetClientNonPosted(
+	ctx context.Context,
+	id uint32,
+	phoneNumber string,
+	pgData *pkg.PaginationMetadata,
+) (repository.ClientNonPosted, pkg.PaginationMetadata, error) {
+	var client generated.Client
+	var loan generated.GetActiveLoanDetailsRow
+	var installments []generated.Installment
+
+	var clientPresent bool
+	var clientHasNonPosted bool
+	var clientHasActiveLoan bool
+	var err error
+
+	if id != 0 {
+		client, err = r.queries.GetClient(ctx, id)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				clientPresent = false
+			} else {
+				return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s", err.Error())
+			}
+		}
+		clientPresent = true
+	} else {
+		if phoneNumber != "" {
+			client, err = r.queries.GetClientByPhoneNumber(ctx, phoneNumber)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					clientPresent = false
+				} else {
+					return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client: %s", err.Error())
+				}
+			}
+			clientPresent = true
+		}
+	}
+
+	params := generated.GetClientsNonPostedParams{
+		Limit:  int32(pgData.PageSize),
+		Offset: int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+	}
+
+	params2 := generated.GetTotalPaidByIDorAccountNoParams{}
+	params3 := generated.CountClientsNonPostedParams{}
+
+	if clientPresent && id != 0 {
+		params.AssignTo = sql.NullInt32{
+			Valid: true,
+			Int32: int32(client.ID),
+		}
+		params2.AssignTo = sql.NullInt32{
+			Valid: true,
+			Int32: int32(client.ID),
+		}
+		params3.AssignTo = sql.NullInt32{
+			Valid: true,
+			Int32: int32(client.ID),
+		}
+	} else {
+		if phoneNumber == "" {
+			return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INVALID_ERROR, "both id and phonenumber cannot be missing")
+		}
+		params.AccountNumber = sql.NullString{
+			Valid:  true,
+			String: phoneNumber,
+		}
+		params2.AccountNumber = sql.NullString{
+			Valid:  true,
+			String: phoneNumber,
+		}
+		params3.AccountNumber = sql.NullString{
+			Valid:  true,
+			String: phoneNumber,
+		}
+	}
+
+	nonPosteds, err := r.queries.GetClientsNonPosted(ctx, params)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			clientHasNonPosted = false
+		} else {
+			return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get non-posted: %s", err.Error())
+		}
+	}
+	clientHasNonPosted = true
+
+	totalNonPosted, err := r.queries.CountClientsNonPosted(ctx, params3)
+	if err != nil {
+		return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get total loans: %s",
+			err,
+		)
+	}
+
+	totalPaid, err := r.queries.GetTotalPaidByIDorAccountNo(ctx, params2)
+	if err != nil {
+		return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get total payment: %s",
+			err,
+		)
+	}
+
+	if clientPresent {
+		loan, err = r.queries.GetActiveLoanDetails(ctx, client.ID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				clientHasActiveLoan = false
+			} else {
+				return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan: %s", err)
+			}
+		}
+		clientHasActiveLoan = true
+	}
+
+	if clientHasActiveLoan {
+		installments, err = r.queries.ListInstallmentsByLoan(ctx, loan.ID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(
+					pkg.INTERNAL_ERROR,
+					"loan has no  installemt!!!",
+				)
+			} else {
+				return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan installments: %s", err.Error())
+			}
+		}
+	}
+
+	rslt := repository.ClientNonPosted{}
+	if clientPresent {
+		branch, _ := r.queries.GetBranch(ctx, client.BranchID)
+		rslt.ClientDetails.ID = client.ID
+		rslt.ClientDetails.FullName = client.FullName
+		rslt.ClientDetails.PhoneNumber = client.PhoneNumber
+		rslt.ClientDetails.Overpayment = client.Overpayment
+		rslt.ClientDetails.BranchName = branch.Name
+	}
+
+	if clientHasActiveLoan {
+		rslt.LoanDetails.ID = loan.ID
+		rslt.LoanDetails.LoanAmount = loan.LoanAmount
+		rslt.LoanDetails.RepayAmount = loan.RepayAmount
+		rslt.LoanDetails.DisbursedOn = loan.DisbursedOn.Time.Format("2006-01-02")
+		rslt.LoanDetails.DueDate = loan.DueDate.Time.Format("2006-01-02")
+		rslt.LoanDetails.PaidAmount = loan.PaidAmount
+		rslt.LoanDetails.Installments = convertGeneratedInstallmentList(installments)
+	}
+
+	if clientHasNonPosted {
+		paymentDetails := make([]repository.NonPostedShort, len(nonPosteds))
+		for i, nonPosted := range nonPosteds {
+			paymentDetails[i] = repository.NonPostedShort{
+				ID:                nonPosted.ID,
+				TransactionSource: string(nonPosted.TransactionSource),
+				TransactionNumber: nonPosted.TransactionNumber,
+				AccountNumber:     nonPosted.AccountNumber,
+				PhoneNumber:       nonPosted.PhoneNumber,
+				PayingName:        nonPosted.PayingName,
+				Amount:            nonPosted.Amount,
+				PaidDate:          nonPosted.PaidDate,
+				AssignedBy:        nonPosted.AssignedBy,
+			}
+		}
+		rslt.PaymentDetails = paymentDetails
+		rslt.TotalPaid = pkg.InterfaceFloat64(totalPaid)
+	}
+
+	return rslt, pkg.CreatePaginationMetadata(
+		uint32(totalNonPosted),
+		pgData.PageSize,
+		pgData.CurrentPage,
+	), nil
+}
+
 func convertGenerateNonPosted(nonPosted generated.NonPosted) repository.NonPosted {
 	var assignedTo *uint32
 
@@ -340,5 +552,6 @@ func convertGenerateNonPosted(nonPosted generated.NonPosted) repository.NonPoste
 		Amount:            nonPosted.Amount,
 		PaidDate:          nonPosted.PaidDate,
 		AssignedTo:        assignedTo,
+		AssignedBy:        nonPosted.AssignedBy,
 	}
 }

@@ -12,6 +12,7 @@ export const paymentSchema = z.object({
 	paidDate: z.string().date(),
 	assigned: z.boolean(),
 	assignedTo: clientSchema,
+	assignedBy: z.string(),
 });
 
 export type Payment = z.infer<typeof paymentSchema>;

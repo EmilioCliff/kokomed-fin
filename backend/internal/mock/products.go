@@ -7,7 +7,7 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
-var _ repository.ProductRepository = (*MockProductRepository)(nil)
+// var _ repository.ProductRepository = (*MockProductRepository)(nil)
 
 type MockProductRepository struct {
 	mockGetAllProductsFunc      func(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.Product, error)
@@ -18,11 +18,17 @@ type MockProductRepository struct {
 	mockDeleteProductFunc       func(ctx context.Context, id uint32) error
 }
 
-func (m *MockProductRepository) GetAllProducts(ctx context.Context, pgData *pkg.PaginationMetadata) ([]repository.Product, error) {
+func (m *MockProductRepository) GetAllProducts(
+	ctx context.Context,
+	pgData *pkg.PaginationMetadata,
+) ([]repository.Product, error) {
 	return m.mockGetAllProductsFunc(ctx, pgData)
 }
 
-func (m *MockProductRepository) GetProductByID(ctx context.Context, id uint32) (repository.Product, error) {
+func (m *MockProductRepository) GetProductByID(
+	ctx context.Context,
+	id uint32,
+) (repository.Product, error) {
 	return m.mockGetProductByIDFunc(ctx, id)
 }
 
@@ -34,11 +40,17 @@ func (m *MockProductRepository) ListProductByBranch(
 	return m.mockListProductByBranchFunc(ctx, branchID, pgData)
 }
 
-func (m *MockProductRepository) CreateProduct(ctx context.Context, product *repository.Product) (repository.Product, error) {
+func (m *MockProductRepository) CreateProduct(
+	ctx context.Context,
+	product *repository.Product,
+) (repository.Product, error) {
 	return m.mockCreateProductFunc(ctx, product)
 }
 
-func (m *MockProductRepository) UpdateProduct(ctx context.Context, product *repository.UpdateProduct) (repository.Product, error) {
+func (m *MockProductRepository) UpdateProduct(
+	ctx context.Context,
+	product *repository.UpdateProduct,
+) (repository.Product, error) {
 	return m.mockUpdateProductFunc(ctx, product)
 }
 

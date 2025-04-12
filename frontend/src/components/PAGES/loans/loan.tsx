@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Loan, ExpectedPayment } from './schema';
+import { Loan, ExpectedPayment, UnpaidInstallment } from './schema';
 import { format } from 'date-fns';
 import DataTableColumnHeader from '@/components/table/data-table-column-header';
 import { Badge } from '@/components/ui/badge';
@@ -247,5 +247,128 @@ export const expectedPaymentColumns: ColumnDef<ExpectedPayment>[] = [
 			<div className="truncate">{row.getValue('dueDate')}</div>
 		),
 		enableSorting: true,
+	},
+];
+
+export const unpaidInstallments: ColumnDef<UnpaidInstallment>[] = [
+	{
+		accessorKey: 'loanId',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Loan ID" />
+		),
+		cell: ({ row }) => (
+			<div className="text-center">{`LN${String(
+				row.original.loanId,
+			).padStart(3, '0')}`}</div>
+		),
+		enableSorting: true,
+		enableHiding: true,
+	},
+	{
+		id: 'clientBranch',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Office" />
+		),
+		cell: ({ row }) => <div>{row.original.clientBranch}</div>,
+		enableHiding: true,
+	},
+	{
+		id: 'loanOfficer',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Loan Officer" />
+		),
+		cell: ({ row }) => <div>{row.original.loanOfficer}</div>,
+		filterFn: (row, filterValue) => {
+			const fullName = row.original.fullName.toLowerCase();
+			const phoneNumber = row.original.phoneNumber.toLowerCase();
+			return (
+				fullName.includes(filterValue.toLowerCase()) ||
+				phoneNumber.includes(filterValue.toLowerCase())
+			);
+		},
+		enableSorting: true,
+	},
+	{
+		accessorKey: 'phoneNumber',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Phone Number" />
+		),
+		cell: ({ row }) => (
+			<div className="w-[80]">{row.original.phoneNumber}</div>
+		),
+		filterFn: (row, filterValue) => {
+			const fullName = row.original.fullName.toLowerCase();
+			const phoneNumber = row.original.phoneNumber.toLowerCase();
+			return (
+				fullName.includes(filterValue.toLowerCase()) ||
+				phoneNumber.includes(filterValue.toLowerCase())
+			);
+		},
+		enableSorting: true,
+		enableHiding: true,
+	},
+	{
+		id: 'clientName',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Client Name" />
+		),
+		cell: ({ row }) => <div>{row.original.fullName}</div>,
+		filterFn: (row, filterValue) => {
+			const fullName = row.original.fullName.toLowerCase();
+			const phoneNumber = row.original.phoneNumber.toLowerCase();
+			return (
+				fullName.includes(filterValue.toLowerCase()) ||
+				phoneNumber.includes(filterValue.toLowerCase())
+			);
+		},
+		enableSorting: true,
+	},
+	{
+		accessorKey: 'productName',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Product" />
+		),
+		cell: ({ row }) => <div>{row.original.productName}</div>,
+		enableHiding: true,
+	},
+	{
+		accessorKey: 'dueDate',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Due Date" />
+		),
+		cell: ({ row }) => (
+			<div className="truncate">{row.original.dueDate}</div>
+		),
+		enableSorting: true,
+	},
+	{
+		accessorKey: 'installmentNumber',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Installment No" />
+		),
+		cell: ({ row }) => (
+			<div className="">{row.original.installmentNumber}</div>
+		),
+		enableHiding: true,
+	},
+	{
+		accessorKey: 'remainingAmount',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Total Due" />
+		),
+		cell: ({ row }) => (
+			<div className="">{row.original.remainingAmount}</div>
+		),
+		enableHiding: true,
+	},
+	{
+		accessorKey: 'totalDueAmount',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Total Overdue" />
+		),
+		cell: ({ row }) => (
+			<div className="">{row.original.totalDueAmount}</div>
+		),
+		enableHiding: true,
 	},
 ];

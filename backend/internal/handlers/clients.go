@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -13,35 +12,35 @@ import (
 
 type clientResponse struct {
 	ID            uint32            `json:"id"`
-	FullName          string            `json:"fullName"`
+	FullName      string            `json:"fullName"`
 	PhoneNumber   string            `json:"phoneNumber"`
 	IdNumber      string            `json:"idNumber"`
 	Dob           string            `json:"dob"`
 	Gender        string            `json:"gender"`
 	Active        bool              `json:"active"`
 	BranchName    string            `json:"branchName"`
-	AssignedStaff userShortResponse `json:"assignedStaff"` 
+	AssignedStaff userShortResponse `json:"assignedStaff"`
 	Overpayment   float64           `json:"overpayment"`
-	DueAmount float64 `json:"dueAmount"`
-	CreatedBy     userShortResponse `json:"createdBy"` 
+	DueAmount     float64           `json:"dueAmount"`
+	CreatedBy     userShortResponse `json:"createdBy"`
 	CreatedAt     time.Time         `json:"createdAt"`
 }
 
 type userShortResponse struct {
-	ID       uint32 `json:"id"`
-	FullName string `json:"fullName"`
+	ID          uint32 `json:"id"`
+	FullName    string `json:"fullName"`
 	PhoneNumber string `json:"phoneNumber"`
-	Email    string `json:"email"`
-	Role     string `json:"role"`
+	Email       string `json:"email"`
+	Role        string `json:"role"`
 }
 
 type clientShortResponse struct {
-	Overpayment   float64           `json:"overpayment"`
-	DueAmount float64 `json:"dueAmount"`
-	ID       uint32 `json:"id"`
-	FullName string `json:"fullName"`
-	PhoneNumber string `json:"phoneNumber"`
-	BranchName string 	`json:"branchName"`
+	Overpayment float64 `json:"overpayment"`
+	DueAmount   float64 `json:"dueAmount"`
+	ID          uint32  `json:"id"`
+	FullName    string  `json:"fullName"`
+	PhoneNumber string  `json:"phoneNumber"`
+	BranchName  string  `json:"branchName"`
 }
 
 type createClientRequest struct {
@@ -90,7 +89,10 @@ func (s *Server) createClient(ctx *gin.Context) {
 	if req.Dob != "" {
 		dob, err := time.Parse("2006-01-02", req.Dob)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+			ctx.JSON(
+				http.StatusInternalServerError,
+				errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())),
+			)
 
 			return
 		}
@@ -109,23 +111,23 @@ func (s *Server) createClient(ctx *gin.Context) {
 		return
 	}
 
-	v, err := s.structureClient(&client, ctx)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// v, err := s.structureClient(&client, ctx)
+	// if err != nil {
+	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-		return
-	}
+	// 	return
+	// }
 
 	s.cache.DelAll(ctx, "client:limit=*")
 
-	ctx.JSON(http.StatusOK, v)
+	ctx.JSON(http.StatusOK, client)
 }
 
 type updateClient struct {
-	IdNumber      string `json:"idNumber"`
-	Dob           string `json:"dob"`
-	Active        string   `json:"active"`
-	BranchID      uint32 `json:"branchId"`
+	IdNumber string `json:"idNumber"`
+	Dob      string `json:"dob"`
+	Active   string `json:"active"`
+	BranchID uint32 `json:"branchId"`
 }
 
 func (s *Server) updateClient(ctx *gin.Context) {
@@ -158,14 +160,17 @@ func (s *Server) updateClient(ctx *gin.Context) {
 	}
 
 	params := &repository.UpdateClient{
-		ID: id,
+		ID:        id,
 		UpdatedBy: payloadData.UserID,
 	}
 
 	if req.Dob != "" {
 		dob, err := time.Parse("2006-01-02", req.Dob)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+			ctx.JSON(
+				http.StatusInternalServerError,
+				errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())),
+			)
 
 			return
 		}
@@ -203,7 +208,6 @@ func (s *Server) updateClient(ctx *gin.Context) {
 }
 
 func (s *Server) listClients(ctx *gin.Context) {
-	log.Println("cache miss")
 	pageNoStr := ctx.DefaultQuery("page", "1")
 	pageNo, err := pkg.StringToUint32(pageNoStr)
 	if err != nil {
@@ -222,7 +226,7 @@ func (s *Server) listClients(ctx *gin.Context) {
 
 	params := repository.ClientCategorySearch{}
 	cacheParams := map[string][]string{
-		"page": {pageNoStr},
+		"page":  {pageNoStr},
 		"limit": {pageSizeStr},
 	}
 
@@ -243,36 +247,43 @@ func (s *Server) listClients(ctx *gin.Context) {
 		}
 	}
 
-	clients, metadata, err := s.repo.Clients.ListClients(ctx, &params, &pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize})
+	clients, metadata, err := s.repo.Clients.ListClients(
+		ctx,
+		&params,
+		&pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize},
+	)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	rsp := make([]clientResponse, len(clients))
+	// rsp := make([]clientResponse, len(clients))
 
-	for idx, c := range clients {
-		v, err := s.structureClient(&c, ctx)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	// for idx, c := range clients {
+	// 	v, err := s.structureClient(&c, ctx)
+	// 	if err != nil {
+	// 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-			return
-		}
+	// 		return
+	// 	}
 
-		rsp[idx] = v
-	}
+	// 	rsp[idx] = v
+	// }
 
 	response := gin.H{
 		"metadata": metadata,
-		"data": rsp,
+		"data":     clients,
 	}
 
 	cacheKey := constructCacheKey("client", cacheParams)
 
 	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err))
+		ctx.JSON(
+			http.StatusInternalServerError,
+			pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err),
+		)
 
 		return
 	}
@@ -288,155 +299,82 @@ func (s *Server) getClient(ctx *gin.Context) {
 		return
 	}
 
-	client, err := s.repo.Clients.GetClient(ctx, id)
+	client, err := s.repo.Clients.GetClientFullData(ctx, id)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
 		return
 	}
 
-	v, err := s.structureClient(&client, ctx)
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	ctx.JSON(http.StatusOK, v)
-}
-
-func (s *Server) listClientsByBranch(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	id, err := pkg.StringToUint32(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	clients, err := s.repo.Clients.ListClientsByBranch(ctx, id, &pkg.PaginationMetadata{CurrentPage: pageNo})
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	rsp := make([]clientResponse, len(clients))
-
-	for idx, c := range clients {
-		v, err := s.structureClient(&c, ctx)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-			return
-		}
-
-		rsp[idx] = v
-	}
-
-	ctx.JSON(http.StatusOK, rsp)
-}
-
-func (s *Server) listClientsByActive(ctx *gin.Context) {
-	pageNo, err := pkg.StringToUint32(ctx.DefaultQuery("page", "1"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	check := true
-
-	status := ctx.DefaultQuery("status", "active")
-	if status == "inactive" {
-		check = false
-	}
-
-	clients, err := s.repo.Clients.ListClientsByActiveStatus(ctx, check, &pkg.PaginationMetadata{CurrentPage: pageNo})
-	if err != nil {
-		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-		return
-	}
-
-	rsp := make([]clientResponse, len(clients))
-
-	for idx, c := range clients {
-		v, err := s.structureClient(&c, ctx)
-		if err != nil {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-			return
-		}
-
-		rsp[idx] = v
-	}
-
-	ctx.JSON(http.StatusOK, rsp)
-}
-
-func (s *Server) structureClient(c *repository.Client, ctx *gin.Context) (clientResponse, error) {
-	cacheKey := fmt.Sprintf("client:%v", c.ID)
-	var dataCached clientResponse
-
-	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
-	if exists {
-		return dataCached, nil
-	}
-
-	assignedStaff, err := s.repo.Users.GetUserByID(ctx, c.AssignedStaff)
-	if err != nil {
-		return clientResponse{}, err
-	}
-
-	// updatedBy, err := s.repo.Users.GetUserByID(ctx, c.UpdatedBy)
+	// v, err := s.structureClient(&client, ctx)
 	// if err != nil {
-	// 	return clientResponse{}, err
+	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+	// 	return
 	// }
 
-	createdBy, err := s.repo.Users.GetUserByID(ctx, c.CreatedBy)
-	if err != nil {
-		return clientResponse{}, err
-	}
-
-	branch, err := s.repo.Branches.GetBranchByID(ctx, c.BranchID)
-	if err != nil {
-		return clientResponse{}, err
-	}
-
-	rsp := clientResponse{
-		ID:            c.ID,
-		FullName:          c.FullName,
-		PhoneNumber:   c.PhoneNumber,
-		Gender:        c.Gender,
-		Active:        c.Active,
-		BranchName:    branch.Name,
-		AssignedStaff: userShortResponse{ID: assignedStaff.ID, FullName: assignedStaff.FullName, Email: assignedStaff.Email, PhoneNumber: assignedStaff.PhoneNumber},
-		Overpayment:   c.Overpayment,
-		CreatedBy:     userShortResponse{ID: createdBy.ID, FullName: createdBy.FullName, Email: createdBy.Email, PhoneNumber: createdBy.PhoneNumber},
-		CreatedAt:     c.CreatedAt,
-		DueAmount: c.DueAmount,
-	}
-	// UpdatedAt:     c.UpdatedAt,
-	// UpdatedBy:     userShortResponse{ID: updatedBy.ID, FullName: updatedBy.FullName},
-
-	if c.Dob != nil {
-		rsp.Dob = c.Dob.Format("2006-01-02")
-	}
-
-	if c.IdNumber != nil {
-		rsp.IdNumber = *c.IdNumber
-	}
-
-	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
-		return clientResponse{}, err
-	}
-
-	return rsp, nil
+	ctx.JSON(http.StatusOK, client)
 }
+
+// func (s *Server) structureClient(c *repository.Client, ctx *gin.Context) (clientResponse, error)
+// {
+// 	cacheKey := fmt.Sprintf("client:%v", c.ID)
+// 	var dataCached clientResponse
+
+// 	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
+// 	if exists {
+// 		return dataCached, nil
+// 	}
+
+// 	assignedStaff, err := s.repo.Users.GetUserByID(ctx, c.AssignedStaff)
+// 	if err != nil {
+// 		return clientResponse{}, err
+// 	}
+
+// 	// updatedBy, err := s.repo.Users.GetUserByID(ctx, c.UpdatedBy)
+// 	// if err != nil {
+// 	// 	return clientResponse{}, err
+// 	// }
+
+// 	createdBy, err := s.repo.Users.GetUserByID(ctx, c.CreatedBy)
+// 	if err != nil {
+// 		return clientResponse{}, err
+// 	}
+
+// 	branch, err := s.repo.Branches.GetBranchByID(ctx, c.BranchID)
+// 	if err != nil {
+// 		return clientResponse{}, err
+// 	}
+
+// 	rsp := clientResponse{
+// 		ID:            c.ID,
+// 		FullName:          c.FullName,
+// 		PhoneNumber:   c.PhoneNumber,
+// 		Gender:        c.Gender,
+// 		Active:        c.Active,
+// 		BranchName:    branch.Name,
+// 		AssignedStaff: userShortResponse{ID: assignedStaff.ID, FullName: assignedStaff.FullName, Email:
+// assignedStaff.Email, PhoneNumber: assignedStaff.PhoneNumber},
+// 		Overpayment:   c.Overpayment,
+// 		CreatedBy:     userShortResponse{ID: createdBy.ID, FullName: createdBy.FullName, Email:
+// createdBy.Email, PhoneNumber: createdBy.PhoneNumber},
+// 		CreatedAt:     c.CreatedAt,
+// 		DueAmount: c.DueAmount,
+// 	}
+// 	// UpdatedAt:     c.UpdatedAt,
+// 	// UpdatedBy:     userShortResponse{ID: updatedBy.ID, FullName: updatedBy.FullName},
+
+// 	if c.Dob != nil {
+// 		rsp.Dob = c.Dob.Format("2006-01-02")
+// 	}
+
+// 	if c.IdNumber != nil {
+// 		rsp.IdNumber = *c.IdNumber
+// 	}
+
+// 	if err := s.cache.Set(ctx, cacheKey, rsp, 3*time.Minute); err != nil {
+// 		return clientResponse{}, err
+// 	}
+
+// 	return rsp, nil
+// }

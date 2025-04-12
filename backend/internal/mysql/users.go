@@ -25,7 +25,10 @@ func NewUserRepository(db *Store) *UserRepository {
 	}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user *repository.User) (repository.User, error) {
+func (r *UserRepository) CreateUser(
+	ctx context.Context,
+	user *repository.User,
+) (repository.User, error) {
 	execResult, err := r.queries.CreateUser(ctx, generated.CreateUserParams{
 		FullName:     user.FullName,
 		PhoneNumber:  user.PhoneNumber,
@@ -39,15 +42,33 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *repository.User) 
 		CreatedBy:    user.CreatedBy, // same
 	})
 	if err != nil {
-		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create user: %s", err.Error())
+		return repository.User{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to create user: %s",
+			err.Error(),
+		)
 	}
 
 	id, err := execResult.LastInsertId()
 	if err != nil {
-		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last insert id: %s", err.Error())
+		return repository.User{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get last insert id: %s",
+			err.Error(),
+		)
+	}
+
+	branch, err := r.queries.GetBranch(ctx, user.BranchID)
+	if err != nil {
+		return repository.User{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get created user branch: %s",
+			err.Error(),
+		)
 	}
 
 	user.ID = uint32(id)
+	user.BranchName = &branch.Name
 
 	return *user, nil
 }
@@ -59,26 +80,69 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uint32) (repository
 			return repository.User{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
 
-		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %s", err.Error())
+		return repository.User{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get user: %s",
+			err.Error(),
+		)
 	}
 
-	return convertGeneratedUser(user), nil
+	return repository.User{
+		ID:              uint32(user.ID),
+		FullName:        user.FullName,
+		PhoneNumber:     user.PhoneNumber,
+		Email:           user.Email,
+		Password:        user.Password,
+		PasswordUpdated: user.PasswordUpdated,
+		RefreshToken:    user.RefreshToken,
+		Role:            string(user.Role),
+		BranchID:        user.BranchID,
+		UpdatedAt:       user.UpdatedAt,
+		UpdatedBy:       uint32(user.UpdatedBy),
+		CreatedBy:       uint32(user.CreatedBy),
+		BranchName:      &user.BranchName,
+	}, nil
 }
 
-func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (repository.User, error) {
+func (r *UserRepository) GetUserByEmail(
+	ctx context.Context,
+	email string,
+) (repository.User, error) {
 	user, err := r.queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return repository.User{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
 
-		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %s", err.Error())
+		return repository.User{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get user: %s",
+			err.Error(),
+		)
 	}
 
-	return convertGeneratedUser(user), nil
+	return repository.User{
+		ID:              uint32(user.ID),
+		FullName:        user.FullName,
+		PhoneNumber:     user.PhoneNumber,
+		Email:           user.Email,
+		Password:        user.Password,
+		PasswordUpdated: user.PasswordUpdated,
+		RefreshToken:    user.RefreshToken,
+		Role:            string(user.Role),
+		BranchID:        user.BranchID,
+		UpdatedAt:       user.UpdatedAt,
+		UpdatedBy:       uint32(user.UpdatedBy),
+		CreatedBy:       uint32(user.CreatedBy),
+		BranchName:      &user.BranchName,
+	}, nil
 }
 
-func (r *UserRepository) UpdateUserPassword(ctx context.Context, email string, password string) error {
+func (r *UserRepository) UpdateUserPassword(
+	ctx context.Context,
+	email string,
+	password string,
+) error {
 	_, err := r.queries.UpdateUserPassword(ctx, generated.UpdateUserPasswordParams{
 		Email:    email,
 		Password: password,
@@ -94,22 +158,26 @@ func (r *UserRepository) UpdateUserPassword(ctx context.Context, email string, p
 	return nil
 }
 
-func (r *UserRepository) ListUsers(ctx context.Context, category *repository.CategorySearch, pgData *pkg.PaginationMetadata) ([]repository.User, pkg.PaginationMetadata, error) {
+func (r *UserRepository) ListUsers(
+	ctx context.Context,
+	category *repository.CategorySearch,
+	pgData *pkg.PaginationMetadata,
+) ([]repository.User, pkg.PaginationMetadata, error) {
 	params := generated.ListUsersByCategoryParams{
-		Column1: "",
-		FullName: "",
-		Email: "",
-		Column4: "",
+		Column1:   "",
+		FullName:  "",
+		Email:     "",
+		Column4:   "",
 		FINDINSET: "",
-		Limit:    int32(pgData.PageSize),
-		Offset:   int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+		Limit:     int32(pgData.PageSize),
+		Offset:    int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
 	}
 
 	params2 := generated.CountUsersByCategoryParams{
-		Column1: "",
-		FullName: "",
-		Email: "",
-		Column4: "",
+		Column1:   "",
+		FullName:  "",
+		Email:     "",
+		Column4:   "",
 		FINDINSET: "",
 	}
 
@@ -126,7 +194,7 @@ func (r *UserRepository) ListUsers(ctx context.Context, category *repository.Cat
 
 	if category.Role != nil {
 		params.Column4 = "has_status"
-		params2.Column4 = "has_status"		
+		params2.Column4 = "has_status"
 		params.FINDINSET = *category.Role
 		params2.FINDINSET = *category.Role
 	}
@@ -137,29 +205,41 @@ func (r *UserRepository) ListUsers(ctx context.Context, category *repository.Cat
 			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no users found")
 		}
 
-		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get users: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get users: %s",
+			err.Error(),
+		)
 	}
 
 	totalUsers, err := r.queries.CountUsersByCategory(ctx, params2)
 	if err != nil {
-		return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get total loans: %s", err.Error())
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get total loans: %s",
+			err.Error(),
+		)
 	}
 
 	result := make([]repository.User, len(users))
 	for idx, user := range users {
 		result[idx] = repository.User{
-			ID: user.ID,
-			FullName: user.FullName,
+			ID:          user.ID,
+			FullName:    user.FullName,
 			PhoneNumber: user.PhoneNumber,
-			Email: user.Email,
-			Role: string(user.Role),
-			BranchName: &user.BranchName,
-			BranchID: user.BranchID,
-			CreatedAt: user.CreatedAt,
+			Email:       user.Email,
+			Role:        string(user.Role),
+			BranchName:  &user.BranchName,
+			BranchID:    user.BranchID,
+			CreatedAt:   user.CreatedAt,
 		}
 	}
 
-	return result, pkg.CreatePaginationMetadata(uint32(totalUsers), pgData.PageSize, pgData.CurrentPage), nil
+	return result, pkg.CreatePaginationMetadata(
+		uint32(totalUsers),
+		pgData.PageSize,
+		pgData.CurrentPage,
+	), nil
 }
 
 func (r *UserRepository) CheckUserExistance(ctx context.Context, email string) bool {
@@ -168,7 +248,10 @@ func (r *UserRepository) CheckUserExistance(ctx context.Context, email string) b
 	return count > 0
 }
 
-func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.UpdateUser) (repository.User, error) {
+func (r *UserRepository) UpdateUser(
+	ctx context.Context,
+	user *repository.UpdateUser,
+) (repository.User, error) {
 	params := generated.UpdateUserParams{
 		ID: user.ID,
 	}
@@ -217,22 +300,37 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *repository.Update
 
 	_, err := r.queries.UpdateUser(ctx, params)
 	if err != nil {
-		return repository.User{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update user: %s", err.Error())
+		return repository.User{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to update user: %s",
+			err.Error(),
+		)
 	}
 
 	return r.GetUserByID(ctx, user.ID)
 }
 
-func (r *UserRepository) GetReportUserAdminData(ctx context.Context, filters services.ReportFilters) ([]services.UserAdminsReportData, services.UserAdminsSummary, error) {
+func (r *UserRepository) GetReportUserAdminData(
+	ctx context.Context,
+	filters services.ReportFilters,
+) ([]services.UserAdminsReportData, services.UserAdminsSummary, error) {
 	users, err := r.GetUserAdminsReportData(ctx, GetUserAdminsReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate:   filters.EndDate,
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, services.UserAdminsSummary{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
+			return nil, services.UserAdminsSummary{}, pkg.Errorf(
+				pkg.NOT_FOUND_ERROR,
+				"no user found",
+			)
 		}
-		return nil, services.UserAdminsSummary{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
+
+		return nil, services.UserAdminsSummary{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get report user admin data: %s",
+			err.Error(),
+		)
 	}
 
 	rslt := make([]services.UserAdminsReportData, len(users))
@@ -277,7 +375,11 @@ func (r *UserRepository) GetReportUserAdminData(ctx context.Context, filters ser
 	return rslt, summary, nil
 }
 
-func (r *UserRepository) GetReportUserUsersData(ctx context.Context, id uint32, filters services.ReportFilters) (services.UserUsersReportData, error) {
+func (r *UserRepository) GetReportUserUsersData(
+	ctx context.Context,
+	id uint32,
+	filters services.ReportFilters,
+) (services.UserUsersReportData, error) {
 	user, err := r.GetUserUsersReportData(ctx, GetUserUsersReportDataParams{
 		StartDate: filters.StartDate,
 		EndDate:   filters.EndDate,
@@ -287,9 +389,13 @@ func (r *UserRepository) GetReportUserUsersData(ctx context.Context, id uint32, 
 		if err == sql.ErrNoRows {
 			return services.UserUsersReportData{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found")
 		}
-		return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get report user admin data: %s", err.Error())
-	}
 
+		return services.UserUsersReportData{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get report user admin data: %s",
+			err.Error(),
+		)
+	}
 
 	return convertUserReportData(user)
 }
@@ -316,12 +422,19 @@ func convertUserReportData(row GetUserUsersReportDataRow) (services.UserUsersRep
 	if row.AssignedLoans != nil {
 		loansByte, ok := row.AssignedLoans.([]byte)
 		if !ok {
-			return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert assigned loans to bytes")
+			return services.UserUsersReportData{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"failed to convert assigned loans to bytes",
+			)
 		}
 
 		err := json.Unmarshal(loansByte, &assignedLoans)
 		if err != nil {
-			return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling assigned loans: %v", err)
+			return services.UserUsersReportData{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"error unmarshalling assigned loans: %v",
+				err,
+			)
 		}
 	}
 
@@ -329,12 +442,19 @@ func convertUserReportData(row GetUserUsersReportDataRow) (services.UserUsersRep
 	if row.AssignedPaymentsList != nil {
 		paymentsByte, ok := row.AssignedPaymentsList.([]byte)
 		if !ok {
-			return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to convert assigned payments to bytes")
+			return services.UserUsersReportData{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"failed to convert assigned payments to bytes",
+			)
 		}
 
 		err := json.Unmarshal(paymentsByte, &assignedPayments)
 		if err != nil {
-			return services.UserUsersReportData{}, pkg.Errorf(pkg.INTERNAL_ERROR, "error unmarshalling assigned payments: %v", err)
+			return services.UserUsersReportData{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"error unmarshalling assigned payments: %v",
+				err,
+			)
 		}
 	}
 
