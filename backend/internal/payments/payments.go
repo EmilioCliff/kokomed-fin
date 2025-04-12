@@ -71,7 +71,7 @@ func (p *PaymentService) ProcessCallback(
 			return 0, err
 		}
 
-		log.Println("Active Loan: ", loanID)
+		log.Println("Active Loan...: ", loanID)
 
 		err = p.db.ExecTx(ctx, func(q *generated.Queries) error {
 			loan := &repository.UpdateLoan{
