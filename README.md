@@ -121,7 +121,7 @@ Once the application is running, you can:
 -   [ ] Write tests for Golang backend
 -   [ ] Use Testcontainers for integrated testing
 -   [ ] Implement Zerolog for structured logging
--   [ ] Add observability using OpenTelemetry
+-   [x] Add observability using OpenTelemetry
 
 ## License
 
