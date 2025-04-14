@@ -52,7 +52,7 @@ export default function LoanForm({ onFormOpen }: LoanFormProps) {
 			disburse: false,
 			disburseOn: '',
 			installments: 4,
-			installmentsPeriod: 30,
+			installmentsPeriod: 28,
 			processingFee: 400,
 			processingFeePaid: false,
 		},
