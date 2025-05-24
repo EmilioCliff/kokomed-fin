@@ -59,6 +59,7 @@ func (p *PaymentService) ProcessCallback(
 					return 0, err
 				}
 
+				// create non posted
 				_, err := p.mySQL.NonPosted.CreateNonPosted(ctx, params)
 				if err != nil {
 
@@ -213,31 +214,32 @@ func helperUpdateLoan(
 	}
 
 	// if client has any overpayment add it to help pay
-	clientOverpayment, err := q.GetClientOverpayment(ctx, loanData.ClientID)
-	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client overpayment: %s", err.Error())
-	}
+	// clientOverpayment, err := q.GetClientOverpayment(ctx, loanData.ClientID)
+	// if err != nil {
+	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get client overpayment: %s", err.Error())
+	// }
 
 	// remove the overpayment from client account
-	if clientOverpayment > 0 {
-		_, err := q.NullifyClientOverpayment(ctx, loanData.ClientID)
-		if err != nil {
-			return pkg.Errorf(
-				pkg.INTERNAL_ERROR,
-				"failed to get nullify client overpayment: %s",
-				err.Error(),
-			)
-		}
-	}
+	// if clientOverpayment > 0 {
+	// 	_, err := q.NullifyClientOverpayment(ctx, loanData.ClientID)
+	// 	if err != nil {
+	// 		return pkg.Errorf(
+	// 			pkg.INTERNAL_ERROR,
+	// 			"failed to get nullify client overpayment: %s",
+	// 			err.Error(),
+	// 		)
+	// 	}
+	// }
 
 	originalAmount := loan.PaidAmount
-	loan.PaidAmount += clientOverpayment
+	// loan.PaidAmount += clientOverpayment
 	log.Println(
 		"Adjusted loan paid amount after overpayment",
 		"originalAmount",
 		originalAmount,
 		"overpayment",
-		clientOverpayment,
+		"0.00",
+		// clientOverpayment,
 		"newAmount",
 		loan.PaidAmount,
 	)
