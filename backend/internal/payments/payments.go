@@ -212,7 +212,6 @@ func helperUpdateLoan(
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan payment data: %s", err.Error())
 	}
-
 	// if client has any overpayment add it to help pay
 	// clientOverpayment, err := q.GetClientOverpayment(ctx, loanData.ClientID)
 	// if err != nil {
@@ -248,51 +247,53 @@ func helperUpdateLoan(
 	totalPaid := 0.0
 
 	// pay the processing fee first
-	if !loanData.FeePaid {
-		log.Println("Paying Processing Fee")
-		if loan.PaidAmount >= loanData.ProcessingFee {
-			_, err := q.UpdateLoanProcessingFeeStatus(
-				ctx,
-				generated.UpdateLoanProcessingFeeStatusParams{
-					ID:      loan.ID,
-					FeePaid: true,
-				},
-			)
-			if err != nil {
-				return pkg.Errorf(
-					pkg.INTERNAL_ERROR,
-					"failed to update loan processing fee status: %s",
-					err.Error(),
-				)
-			}
+	// if !loanData.FeePaid {
+	// 	log.Println("Paying Processing Fee")
+	// 	if loan.PaidAmount >= loanData.ProcessingFee {
+	// 		_, err := q.UpdateLoanProcessingFeeStatus(
+	// 			ctx,
+	// 			generated.UpdateLoanProcessingFeeStatusParams{
+	// 				ID:      loan.ID,
+	// 				FeePaid: true,
+	// 			},
+	// 		)
+	// 		if err != nil {
+	// 			return pkg.Errorf(
+	// 				pkg.INTERNAL_ERROR,
+	// 				"failed to update loan processing fee status: %s",
+	// 				err.Error(),
+	// 			)
+	// 		}
 
-			beforeFee := loan.PaidAmount
-			loan.PaidAmount -= loanData.ProcessingFee
-			log.Println(
-				"Processing Fee Paying: ",
-				loan.PaidAmount,
-				"beforeFee",
-				beforeFee,
-				"feeAmount",
-				loanData.ProcessingFee,
-				"afterFee",
-				loan.PaidAmount,
-			)
-		} else {
-			// if the processing fee is not paid fully add credit to client(overpayment).
-			log.Println("Insufficient funds for processing fee, adding to overpayment", "remainingAmount", loan.PaidAmount)
-			_, err = q.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
-				PhoneNumber: loanData.PhoneNumber,
-				Overpayment: loan.PaidAmount,
-				ClientID:    loanData.ClientID,
-			})
-			if err != nil {
-				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan overpayment: %s", err.Error())
-			}
+	// 		beforeFee := loan.PaidAmount
+	// 		loan.PaidAmount -= loanData.ProcessingFee
+	// 		log.Println(
+	// 			"Processing Fee Paying: ",
+	// 			loan.PaidAmount,
+	// 			"beforeFee",
+	// 			beforeFee,
+	// 			"feeAmount",
+	// 			loanData.ProcessingFee,
+	// 			"afterFee",
+	// 			loan.PaidAmount,
+	// 		)
+	// 	} else {
+	// 		// if the processing fee is not paid fully add credit to client(overpayment).
+	// 		log.Println("Insufficient funds for processing fee, adding to overpayment",
+	// "remainingAmount", loan.PaidAmount)
+	// 		_, err = q.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
+	// 			PhoneNumber: loanData.PhoneNumber,
+	// 			Overpayment: loan.PaidAmount,
+	// 			ClientID:    loanData.ClientID,
+	// 		})
+	// 		if err != nil {
+	// 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan overpayment: %s",
+	// err.Error())
+	// 		}
 
-			return nil
-		}
-	}
+	// 		return nil
+	// 	}
+	// }
 
 	installments, err := q.ListUnpaidInstallmentsByLoan(ctx, loan.ID)
 	if err != nil {
