@@ -203,6 +203,15 @@ type Client struct {
 	CreatedAt     time.Time      `json:"created_at"`
 }
 
+type ClientOverpaymentTransaction struct {
+	ID        uint32        `json:"id"`
+	ClientID  uint32        `json:"client_id"`
+	PaymentID sql.NullInt32 `json:"payment_id"`
+	Amount    float64       `json:"amount"`
+	CreatedBy string        `json:"created_by"`
+	CreatedAt time.Time     `json:"created_at"`
+}
+
 type Installment struct {
 	ID                uint32       `json:"id"`
 	LoanID            uint32       `json:"loan_id"`
@@ -246,6 +255,17 @@ type NonPosted struct {
 	PaidDate          time.Time                  `json:"paid_date"`
 	TransactionSource NonPostedTransactionSource `json:"transaction_source"`
 	AssignedBy        string                     `json:"assigned_by"`
+	DeletedAt         sql.NullTime               `json:"deleted_at"`
+}
+
+type PaymentAllocation struct {
+	ID            uint32        `json:"id"`
+	NonPostedID   uint32        `json:"non_posted_id"`
+	LoanID        sql.NullInt32 `json:"loan_id"`
+	InstallmentID sql.NullInt32 `json:"installment_id"`
+	Amount        float64       `json:"amount"`
+	DeletedAt     sql.NullTime  `json:"deleted_at"`
+	CreatedAt     time.Time     `json:"created_at"`
 }
 
 type Product struct {

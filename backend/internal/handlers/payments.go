@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
@@ -130,6 +131,12 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 	payloadData, ok := payload.(*pkg.Payload)
 	if !ok {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
+
+	if strings.ToLower(payloadData.Role) != "admin" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "not authorized"})
 
 		return
 	}

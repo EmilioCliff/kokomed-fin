@@ -1,90 +1,33 @@
-import React from "react";
+SELECT * FROM products 
+WHERE levenshtein(
+	unaccent(name),
+	unaccent('Cafe al Lait)
+) < 3
+ORDER BY levenshtein(
+	unaccent(name),
+	unaccent('Cafe al Lait)
+) ASC;
 
-export const DownloadLink = ({ url, fileName }) => {
-  const handleDownload = () => {
-    fetch(url)
-      .then((response) => response.blob())
-      .then((blob) => {
-        const url = window.URL.createObjectURL(new Blob([blob]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = fileName || "downloaded-file";
-        document.body.appendChild(link);
 
-        link.click();
+* Trigram Comparison *
+SELECT * FROM products 
+WHERE name % 'Cafe Laite'
+ORDER BY similarity(name, 'Cafe Laite') DESC;
 
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      })
-      .catch((error) => {
-        console.error("Error fetching the file:", error);
-      });
-  };
+* Go To Approach * 
+-- RUn as a migration
+CREATE OR REPLACE FUNCTION indexed_unaccent(text)
+RETURNS text AS $$
+SELECT unaccent($1);
+$$ LANGUAGE SQL IMMUTABLE;
 
-  return (
-    <button onClick={handleDownload}>
-      Download Sample JSON
-    </button>
-  );
-};
+CREATE INDEX idx_products_name_trgm
+ON products USING gin (indexed_unacent(name) gin_trgm_ops);
 
-type GetLoanEventsRow struct {
-	LoanID        uint32       `json:"loan_id"`
-	DisbursedDate sql.NullTime `json:"disbursed_date"`
-	DueDate       sql.NullTime       `json:"due_date"`
-	ClientName    string       `json:"client_name"`
-	LoanAmount    float64      `json:"loan_amount"`
-	PaymentDue    sql.NullFloat64       `json:"payment_due"`
-}
-
-import { useState } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-} from '@/components/ui/sheet';
-import { Input } from '@/components/ui/input';
-
-export default function LoanTimeline() {
-	const [sheetOpen, setSheetOpen] = useState(false);
-	const [dateSelected, setdateSelected] = useState();
-
-	const handleDateClick = (arg: any) => {
-		console.log(arg);
-		alert(arg.dateStr);
-	};
-
-	return (
-		<div>
-			<FullCalendar
-				plugins={[dayGridPlugin, interactionPlugin]}
-				initialView="dayGridMonth"
-				dateClick={handleDateClick}
-				selectable={true}
-				// eventContent={renderEventContent}
-				events={[
-					{ title: 'event 1 here i am', date: '2025-02-01' },
-					{ title: 'event 2', date: '2025-02-08' },
-				]}
-			/>
-			<Sheet
-				open={sheetOpen}
-				onOpenChange={() => setSheetOpen(!sheetOpen)}
-			>
-				<SheetContent className="overflow-auto">
-					<SheetHeader>
-						<SheetTitle>Loan Details</SheetTitle>
-						<SheetDescription>
-							Description goes here
-						</SheetDescription>
-					</SheetHeader>
-				</SheetContent>
-			</Sheet>
-		</div>
-	);
-}
+-- Query
+SELECT * 
+FROM products
+WHERE 
+	name % indexed_unaccent('Cafe Laite')
+ORDER BY
+	similarity(name, indexed_unaccent('Cafe Laite')) DESC;

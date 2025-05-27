@@ -252,6 +252,21 @@ func (mr *MockQuerierMockRecorder) CreateClient(ctx, arg any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateClient", reflect.TypeOf((*MockQuerier)(nil).CreateClient), ctx, arg)
 }
 
+// CreateClientOverpaymentTransaction mocks base method.
+func (m *MockQuerier) CreateClientOverpaymentTransaction(ctx context.Context, arg generated.CreateClientOverpaymentTransactionParams) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateClientOverpaymentTransaction", ctx, arg)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateClientOverpaymentTransaction indicates an expected call of CreateClientOverpaymentTransaction.
+func (mr *MockQuerierMockRecorder) CreateClientOverpaymentTransaction(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateClientOverpaymentTransaction", reflect.TypeOf((*MockQuerier)(nil).CreateClientOverpaymentTransaction), ctx, arg)
+}
+
 // CreateInstallment mocks base method.
 func (m *MockQuerier) CreateInstallment(ctx context.Context, arg generated.CreateInstallmentParams) (sql.Result, error) {
 	m.ctrl.T.Helper()
@@ -295,6 +310,21 @@ func (m *MockQuerier) CreateNonPosted(ctx context.Context, arg generated.CreateN
 func (mr *MockQuerierMockRecorder) CreateNonPosted(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNonPosted", reflect.TypeOf((*MockQuerier)(nil).CreateNonPosted), ctx, arg)
+}
+
+// CreatePaymentAllocation mocks base method.
+func (m *MockQuerier) CreatePaymentAllocation(ctx context.Context, arg generated.CreatePaymentAllocationParams) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePaymentAllocation", ctx, arg)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreatePaymentAllocation indicates an expected call of CreatePaymentAllocation.
+func (mr *MockQuerierMockRecorder) CreatePaymentAllocation(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePaymentAllocation", reflect.TypeOf((*MockQuerier)(nil).CreatePaymentAllocation), ctx, arg)
 }
 
 // CreateProduct mocks base method.
@@ -427,6 +457,36 @@ func (m *MockQuerier) DeleteNonPosted(ctx context.Context, id uint32) error {
 func (mr *MockQuerierMockRecorder) DeleteNonPosted(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNonPosted", reflect.TypeOf((*MockQuerier)(nil).DeleteNonPosted), ctx, id)
+}
+
+// DeletePaymentAllocation mocks base method.
+func (m *MockQuerier) DeletePaymentAllocation(ctx context.Context, id uint32) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePaymentAllocation", ctx, id)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeletePaymentAllocation indicates an expected call of DeletePaymentAllocation.
+func (mr *MockQuerierMockRecorder) DeletePaymentAllocation(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePaymentAllocation", reflect.TypeOf((*MockQuerier)(nil).DeletePaymentAllocation), ctx, id)
+}
+
+// DeletePaymentAllocationsByNonPostedId mocks base method.
+func (m *MockQuerier) DeletePaymentAllocationsByNonPostedId(ctx context.Context, nonPostedID uint32) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePaymentAllocationsByNonPostedId", ctx, nonPostedID)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeletePaymentAllocationsByNonPostedId indicates an expected call of DeletePaymentAllocationsByNonPostedId.
+func (mr *MockQuerierMockRecorder) DeletePaymentAllocationsByNonPostedId(ctx, nonPostedID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePaymentAllocationsByNonPostedId", reflect.TypeOf((*MockQuerier)(nil).DeletePaymentAllocationsByNonPostedId), ctx, nonPostedID)
 }
 
 // DeleteProduct mocks base method.
@@ -623,6 +683,51 @@ func (mr *MockQuerierMockRecorder) GetClientOverpayment(ctx, id any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientOverpayment", reflect.TypeOf((*MockQuerier)(nil).GetClientOverpayment), ctx, id)
 }
 
+// GetClientOverpaymentTransaction mocks base method.
+func (m *MockQuerier) GetClientOverpaymentTransaction(ctx context.Context, id uint32) (generated.ClientOverpaymentTransaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetClientOverpaymentTransaction", ctx, id)
+	ret0, _ := ret[0].(generated.ClientOverpaymentTransaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetClientOverpaymentTransaction indicates an expected call of GetClientOverpaymentTransaction.
+func (mr *MockQuerierMockRecorder) GetClientOverpaymentTransaction(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientOverpaymentTransaction", reflect.TypeOf((*MockQuerier)(nil).GetClientOverpaymentTransaction), ctx, id)
+}
+
+// GetClientOverpaymentTransactionByPaymentId mocks base method.
+func (m *MockQuerier) GetClientOverpaymentTransactionByPaymentId(ctx context.Context, paymentID sql.NullInt32) (generated.ClientOverpaymentTransaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetClientOverpaymentTransactionByPaymentId", ctx, paymentID)
+	ret0, _ := ret[0].(generated.ClientOverpaymentTransaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetClientOverpaymentTransactionByPaymentId indicates an expected call of GetClientOverpaymentTransactionByPaymentId.
+func (mr *MockQuerierMockRecorder) GetClientOverpaymentTransactionByPaymentId(ctx, paymentID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientOverpaymentTransactionByPaymentId", reflect.TypeOf((*MockQuerier)(nil).GetClientOverpaymentTransactionByPaymentId), ctx, paymentID)
+}
+
+// GetClientOverpaymentTransactions mocks base method.
+func (m *MockQuerier) GetClientOverpaymentTransactions(ctx context.Context, clientID uint32) ([]generated.ClientOverpaymentTransaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetClientOverpaymentTransactions", ctx, clientID)
+	ret0, _ := ret[0].([]generated.ClientOverpaymentTransaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetClientOverpaymentTransactions indicates an expected call of GetClientOverpaymentTransactions.
+func (mr *MockQuerierMockRecorder) GetClientOverpaymentTransactions(ctx, clientID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientOverpaymentTransactions", reflect.TypeOf((*MockQuerier)(nil).GetClientOverpaymentTransactions), ctx, clientID)
+}
+
 // GetClientsNonPosted mocks base method.
 func (m *MockQuerier) GetClientsNonPosted(ctx context.Context, arg generated.GetClientsNonPostedParams) ([]generated.GetClientsNonPostedRow, error) {
 	m.ctrl.T.Helper()
@@ -668,6 +773,21 @@ func (mr *MockQuerierMockRecorder) GetLoan(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoan", reflect.TypeOf((*MockQuerier)(nil).GetLoan), ctx, id)
 }
 
+// GetLoanClientID mocks base method.
+func (m *MockQuerier) GetLoanClientID(ctx context.Context, id uint32) (uint32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLoanClientID", ctx, id)
+	ret0, _ := ret[0].(uint32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLoanClientID indicates an expected call of GetLoanClientID.
+func (mr *MockQuerierMockRecorder) GetLoanClientID(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoanClientID", reflect.TypeOf((*MockQuerier)(nil).GetLoanClientID), ctx, id)
+}
+
 // GetLoanData mocks base method.
 func (m *MockQuerier) GetLoanData(ctx context.Context) ([]uint32, error) {
 	m.ctrl.T.Helper()
@@ -711,21 +831,6 @@ func (m *MockQuerier) GetLoanFullData(ctx context.Context, id uint32) (generated
 func (mr *MockQuerierMockRecorder) GetLoanFullData(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoanFullData", reflect.TypeOf((*MockQuerier)(nil).GetLoanFullData), ctx, id)
-}
-
-// GetLoanPaymentData mocks base method.
-func (m *MockQuerier) GetLoanPaymentData(ctx context.Context, id uint32) (generated.GetLoanPaymentDataRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLoanPaymentData", ctx, id)
-	ret0, _ := ret[0].(generated.GetLoanPaymentDataRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetLoanPaymentData indicates an expected call of GetLoanPaymentData.
-func (mr *MockQuerierMockRecorder) GetLoanPaymentData(ctx, id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoanPaymentData", reflect.TypeOf((*MockQuerier)(nil).GetLoanPaymentData), ctx, id)
 }
 
 // GetLoanReportDataById mocks base method.
@@ -1238,6 +1343,36 @@ func (mr *MockQuerierMockRecorder) ListNonPostedByTransactionSource(ctx, arg any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNonPostedByTransactionSource", reflect.TypeOf((*MockQuerier)(nil).ListNonPostedByTransactionSource), ctx, arg)
 }
 
+// ListPaymentAllocationsByLoanId mocks base method.
+func (m *MockQuerier) ListPaymentAllocationsByLoanId(ctx context.Context, loanID sql.NullInt32) ([]generated.PaymentAllocation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListPaymentAllocationsByLoanId", ctx, loanID)
+	ret0, _ := ret[0].([]generated.PaymentAllocation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListPaymentAllocationsByLoanId indicates an expected call of ListPaymentAllocationsByLoanId.
+func (mr *MockQuerierMockRecorder) ListPaymentAllocationsByLoanId(ctx, loanID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaymentAllocationsByLoanId", reflect.TypeOf((*MockQuerier)(nil).ListPaymentAllocationsByLoanId), ctx, loanID)
+}
+
+// ListPaymentAllocationsByNonPostedId mocks base method.
+func (m *MockQuerier) ListPaymentAllocationsByNonPostedId(ctx context.Context, nonPostedID uint32) ([]generated.PaymentAllocation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListPaymentAllocationsByNonPostedId", ctx, nonPostedID)
+	ret0, _ := ret[0].([]generated.PaymentAllocation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListPaymentAllocationsByNonPostedId indicates an expected call of ListPaymentAllocationsByNonPostedId.
+func (mr *MockQuerierMockRecorder) ListPaymentAllocationsByNonPostedId(ctx, nonPostedID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaymentAllocationsByNonPostedId", reflect.TypeOf((*MockQuerier)(nil).ListPaymentAllocationsByNonPostedId), ctx, nonPostedID)
+}
+
 // ListProducts mocks base method.
 func (m *MockQuerier) ListProducts(ctx context.Context, arg generated.ListProductsParams) ([]generated.Product, error) {
 	m.ctrl.T.Helper()
@@ -1431,6 +1566,21 @@ func (m *MockQuerier) UpdateClientOverpayment(ctx context.Context, arg generated
 func (mr *MockQuerierMockRecorder) UpdateClientOverpayment(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClientOverpayment", reflect.TypeOf((*MockQuerier)(nil).UpdateClientOverpayment), ctx, arg)
+}
+
+// UpdateClientOverpaymentGeneral mocks base method.
+func (m *MockQuerier) UpdateClientOverpaymentGeneral(ctx context.Context, arg generated.UpdateClientOverpaymentGeneralParams) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateClientOverpaymentGeneral", ctx, arg)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateClientOverpaymentGeneral indicates an expected call of UpdateClientOverpaymentGeneral.
+func (mr *MockQuerierMockRecorder) UpdateClientOverpaymentGeneral(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClientOverpaymentGeneral", reflect.TypeOf((*MockQuerier)(nil).UpdateClientOverpaymentGeneral), ctx, arg)
 }
 
 // UpdateInstallment mocks base method.

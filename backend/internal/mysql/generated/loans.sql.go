@@ -273,6 +273,21 @@ func (q *Queries) GetLoan(ctx context.Context, id uint32) (Loan, error) {
 	return i, err
 }
 
+const getLoanClientID = `-- name: GetLoanClientID :one
+SELECT 
+    client_id
+FROM loans 
+WHERE id = ?
+LIMIT 1
+`
+
+func (q *Queries) GetLoanClientID(ctx context.Context, id uint32) (uint32, error) {
+	row := q.db.QueryRowContext(ctx, getLoanClientID, id)
+	var client_id uint32
+	err := row.Scan(&client_id)
+	return client_id, err
+}
+
 const getLoanData = `-- name: GetLoanData :many
 SELECT id FROM loans
 `
@@ -512,47 +527,6 @@ func (q *Queries) GetLoanFullData(ctx context.Context, id uint32) (GetLoanFullDa
 		&i.CreatedByName,
 		&i.CreatedByEmail,
 		&i.CreatedByPhone,
-	)
-	return i, err
-}
-
-const getLoanPaymentData = `-- name: GetLoanPaymentData :one
-SELECT 
-    l.id AS loan_id,
-    l.client_id,
-    l.processing_fee,
-    l.fee_paid,
-    l.paid_amount,
-    c.phone_number,
-    p.repay_amount
-FROM loans l
-JOIN products p ON l.product_id = p.id
-JOIN clients c ON l.client_id = c.id
-WHERE l.id = ?
-LIMIT 1
-`
-
-type GetLoanPaymentDataRow struct {
-	LoanID        uint32  `json:"loan_id"`
-	ClientID      uint32  `json:"client_id"`
-	ProcessingFee float64 `json:"processing_fee"`
-	FeePaid       bool    `json:"fee_paid"`
-	PaidAmount    float64 `json:"paid_amount"`
-	PhoneNumber   string  `json:"phone_number"`
-	RepayAmount   float64 `json:"repay_amount"`
-}
-
-func (q *Queries) GetLoanPaymentData(ctx context.Context, id uint32) (GetLoanPaymentDataRow, error) {
-	row := q.db.QueryRowContext(ctx, getLoanPaymentData, id)
-	var i GetLoanPaymentDataRow
-	err := row.Scan(
-		&i.LoanID,
-		&i.ClientID,
-		&i.ProcessingFee,
-		&i.FeePaid,
-		&i.PaidAmount,
-		&i.PhoneNumber,
-		&i.RepayAmount,
 	)
 	return i, err
 }

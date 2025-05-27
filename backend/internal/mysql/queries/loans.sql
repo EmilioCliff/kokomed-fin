@@ -254,19 +254,11 @@ SELECT EXISTS (
     WHERE client_id = ? AND status = 'ACTIVE'
 ) AS has_active_loan LIMIT 1;
 
--- name: GetLoanPaymentData :one
+-- name: GetLoanClientID :one
 SELECT 
-    l.id AS loan_id,
-    l.client_id,
-    l.processing_fee,
-    l.fee_paid,
-    l.paid_amount,
-    c.phone_number,
-    p.repay_amount
-FROM loans l
-JOIN products p ON l.product_id = p.id
-JOIN clients c ON l.client_id = c.id
-WHERE l.id = ?
+    client_id
+FROM loans 
+WHERE id = ?
 LIMIT 1;
 
 -- name: GetLoanEvents :many
