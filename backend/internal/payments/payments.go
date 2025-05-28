@@ -3,7 +3,6 @@ package payments
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
@@ -53,7 +52,7 @@ func (p *PaymentService) ProcessCallback(
 		loanID, err = p.mySQL.Loans.GetClientActiceLoan(ctx, *params.AssignedTo)
 		if err != nil {
 			if pkg.ErrorCode(err) == pkg.NOT_FOUND_ERROR {
-				err = p.db.ExecTx(ctx, func(q *generated.Queries) error {
+				err = p.db.ExecTx(ctx, func(q generated.Querier) error {
 					nonPostedID, err := createNonPosted(ctx, q, params)
 					if err != nil {
 						return err
@@ -84,9 +83,7 @@ func (p *PaymentService) ProcessCallback(
 			return 0, err
 		}
 
-		log.Println("Active Loan...: ", loanID)
-
-		if err = p.db.ExecTx(ctx, func(q *generated.Queries) error {
+		if err = p.db.ExecTx(ctx, func(q generated.Querier) error {
 			loan := &repository.UpdateLoan{
 				ID:         loanID,
 				PaidAmount: callbackData.Amount,
@@ -97,12 +94,7 @@ func (p *PaymentService) ProcessCallback(
 				return err
 			}
 
-			// update loan
-			err = helperUpdateLoan(ctx, q, loan, nonPostedID, *params.AssignedTo)
-
-			// create allocations
-
-			return err
+			return helperUpdateLoan(ctx, q, loan, nonPostedID, *params.AssignedTo)
 		}); err != nil {
 			return 0, err
 		}
@@ -125,7 +117,7 @@ func (p *PaymentService) TriggerManualPayment(
 	if err != nil {
 		return 0, err
 	}
-	err = p.db.ExecTx(ctx, func(q *generated.Queries) error {
+	err = p.db.ExecTx(ctx, func(q generated.Querier) error {
 		_, err := q.AssignNonPosted(ctx, generated.AssignNonPostedParams{
 			ID: paymentData.NonPostedID,
 			AssignTo: sql.NullInt32{
@@ -166,18 +158,26 @@ func (p *PaymentService) TriggerManualPayment(
 					return err
 				}
 
+				if err := createAllocation(ctx, q, repository.PaymentAllocation{
+					NonPostedID:   paymentData.NonPostedID,
+					Amount:        nonPosted.Amount,
+					LoanID:        nil,
+					InstallmentID: nil,
+				}); err != nil {
+					return err
+				}
+
 				return nil
 			}
 
 			return err
 		}
 
-		err = helperUpdateLoan(ctx, q, &repository.UpdateLoan{
+		if err = helperUpdateLoan(ctx, q, &repository.UpdateLoan{
 			ID:         loanID,
 			PaidAmount: nonPosted.Amount,
 			UpdatedBy:  &paymentData.AdminUserID,
-		}, paymentData.NonPostedID, paymentData.ClientID)
-		if err != nil {
+		}, paymentData.NonPostedID, paymentData.ClientID); err != nil {
 			return err
 		}
 
@@ -189,7 +189,7 @@ func (p *PaymentService) TriggerManualPayment(
 
 func helperUpdateLoan(
 	ctx context.Context,
-	q *generated.Queries,
+	q generated.Querier,
 	loan *repository.UpdateLoan,
 	paymentID uint32,
 	clientID uint32,
@@ -272,14 +272,12 @@ func helperUpdateLoan(
 		}
 	}
 
-	// create allocations
 	for _, allocation := range allocations {
 		if err := createAllocation(ctx, q, allocation); err != nil {
 			return err
 		}
 	}
 
-	// update the loan
 	params := generated.UpdateLoanParams{
 		ID:         loan.ID,
 		PaidAmount: totalPaid,
@@ -305,6 +303,15 @@ func helperUpdateLoan(
 		}); err != nil {
 			return err
 		}
+
+		if err = createAllocation(ctx, q, repository.PaymentAllocation{
+			NonPostedID:   paymentID,
+			Amount:        loan.PaidAmount,
+			LoanID:        nil,
+			InstallmentID: nil,
+		}); err != nil {
+			return err
+		}
 	}
 
 	installmentsLeft, err := q.ListUnpaidInstallmentsByLoan(ctx, loan.ID)
@@ -327,7 +334,7 @@ func helperUpdateLoan(
 
 func updateOverpayment(
 	ctx context.Context,
-	q *generated.Queries,
+	q generated.Querier,
 	overpaymentParams repository.Overpayment,
 ) error {
 	_, err := q.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
@@ -349,6 +356,7 @@ func updateOverpayment(
 			Valid: true,
 			Int32: int32(*overpaymentParams.PaymentID),
 		},
+		CreatedBy: "SYSTEM",
 	}
 
 	_, err = q.CreateClientOverpaymentTransaction(ctx, params)
@@ -365,7 +373,7 @@ func updateOverpayment(
 
 func createNonPosted(
 	ctx context.Context,
-	q *generated.Queries,
+	q generated.Querier,
 	params *repository.NonPosted,
 ) (uint32, error) {
 	nonPostedParams := generated.CreateNonPostedParams{
@@ -409,7 +417,7 @@ func createNonPosted(
 
 func createAllocation(
 	ctx context.Context,
-	q *generated.Queries,
+	q generated.Querier,
 	allocationParams repository.PaymentAllocation,
 ) error {
 	allocation := generated.CreatePaymentAllocationParams{

@@ -1,19 +1,51 @@
-package payments_test
+package payments
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/mock"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
-	"github.com/EmilioCliff/kokomed-fin/backend/internal/payments"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/mockdb"
+	"github.com/EmilioCliff/kokomed-fin/backend/internal/repository"
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/services"
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
+	"go.uber.org/mock/gomock"
 )
 
+type TestGRPCServer struct {
+	*PaymentService
+	LoansRepository mock.MockLoanRepository
+}
+
+func mockCreateLoan(ctx context.Context, loan *repository.Loan) (repository.LoanFullData, error) {
+	return repository.LoanFullData{}, nil
+}
+
 func TestProcessCallback(t *testing.T) {
-	db := mysql.NewMySQLRepo(&pkg.Config{})
-	store := mysql.NewStore(&pkg.Config{})
-	payments := payments.NewPaymentService(db, store)
+	server := &TestGRPCServer{}
+
+	server.mySQL.Loans = &server.LoansRepository
+
+	server.LoansRepository.MockCreateLoan = mockCreateLoan
+
+	store := mysql.NewStore(pkg.Config{})
+	db := mysql.NewMySQLRepo(store)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	// store.
+
+	mockQueries := mockdb.NewMockQuerier(ctrl)
+
+	store.NewQuerierFn = func(tx *sql.Tx) generated.Querier {
+		return mockQueries
+	}
+
+	payments := NewPaymentService(db, store)
 
 	callbackData := &services.MpesaCallbackData{
 		TransactionSource: "MPESA",

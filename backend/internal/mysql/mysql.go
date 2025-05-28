@@ -17,13 +17,17 @@ import (
 )
 
 type Store struct {
-	db     *sql.DB
-	config pkg.Config
+	db           *sql.DB
+	config       pkg.Config
+	NewQuerierFn func(tx *sql.Tx) generated.Querier
 }
 
 func NewStore(config pkg.Config) *Store {
 	return &Store{
 		config: config,
+		NewQuerierFn: func(tx *sql.Tx) generated.Querier {
+			return generated.New(tx)
+		},
 	}
 }
 
@@ -34,7 +38,7 @@ type MySQLRepo struct {
 	Users     repository.UserRepository
 	Clients   repository.ClientRepository
 	NonPosted repository.NonPostedRepository
-	Helpers repository.HelperRepository
+	Helpers   repository.HelperRepository
 }
 
 func NewMySQLRepo(db *Store) *MySQLRepo {
@@ -45,7 +49,7 @@ func NewMySQLRepo(db *Store) *MySQLRepo {
 		Users:     NewUserRepository(db),
 		Clients:   NewClientRepository(db),
 		NonPosted: NewNonPostedRepository(db),
-		Helpers: NewHelperRepository(db),
+		Helpers:   NewHelperRepository(db),
 	}
 }
 
@@ -92,7 +96,11 @@ func (s *Store) runMigration(driver database.Driver) error {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "migrations directory is empty")
 	}
 
-	migration, err := migrate.NewWithDatabaseInstance(s.config.MIGRATION_PATH, s.config.DB_DSN, driver)
+	migration, err := migrate.NewWithDatabaseInstance(
+		s.config.MIGRATION_PATH,
+		s.config.DB_DSN,
+		driver,
+	)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "Failed to load migration: %s", err)
 	}
@@ -105,13 +113,13 @@ func (s *Store) runMigration(driver database.Driver) error {
 }
 
 // executes transaction.
-func (s *Store) ExecTx(ctx context.Context, fn func(q *generated.Queries) error) error {
+func (s *Store) ExecTx(ctx context.Context, fn func(q generated.Querier) error) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "couldn't being transaction: %v", err)
 	}
 
-	q := generated.New(tx)
+	q := s.NewQuerierFn(tx)
 
 	err = fn(q)
 	if err != nil {

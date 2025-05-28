@@ -33,7 +33,7 @@ func (r *LoanRepository) CreateLoan(
 		}
 	}
 
-	err := r.db.ExecTx(ctx, func(q *generated.Queries) error {
+	err := r.db.ExecTx(ctx, func(q generated.Querier) error {
 		// create the loan
 		params := generated.CreateLoanParams{
 			ProductID:          loan.ProductID,
@@ -132,7 +132,7 @@ func (r *LoanRepository) DisburseLoan(
 		}
 	}
 
-	err = r.db.ExecTx(ctx, func(q *generated.Queries) error {
+	err = r.db.ExecTx(ctx, func(q generated.Querier) error {
 		params := generated.DisburseLoanParams{
 			ID: disburseLoan.ID,
 			DisbursedBy: sql.NullInt32{
@@ -197,7 +197,7 @@ func (r *LoanRepository) DisburseLoan(
 
 func helperCreateInstallation(
 	ctx context.Context,
-	q *generated.Queries,
+	q generated.Querier,
 	disbursedDate time.Time,
 	loanID, productID, totalInstallment, intallmentPeriod uint32,
 ) error {

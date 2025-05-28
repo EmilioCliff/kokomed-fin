@@ -16,10 +16,10 @@ VALUES (?, ?, ?, ?)
 `
 
 type CreateClientOverpaymentTransactionParams struct {
-	ClientID  uint32         `json:"client_id"`
-	PaymentID sql.NullInt32  `json:"payment_id"`
-	Amount    float64        `json:"amount"`
-	CreatedBy sql.NullString `json:"created_by"`
+	ClientID  uint32        `json:"client_id"`
+	PaymentID sql.NullInt32 `json:"payment_id"`
+	Amount    float64       `json:"amount"`
+	CreatedBy string        `json:"created_by"`
 }
 
 func (q *Queries) CreateClientOverpaymentTransaction(ctx context.Context, arg CreateClientOverpaymentTransactionParams) (sql.Result, error) {

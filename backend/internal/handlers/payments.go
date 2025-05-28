@@ -42,6 +42,7 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 		PayingName:    req["FirstName"].(string),
 		Amount:        amountFlt,
 		AssignedBy:    "APP",
+		AssignedTo:    nil,
 	}
 
 	if app, ok := req["App"].(string); ok && app != "" {
@@ -69,15 +70,12 @@ func (s *Server) paymentCallback(ctx *gin.Context) {
 	}
 
 	clientID, err := s.repo.Clients.GetClientIDByPhoneNumber(ctx, callbackData.AccountNumber)
-	if err != nil {
-		if pkg.ErrorCode(err) != pkg.NOT_FOUND_ERROR {
-			ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+	if err != nil && pkg.ErrorCode(err) != pkg.NOT_FOUND_ERROR {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
-			return
-		}
+		return
 	}
 
-	// if account number is wrong(non-existing) continue
 	if clientID != 0 {
 		callbackData.AssignedTo = pkg.Uint32Ptr(clientID)
 		s.cache.Del(ctx, fmt.Sprintf("client:%v", clientID))
