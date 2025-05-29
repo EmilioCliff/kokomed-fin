@@ -94,7 +94,7 @@ func (p *PaymentService) ProcessCallback(
 				return err
 			}
 
-			return helperUpdateLoan(ctx, q, loan, nonPostedID, *params.AssignedTo)
+			return processLoanPayment(ctx, q, loan, nonPostedID, *params.AssignedTo, 0)
 		}); err != nil {
 			return 0, err
 		}
@@ -173,11 +173,11 @@ func (p *PaymentService) TriggerManualPayment(
 			return err
 		}
 
-		if err = helperUpdateLoan(ctx, q, &repository.UpdateLoan{
+		if err = processLoanPayment(ctx, q, &repository.UpdateLoan{
 			ID:         loanID,
 			PaidAmount: nonPosted.Amount,
 			UpdatedBy:  &paymentData.AdminUserID,
-		}, paymentData.NonPostedID, paymentData.ClientID); err != nil {
+		}, paymentData.NonPostedID, paymentData.ClientID, 0); err != nil {
 			return err
 		}
 
@@ -187,266 +187,196 @@ func (p *PaymentService) TriggerManualPayment(
 	return loanID, err
 }
 
-func helperUpdateLoan(
+func (p *PaymentService) UpdatePayment(
 	ctx context.Context,
-	q generated.Querier,
-	loan *repository.UpdateLoan,
 	paymentID uint32,
-	clientID uint32,
+	userID uint32,
+	paymentData *services.MpesaCallbackData,
 ) error {
-	totalPaid := 0.0
-
-	installments, err := q.ListUnpaidInstallmentsByLoan(ctx, loan.ID)
-	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list unpaid installments: %s", err.Error())
-	}
-
-	var allocations []repository.PaymentAllocation
-	for _, i := range installments {
-		if loan.PaidAmount >= i.RemainingAmount {
-			_, err := q.PayInstallment(ctx, generated.PayInstallmentParams{
-				ID:              i.ID,
-				RemainingAmount: 0,
-				Paid: sql.NullBool{
-					Valid: true,
-					Bool:  true,
-				},
-				PaidAt: sql.NullTime{
-					Valid: true,
-					Time:  time.Now(),
-				},
-			})
-			if err != nil {
-				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to pay installment: %s", err.Error())
-			}
-
-			oldPaidAmount := loan.PaidAmount
-			remainingAmount := i.RemainingAmount
-			expectedNewAmount := oldPaidAmount - remainingAmount
-			loan.PaidAmount = expectedNewAmount
-
-			if loan.PaidAmount != expectedNewAmount {
-				loan.PaidAmount = expectedNewAmount
-			}
-
-			totalPaid += remainingAmount
-			allocations = append(allocations, repository.PaymentAllocation{
-				NonPostedID:   paymentID,
-				LoanID:        &loan.ID,
-				InstallmentID: &i.ID,
-				Amount:        remainingAmount,
-			})
-		} else {
-			if loan.PaidAmount == 0 {
-				break
-			}
-
-			partialPayment := loan.PaidAmount
-			newRemainingAmount := i.RemainingAmount - partialPayment
-
-			_, err := q.PayInstallment(ctx, generated.PayInstallmentParams{
-				ID:              i.ID,
-				RemainingAmount: newRemainingAmount,
-			})
-			if err != nil {
-				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to pay installment: %s", err.Error())
-			}
-
-			oldTotalPaid := totalPaid
-			totalPaid += partialPayment
-
-			if totalPaid != oldTotalPaid+partialPayment {
-				totalPaid = oldTotalPaid + partialPayment
-			}
-
-			loan.PaidAmount = 0
-
-			allocations = append(allocations, repository.PaymentAllocation{
-				NonPostedID:   paymentID,
-				LoanID:        &loan.ID,
-				InstallmentID: &i.ID,
-				Amount:        partialPayment,
-			})
-
-			break
+	if paymentData.AssignedTo == nil {
+		nonPostedParams := &repository.NonPosted{
+			ID:                paymentID,
+			TransactionSource: paymentData.TransactionSource,
+			TransactionNumber: paymentData.TransactionID,
+			AccountNumber:     paymentData.AccountNumber,
+			PhoneNumber:       paymentData.PhoneNumber,
+			PayingName:        paymentData.PayingName,
+			Amount:            paymentData.Amount,
+			AssignedBy:        paymentData.AssignedBy,
+			PaidDate:          time.Now(),
+			AssignedTo:        nil,
 		}
-	}
 
-	for _, allocation := range allocations {
-		if err := createAllocation(ctx, q, allocation); err != nil {
-			return err
-		}
-	}
-
-	params := generated.UpdateLoanParams{
-		ID:         loan.ID,
-		PaidAmount: totalPaid,
-	}
-
-	if loan.UpdatedBy != nil {
-		params.UpdatedBy = sql.NullInt32{
-			Valid: true,
-			Int32: int32(*loan.UpdatedBy),
-		}
-	}
-
-	_, err = q.UpdateLoan(ctx, params)
-	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan: %s", err.Error())
-	}
-
-	if loan.PaidAmount > 0 {
-		if err := updateOverpayment(ctx, q, repository.Overpayment{
-			ClientID:  clientID,
-			Amount:    loan.PaidAmount,
-			PaymentID: &paymentID,
-		}); err != nil {
+		if err := p.mySQL.NonPosted.UpdateNonPosted(ctx, nonPostedParams); err != nil {
 			return err
 		}
 
-		if err = createAllocation(ctx, q, repository.PaymentAllocation{
-			NonPostedID:   paymentID,
-			Amount:        loan.PaidAmount,
-			LoanID:        nil,
-			InstallmentID: nil,
-		}); err != nil {
-			return err
-		}
+		return nil
 	}
 
-	installmentsLeft, err := q.ListUnpaidInstallmentsByLoan(ctx, loan.ID)
-	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list unpaid installments: %s", err.Error())
-	}
-
-	if len(installmentsLeft) == 0 {
-		_, err = q.UpdateLoanStatus(ctx, generated.UpdateLoanStatusParams{
-			ID:     loan.ID,
-			Status: generated.LoansStatusCOMPLETED,
-		})
+	err := p.db.ExecTx(ctx, func(q generated.Querier) error {
+		allocations, err := q.ListPaymentAllocationsByNonPostedId(ctx, paymentID)
 		if err != nil {
-			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to change loans status: %s", err.Error())
+			return err
 		}
-	}
 
-	return nil
-}
+		revertedAmount := 0.0
+		loanID := uint32(0)
+		for _, allocation := range allocations {
+			if allocation.InstallmentID.Valid {
+				loanID = uint32(allocation.LoanID.Int32)
+				revertedAmount += allocation.Amount
+				if err := revertInstallment(ctx, q, uint32(allocation.InstallmentID.Int32), allocation.Amount); err != nil {
+					return err
+				}
+			} else {
+				if err := deductOverpayment(ctx, q, allocation.ID, paymentData.AssignedBy, allocation.Amount); err != nil {
+					return err
+				}
+			}
+		}
 
-func updateOverpayment(
-	ctx context.Context,
-	q generated.Querier,
-	overpaymentParams repository.Overpayment,
-) error {
-	_, err := q.UpdateClientOverpayment(ctx, generated.UpdateClientOverpaymentParams{
-		ClientID:    overpaymentParams.ClientID,
-		Overpayment: overpaymentParams.Amount,
+		_, err = q.DeletePaymentAllocationsByNonPostedId(ctx, paymentID)
+		if err != nil {
+			return pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"failed to delete payment allocations: %s",
+				err.Error(),
+			)
+		}
+
+		if revertedAmount > 0 {
+			loanStatus, err := q.GetLoanStatus(ctx, loanID)
+			if err != nil && err != sql.ErrNoRows {
+				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan status: %s", err.Error())
+			}
+
+			if loanStatus != generated.LoansStatusACTIVE {
+				hasActiveLoan, err := q.CheckActiveLoanForClient(ctx, *paymentData.AssignedTo)
+				if err != nil {
+					return pkg.Errorf(
+						pkg.INTERNAL_ERROR,
+						"failed to check if client has an active loan: %s",
+						err.Error(),
+					)
+				}
+
+				if hasActiveLoan {
+					return pkg.Errorf(
+						pkg.INVALID_ERROR,
+						"loan is status will change to active and client has another active loan",
+					)
+				}
+
+				_, err = q.UpdateLoanStatus(ctx, generated.UpdateLoanStatusParams{
+					ID:     loanID,
+					Status: generated.LoansStatusACTIVE,
+				})
+				if err != nil {
+					return pkg.Errorf(
+						pkg.INTERNAL_ERROR,
+						"failed to change loans status: %s",
+						err.Error(),
+					)
+				}
+			}
+		}
+
+		loan := &repository.UpdateLoan{
+			ID:         loanID,
+			PaidAmount: paymentData.Amount,
+		}
+
+		return processLoanPayment(ctx, q, loan, paymentID, *paymentData.AssignedTo, revertedAmount)
 	})
-	if err != nil {
-		return pkg.Errorf(
-			pkg.INTERNAL_ERROR,
-			"failed to update client overpayment: %s",
-			err.Error(),
-		)
-	}
 
-	params := generated.CreateClientOverpaymentTransactionParams{
-		ClientID: overpaymentParams.ClientID,
-		Amount:   overpaymentParams.Amount,
-		PaymentID: sql.NullInt32{
-			Valid: true,
-			Int32: int32(*overpaymentParams.PaymentID),
-		},
-		CreatedBy: "SYSTEM",
-	}
-
-	_, err = q.CreateClientOverpaymentTransaction(ctx, params)
-	if err != nil {
-		return pkg.Errorf(
-			pkg.INTERNAL_ERROR,
-			"failed to create client overpayment transaction: %s",
-			err.Error(),
-		)
-	}
-
-	return nil
+	return err
 }
 
-func createNonPosted(
-	ctx context.Context,
-	q generated.Querier,
-	params *repository.NonPosted,
-) (uint32, error) {
-	nonPostedParams := generated.CreateNonPostedParams{
-		TransactionSource: generated.NonPostedTransactionSource(params.TransactionSource),
-		TransactionNumber: params.TransactionNumber,
-		AccountNumber:     params.AccountNumber,
-		PhoneNumber:       params.PhoneNumber,
-		PayingName:        params.PayingName,
-		Amount:            params.Amount,
-		PaidDate:          params.PaidDate,
-		AssignedBy:        params.AssignedBy,
-	}
-
-	if params.AssignedTo != nil {
-		nonPostedParams.AssignTo = sql.NullInt32{
-			Valid: true,
-			Int32: int32(*params.AssignedTo),
-		}
-	}
-
-	nonPostedExecResult, err := q.CreateNonPosted(ctx, nonPostedParams)
+func (p *PaymentService) DeletePayment(ctx context.Context, paymentID uint32, userID uint32) error {
+	paymentData, err := p.mySQL.NonPosted.GetNonPosted(ctx, paymentID)
 	if err != nil {
-		return 0, pkg.Errorf(
-			pkg.INTERNAL_ERROR,
-			"failed to create non posted: %s",
-			err.Error(),
-		)
+		return err
 	}
 
-	nonPostedID, err := nonPostedExecResult.LastInsertId()
-	if err != nil {
-		return 0, pkg.Errorf(
-			pkg.INTERNAL_ERROR,
-			"failed to get last insert id: %s",
-			err.Error(),
-		)
-	}
-
-	return uint32(nonPostedID), nil
-}
-
-func createAllocation(
-	ctx context.Context,
-	q generated.Querier,
-	allocationParams repository.PaymentAllocation,
-) error {
-	allocation := generated.CreatePaymentAllocationParams{
-		NonPostedID: allocationParams.NonPostedID,
-		Amount:      allocationParams.Amount,
-	}
-
-	if allocationParams.LoanID != nil {
-		allocation.LoanID = sql.NullInt32{
-			Valid: true,
-			Int32: int32(*allocationParams.LoanID),
+	if paymentData.AssignedTo == nil {
+		if err = p.mySQL.NonPosted.DeleteNonPosted(ctx, paymentID); err != nil {
+			return err
 		}
+
+		return nil
 	}
 
-	if allocationParams.InstallmentID != nil {
-		allocation.InstallmentID = sql.NullInt32{
-			Valid: true,
-			Int32: int32(*allocationParams.InstallmentID),
+	err = p.db.ExecTx(ctx, func(q generated.Querier) error {
+		allocations, err := q.ListPaymentAllocationsByNonPostedId(ctx, paymentID)
+		if err != nil {
+			return err
 		}
-	}
 
-	_, err := q.CreatePaymentAllocation(ctx, allocation)
-	if err != nil {
-		return pkg.Errorf(
-			pkg.INTERNAL_ERROR,
-			"failed to create payment allocation: %s",
-			err.Error(),
-		)
-	}
+		revertedAmount := 0.0
+		loanID := uint32(0)
+		for _, allocation := range allocations {
+			if allocation.InstallmentID.Valid {
+				loanID = uint32(allocation.LoanID.Int32)
+				revertedAmount += allocation.Amount
+				if err := revertInstallment(ctx, q, uint32(allocation.InstallmentID.Int32), allocation.Amount); err != nil {
+					return err
+				}
+			} else {
+				if err := deductOverpayment(ctx, q, allocation.ID, paymentData.AssignedBy, allocation.Amount); err != nil {
+					return err
+				}
+			}
+		}
 
-	return nil
+		_, err = q.DeletePaymentAllocationsByNonPostedId(ctx, paymentID)
+		if err != nil {
+			return pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"failed to delete payment allocations: %s",
+				err.Error(),
+			)
+		}
+
+		if revertedAmount > 0 {
+			loanStatus, err := q.GetLoanStatus(ctx, loanID)
+			if err != nil && err != sql.ErrNoRows {
+				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan status: %s", err.Error())
+			}
+
+			if loanStatus != generated.LoansStatusACTIVE {
+				hasActiveLoan, err := q.CheckActiveLoanForClient(ctx, *paymentData.AssignedTo)
+				if err != nil {
+					return pkg.Errorf(
+						pkg.INTERNAL_ERROR,
+						"failed to check if client has an active loan: %s",
+						err.Error(),
+					)
+				}
+
+				if hasActiveLoan {
+					return pkg.Errorf(
+						pkg.INVALID_ERROR,
+						"loan is status will change to active and client has another active loan",
+					)
+				}
+
+			}
+			_, err = q.ReduceLoan(ctx, generated.ReduceLoanParams{
+				ID:         loanID,
+				PaidAmount: revertedAmount,
+				UpdatedBy: sql.NullInt32{
+					Valid: true,
+					Int32: int32(userID),
+				},
+			})
+			if err != nil {
+				return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan: %s", err.Error())
+			}
+		}
+
+		return nil
+	})
+
+	return err
 }

@@ -286,6 +286,23 @@ func (q *Queries) PayInstallment(ctx context.Context, arg PayInstallmentParams) 
 	)
 }
 
+const revertInstallment = `-- name: RevertInstallment :execresult
+UPDATE installments 
+    SET remaining_amount =  remaining_amount + ?,
+    paid =  FALSE,
+    paid_at =  NULL
+WHERE id = ?
+`
+
+type RevertInstallmentParams struct {
+	RemainingAmount float64 `json:"remaining_amount"`
+	ID              uint32  `json:"id"`
+}
+
+func (q *Queries) RevertInstallment(ctx context.Context, arg RevertInstallmentParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, revertInstallment, arg.RemainingAmount, arg.ID)
+}
+
 const updateInstallment = `-- name: UpdateInstallment :execresult
 UPDATE installments 
     SET remaining_amount =  ?,

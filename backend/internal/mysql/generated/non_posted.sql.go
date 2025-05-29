@@ -557,3 +557,56 @@ func (q *Queries) ListUnassignedNonPosted(ctx context.Context, arg ListUnassigne
 	}
 	return items, nil
 }
+
+const softDeleteNonPosted = `-- name: SoftDeleteNonPosted :exec
+UPDATE non_posted
+SET deleted_at = CURRENT_TIMESTAMP
+WHERE id = ?
+`
+
+func (q *Queries) SoftDeleteNonPosted(ctx context.Context, id uint32) error {
+	_, err := q.db.ExecContext(ctx, softDeleteNonPosted, id)
+	return err
+}
+
+const updateNonPosted = `-- name: UpdateNonPosted :execresult
+UPDATE non_posted 
+    SET transaction_source = ?,
+    transaction_number = ?,
+    account_number = ?,
+    phone_number = ?,
+    paying_name = ?,
+    amount = ?,
+    paid_date = ?,
+    assign_to = COALESCE(?, assign_to),
+    assigned_by = ?
+WHERE id = ?
+`
+
+type UpdateNonPostedParams struct {
+	TransactionSource NonPostedTransactionSource `json:"transaction_source"`
+	TransactionNumber string                     `json:"transaction_number"`
+	AccountNumber     string                     `json:"account_number"`
+	PhoneNumber       string                     `json:"phone_number"`
+	PayingName        string                     `json:"paying_name"`
+	Amount            float64                    `json:"amount"`
+	PaidDate          time.Time                  `json:"paid_date"`
+	AssignTo          sql.NullInt32              `json:"assign_to"`
+	AssignedBy        string                     `json:"assigned_by"`
+	ID                uint32                     `json:"id"`
+}
+
+func (q *Queries) UpdateNonPosted(ctx context.Context, arg UpdateNonPostedParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, updateNonPosted,
+		arg.TransactionSource,
+		arg.TransactionNumber,
+		arg.AccountNumber,
+		arg.PhoneNumber,
+		arg.PayingName,
+		arg.Amount,
+		arg.PaidDate,
+		arg.AssignTo,
+		arg.AssignedBy,
+		arg.ID,
+	)
+}

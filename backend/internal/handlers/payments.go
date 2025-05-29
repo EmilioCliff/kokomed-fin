@@ -162,6 +162,10 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+func (s *Server) updateLoan(ctx *gin.Context) {}
+
+func (s *Server) deleteLoan(ctx *gin.Context) {}
+
 func (s *Server) getMPESAAccesToken(ctx *gin.Context) {
 	payload, ok := ctx.Get(authorizationPayloadKey)
 	if !ok {

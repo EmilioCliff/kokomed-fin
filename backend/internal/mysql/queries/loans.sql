@@ -32,6 +32,13 @@ UPDATE loans
     updated_by = coalesce(sqlc.arg("updated_by"), updated_by)
 WHERE id = sqlc.arg("id");
 
+-- name: ReduceLoan :execresult
+UPDATE loans 
+    SET paid_amount = paid_amount - sqlc.arg("paid_amount"),
+    status = 'ACTIVE',
+    updated_by = sqlc.arg("updated_by")
+WHERE id = sqlc.arg("id");
+
 -- name: TransferLoan :execresult
 UPDATE loans SET loan_officer = ?, updated_by = ? WHERE id = ?;
 
@@ -101,6 +108,9 @@ SELECT id FROM loans WHERE client_id = ? AND status = ? LIMIT 1;
 
 -- name: GetLoanData :many
 SELECT id FROM loans;
+
+-- name: GetLoanStatus :one
+SELECT status FROM loans WHERE id = ? LIMIT 1;
 
 -- name: ListLoans :many
 SELECT 

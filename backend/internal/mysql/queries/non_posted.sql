@@ -12,6 +12,19 @@ VALUES (
     sqlc.arg("assigned_by")
 );
 
+-- name: UpdateNonPosted :execresult
+UPDATE non_posted 
+    SET transaction_source = sqlc.arg("transaction_source"),
+    transaction_number = sqlc.arg("transaction_number"),
+    account_number = sqlc.arg("account_number"),
+    phone_number = sqlc.arg("phone_number"),
+    paying_name = sqlc.arg("paying_name"),
+    amount = sqlc.arg("amount"),
+    paid_date = sqlc.arg("paid_date"),
+    assign_to = COALESCE(sqlc.narg("assign_to"), assign_to),
+    assigned_by = sqlc.arg("assigned_by")
+WHERE id = sqlc.arg("id");
+
 -- name: ListAllNonPosted :many
 SELECT * FROM non_posted LIMIT ? OFFSET ?;
 
@@ -36,6 +49,11 @@ WHERE id = sqlc.arg("id");
 
 -- name: DeleteNonPosted :exec
 DELETE FROM non_posted WHERE id = ?;
+
+-- name: SoftDeleteNonPosted :exec
+UPDATE non_posted
+SET deleted_at = CURRENT_TIMESTAMP
+WHERE id = sqlc.arg("id");
 
 -- name: GetClientsNonPosted :many
 SELECT 

@@ -89,6 +89,21 @@ func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (sql
 	)
 }
 
+const deductClientOverpayment = `-- name: DeductClientOverpayment :execresult
+UPDATE clients
+SET overpayment = overpayment - ?
+WHERE id = ?
+`
+
+type DeductClientOverpaymentParams struct {
+	Overpayment float64 `json:"overpayment"`
+	ID          uint32  `json:"id"`
+}
+
+func (q *Queries) DeductClientOverpayment(ctx context.Context, arg DeductClientOverpaymentParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, deductClientOverpayment, arg.Overpayment, arg.ID)
+}
+
 const deleteClient = `-- name: DeleteClient :execresult
 DELETE FROM clients WHERE id = ?
 `
@@ -659,19 +674,4 @@ func (q *Queries) UpdateClientOverpayment(ctx context.Context, arg UpdateClientO
 		arg.ClientID,
 		arg.ClientID,
 	)
-}
-
-const updateClientOverpaymentGeneral = `-- name: UpdateClientOverpaymentGeneral :execresult
-UPDATE clients
-SET overpayment = ?
-WHERE id = ?
-`
-
-type UpdateClientOverpaymentGeneralParams struct {
-	Overpayment float64 `json:"overpayment"`
-	ID          uint32  `json:"id"`
-}
-
-func (q *Queries) UpdateClientOverpaymentGeneral(ctx context.Context, arg UpdateClientOverpaymentGeneralParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, updateClientOverpaymentGeneral, arg.Overpayment, arg.ID)
 }

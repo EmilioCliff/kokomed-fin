@@ -37,6 +37,7 @@ type ClientNonPosted struct {
 type NonPostedRepository interface {
 	CreateNonPosted(ctx context.Context, nonPosted *NonPosted) (NonPosted, error)
 	GetNonPosted(ctx context.Context, id uint32) (NonPosted, error)
+	UpdateNonPosted(ctx context.Context, nonPosted *NonPosted) error
 	ListNonPosted(
 		ctx context.Context,
 		category *NonPostedCategory,

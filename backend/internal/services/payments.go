@@ -6,15 +6,15 @@ import (
 )
 
 type MpesaCallbackData struct {
-	TransactionSource string `json:"transaction_source"`
-	TransactionID string  `json:"transaction_id"`
-	AccountNumber string  `json:"account_number"`
-	PhoneNumber   string  `json:"phone_number"`
-	PayingName    string  `json:"paying_name"`
-	Amount        float64 `json:"amount"`
-	AssignedBy	  string `json:"assigned_by"`
-	AssignedTo    *uint32 `json:"assigned_to"`
-	PaidDate	*time.Time `json:"paid_date"`
+	TransactionSource string     `json:"transaction_source"`
+	TransactionID     string     `json:"transaction_id"`
+	AccountNumber     string     `json:"account_number"`
+	PhoneNumber       string     `json:"phone_number"`
+	PayingName        string     `json:"paying_name"`
+	Amount            float64    `json:"amount"`
+	AssignedBy        string     `json:"assigned_by"`
+	AssignedTo        *uint32    `json:"assigned_to"`
+	PaidDate          *time.Time `json:"paid_date"`
 }
 
 type ManualPaymentData struct {
@@ -26,4 +26,11 @@ type ManualPaymentData struct {
 type PaymentService interface {
 	ProcessCallback(ctx context.Context, callbackData *MpesaCallbackData) (uint32, error)
 	TriggerManualPayment(ctx context.Context, paymentData ManualPaymentData) (uint32, error)
+	UpdatePayment(
+		ctx context.Context,
+		paymentID uint32,
+		userID uint32,
+		paymentData *MpesaCallbackData,
+	) error
+	DeletePayment(ctx context.Context, paymentID uint32, clientID uint32) error
 }

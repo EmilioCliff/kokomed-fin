@@ -34,6 +34,7 @@ type Querier interface {
 	DashBoardDataHelper(ctx context.Context) (DashBoardDataHelperRow, error)
 	DashBoardInactiveLoans(ctx context.Context) ([]DashBoardInactiveLoansRow, error)
 	DashBoardRecentsPayments(ctx context.Context) ([]DashBoardRecentsPaymentsRow, error)
+	DeductClientOverpayment(ctx context.Context, arg DeductClientOverpaymentParams) (sql.Result, error)
 	DeleteBranch(ctx context.Context, id uint32) error
 	DeleteClient(ctx context.Context, id uint32) (sql.Result, error)
 	DeleteLoan(ctx context.Context, id uint32) error
@@ -66,6 +67,7 @@ type Querier interface {
 	// Left joins for optional fields (disbursed_by, updated_by, created_by)
 	GetLoanFullData(ctx context.Context, id uint32) (GetLoanFullDataRow, error)
 	GetLoanReportDataById(ctx context.Context, id uint32) (GetLoanReportDataByIdRow, error)
+	GetLoanStatus(ctx context.Context, id uint32) (LoansStatus, error)
 	GetLoansReportData(ctx context.Context, arg GetLoansReportDataParams) ([]GetLoansReportDataRow, error)
 	GetNonPosted(ctx context.Context, id uint32) (NonPosted, error)
 	GetPaymentReportData(ctx context.Context, arg GetPaymentReportDataParams) ([]GetPaymentReportDataRow, error)
@@ -113,15 +115,18 @@ type Querier interface {
 	ListUsersByCategory(ctx context.Context, arg ListUsersByCategoryParams) ([]ListUsersByCategoryRow, error)
 	NullifyClientOverpayment(ctx context.Context, id uint32) (sql.Result, error)
 	PayInstallment(ctx context.Context, arg PayInstallmentParams) (sql.Result, error)
+	ReduceLoan(ctx context.Context, arg ReduceLoanParams) (sql.Result, error)
+	RevertInstallment(ctx context.Context, arg RevertInstallmentParams) (sql.Result, error)
+	SoftDeleteNonPosted(ctx context.Context, id uint32) error
 	TransferLoan(ctx context.Context, arg TransferLoanParams) (sql.Result, error)
 	UpdateBranch(ctx context.Context, arg UpdateBranchParams) (sql.Result, error)
 	UpdateClient(ctx context.Context, arg UpdateClientParams) (sql.Result, error)
 	UpdateClientOverpayment(ctx context.Context, arg UpdateClientOverpaymentParams) (sql.Result, error)
-	UpdateClientOverpaymentGeneral(ctx context.Context, arg UpdateClientOverpaymentGeneralParams) (sql.Result, error)
 	UpdateInstallment(ctx context.Context, arg UpdateInstallmentParams) (sql.Result, error)
 	UpdateLoan(ctx context.Context, arg UpdateLoanParams) (sql.Result, error)
 	UpdateLoanProcessingFeeStatus(ctx context.Context, arg UpdateLoanProcessingFeeStatusParams) (sql.Result, error)
 	UpdateLoanStatus(ctx context.Context, arg UpdateLoanStatusParams) (sql.Result, error)
+	UpdateNonPosted(ctx context.Context, arg UpdateNonPostedParams) (sql.Result, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (sql.Result, error)
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (sql.Result, error)
 }

@@ -38,9 +38,9 @@ WHERE
     OR 
     (id = sqlc.arg("client_id") AND sqlc.arg("client_id") IS NOT NULL);
 
--- name: UpdateClientOverpaymentGeneral :execresult
+-- name: DeductClientOverpayment :execresult
 UPDATE clients
-SET overpayment = sqlc.arg("overpayment")
+SET overpayment = overpayment - sqlc.arg("overpayment")
 WHERE id = sqlc.arg("id");
 
 -- name: NullifyClientOverpayment :execresult

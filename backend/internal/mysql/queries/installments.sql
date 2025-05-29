@@ -20,6 +20,13 @@ UPDATE installments
     paid_at =  coalesce(sqlc.narg("paid_at"), paid_at)
 WHERE id = sqlc.arg("id");
 
+-- name: RevertInstallment :execresult
+UPDATE installments 
+    SET remaining_amount =  remaining_amount + sqlc.arg("remaining_amount"),
+    paid =  FALSE,
+    paid_at =  NULL
+WHERE id = sqlc.arg("id");
+
 -- name: PayInstallment :execresult
 UPDATE installments 
     SET remaining_amount = sqlc.arg("remaining_amount"),

@@ -123,6 +123,8 @@ func (s *Server) setUpRoutes() {
 	v1.POST("/payment/callback", s.paymentCallback)
 	v1.POST("/payment/validation", s.validationCallback)
 	authRoute.PATCH("/payment/:id/assign", s.paymentByAdmin)
+	authRoute.POST("/payment/:id", s.updateLoan)
+	authRoute.DELETE("/payment/:id", s.deleteLoan)
 
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)
@@ -188,7 +190,7 @@ func errorResponse(err error) gin.H {
 
 func constructCacheKey(path string, queryParams map[string][]string) string {
 	const prefix = "/api/v1/"
-	if strings.HasPrefix(path, prefix) {
+	if ok := strings.HasPrefix(path, prefix); ok {
 		path = strings.TrimPrefix(path, prefix)
 	}
 

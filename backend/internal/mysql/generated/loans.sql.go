@@ -531,6 +531,17 @@ func (q *Queries) GetLoanFullData(ctx context.Context, id uint32) (GetLoanFullDa
 	return i, err
 }
 
+const getLoanStatus = `-- name: GetLoanStatus :one
+SELECT status FROM loans WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetLoanStatus(ctx context.Context, id uint32) (LoansStatus, error) {
+	row := q.db.QueryRowContext(ctx, getLoanStatus, id)
+	var status LoansStatus
+	err := row.Scan(&status)
+	return status, err
+}
+
 const listExpectedPayments = `-- name: ListExpectedPayments :many
 SELECT 
 	b.name AS branch_name,
@@ -1019,6 +1030,24 @@ func (q *Queries) ListNonDisbursedLoans(ctx context.Context, arg ListNonDisburse
 		return nil, err
 	}
 	return items, nil
+}
+
+const reduceLoan = `-- name: ReduceLoan :execresult
+UPDATE loans 
+    SET paid_amount = paid_amount - ?,
+    status = 'ACTIVE',
+    updated_by = ?
+WHERE id = ?
+`
+
+type ReduceLoanParams struct {
+	PaidAmount float64       `json:"paid_amount"`
+	UpdatedBy  sql.NullInt32 `json:"updated_by"`
+	ID         uint32        `json:"id"`
+}
+
+func (q *Queries) ReduceLoan(ctx context.Context, arg ReduceLoanParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, reduceLoan, arg.PaidAmount, arg.UpdatedBy, arg.ID)
 }
 
 const transferLoan = `-- name: TransferLoan :execresult

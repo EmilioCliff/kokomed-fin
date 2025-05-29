@@ -40,7 +40,7 @@ func (q *Queries) DeletePaymentAllocation(ctx context.Context, id uint32) (sql.R
 }
 
 const deletePaymentAllocationsByNonPostedId = `-- name: DeletePaymentAllocationsByNonPostedId :execresult
-UPDATE payment_allocations SET deleted_at = NOW() WHERE non_posted_id = ? AND deleted_at IS NULL
+UPDATE payment_allocations SET deleted_at = NOW() WHERE non_posted_id = ? AND deleted_at IS NOT NULL
 `
 
 func (q *Queries) DeletePaymentAllocationsByNonPostedId(ctx context.Context, nonPostedID uint32) (sql.Result, error) {
@@ -48,7 +48,7 @@ func (q *Queries) DeletePaymentAllocationsByNonPostedId(ctx context.Context, non
 }
 
 const listPaymentAllocationsByLoanId = `-- name: ListPaymentAllocationsByLoanId :many
-SELECT id, non_posted_id, loan_id, installment_id, amount, deleted_at, created_at FROM payment_allocations WHERE loan_id = ? AND deleted_at IS NULL
+SELECT id, non_posted_id, loan_id, installment_id, amount, deleted_at, created_at FROM payment_allocations WHERE loan_id = ? AND deleted_at IS NOT NULL
 `
 
 func (q *Queries) ListPaymentAllocationsByLoanId(ctx context.Context, loanID sql.NullInt32) ([]PaymentAllocation, error) {
@@ -83,7 +83,7 @@ func (q *Queries) ListPaymentAllocationsByLoanId(ctx context.Context, loanID sql
 }
 
 const listPaymentAllocationsByNonPostedId = `-- name: ListPaymentAllocationsByNonPostedId :many
-SELECT id, non_posted_id, loan_id, installment_id, amount, deleted_at, created_at FROM payment_allocations WHERE non_posted_id = ? AND deleted_at IS NULL
+SELECT id, non_posted_id, loan_id, installment_id, amount, deleted_at, created_at FROM payment_allocations WHERE non_posted_id = ? AND deleted_at IS NOT NULL
 `
 
 func (q *Queries) ListPaymentAllocationsByNonPostedId(ctx context.Context, nonPostedID uint32) ([]PaymentAllocation, error) {

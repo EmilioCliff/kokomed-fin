@@ -70,6 +70,37 @@ func (r *NonPostedRepository) CreateNonPosted(
 	return *nonPosted, nil
 }
 
+func (r *NonPostedRepository) UpdateNonPosted(
+	ctx context.Context,
+	nonPosted *repository.NonPosted,
+) error {
+	params := generated.UpdateNonPostedParams{
+		ID:                nonPosted.ID,
+		TransactionSource: generated.NonPostedTransactionSource(nonPosted.TransactionSource),
+		TransactionNumber: nonPosted.TransactionNumber,
+		AccountNumber:     nonPosted.AccountNumber,
+		PhoneNumber:       nonPosted.PhoneNumber,
+		PayingName:        nonPosted.PayingName,
+		Amount:            nonPosted.Amount,
+		PaidDate:          nonPosted.PaidDate,
+		AssignedBy:        nonPosted.AssignedBy,
+		AssignTo: sql.NullInt32{
+			Valid: false,
+		},
+	}
+
+	_, err := r.queries.UpdateNonPosted(ctx, params)
+	if err != nil {
+		return pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to create non posted: %s",
+			err.Error(),
+		)
+	}
+
+	return nil
+}
+
 func (r *NonPostedRepository) GetNonPosted(
 	ctx context.Context,
 	id uint32,
@@ -272,8 +303,8 @@ func (r *NonPostedRepository) ListNonPostedByTransactionSource(
 }
 
 func (r *NonPostedRepository) DeleteNonPosted(ctx context.Context, id uint32) error {
-	err := r.queries.DeleteNonPosted(ctx, id)
-	if err != nil {
+	err := r.queries.SoftDeleteNonPosted(ctx, id)
+	if err != nil && err == sql.ErrNoRows {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete non posted: %s", err.Error())
 	}
 
