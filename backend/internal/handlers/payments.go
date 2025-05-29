@@ -162,9 +162,127 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-func (s *Server) updateLoan(ctx *gin.Context) {}
+type updateLoanRequest struct {
+	TransactionSource string  `json:"transaction_source" binding:"required"`
+	TransactionID     string  `json:"transaction_id"     binding:"required"`
+	AccountNumber     string  `json:"account_number"     binding:"required"`
+	PhoneNumber       string  `json:"phone_number"       binding:"required"`
+	PayingName        string  `json:"paying_name"        binding:"required"`
+	Amount            float64 `json:"amount"             binding:"required"`
+	AssignedBy        string  `json:"assigned_by"        binding:"required"`
+	AssignedTo        uint32  `json:"assigned_to"        binding:"required"`
+	Description       string  `json:"description"        binding:"required"`
+	PaidDate          string  `json:"paid_date"          binding:"required"`
+}
 
-func (s *Server) deleteLoan(ctx *gin.Context) {}
+func (s *Server) updateLoan(ctx *gin.Context) {
+	var req updateLoanRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	id, err := pkg.StringToUint32(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
+
+	params := services.MpesaCallbackData{
+		TransactionSource: req.TransactionSource,
+		TransactionID:     req.TransactionID,
+		AccountNumber:     req.AccountNumber,
+		PhoneNumber:       req.PhoneNumber,
+		PayingName:        req.PayingName,
+		Amount:            req.Amount,
+		AssignedBy:        req.AssignedBy,
+		AssignedTo:        pkg.Uint32Ptr(req.AssignedTo),
+	}
+
+	if req.AssignedTo == 0 {
+		params.AssignedTo = nil
+	}
+
+	if req.PaidDate != "" {
+		paidDateT, err := time.Parse("2006-01-02", req.PaidDate)
+		if err != nil {
+			ctx.JSON(
+				http.StatusBadRequest,
+				errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid paid_date format")),
+			)
+
+			return
+		}
+
+		params.PaidDate = pkg.TimePtr(paidDateT)
+	}
+
+	if err := s.payments.UpdatePayment(ctx, id, payloadData.UserID, req.Description, &params); err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+type deleteLoanRequest struct {
+	Description string `json:"description" binding:"required"`
+}
+
+func (s *Server) deleteLoan(ctx *gin.Context) {
+	var req deleteLoanRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	id, err := pkg.StringToUint32(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
+
+	if err := s.payments.DeletePayment(ctx, id, payloadData.UserID, req.Description); err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
 
 func (s *Server) getMPESAAccesToken(ctx *gin.Context) {
 	payload, ok := ctx.Get(authorizationPayloadKey)

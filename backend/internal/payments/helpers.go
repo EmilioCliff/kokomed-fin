@@ -3,6 +3,7 @@ package payments
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql/generated"
@@ -34,11 +35,9 @@ func revertInstallment(
 func deductOverpayment(
 	ctx context.Context,
 	q generated.Querier,
-	clientID uint32,
-	createdBy string,
-	amount float64,
+	data repository.Overpayment,
 ) error {
-	overpayment, err := q.GetClientOverpayment(ctx, clientID)
+	overpayment, err := q.GetClientOverpayment(ctx, data.ClientID)
 	if err != nil {
 		return pkg.Errorf(
 			pkg.INTERNAL_ERROR,
@@ -47,15 +46,15 @@ func deductOverpayment(
 		)
 	}
 
-	if overpayment < amount {
+	if overpayment < data.Amount {
 		return pkg.Errorf(
 			pkg.INVALID_ERROR,
 			"client overpayment is less than the amount")
 	}
 
 	_, err = q.DeductClientOverpayment(ctx, generated.DeductClientOverpaymentParams{
-		ID:          clientID,
-		Overpayment: amount,
+		ID:          data.ClientID,
+		Overpayment: data.Amount,
 	})
 	if err != nil {
 		return pkg.Errorf(
@@ -66,9 +65,10 @@ func deductOverpayment(
 	}
 
 	params := generated.CreateClientOverpaymentTransactionParams{
-		ClientID:  clientID,
-		Amount:    amount,
-		CreatedBy: createdBy,
+		ClientID:    data.ClientID,
+		Amount:      data.Amount,
+		CreatedBy:   data.CreatedBy,
+		Description: data.Description,
 	}
 
 	_, err = q.CreateClientOverpaymentTransaction(ctx, params)
@@ -90,6 +90,7 @@ func processLoanPayment(
 	paymentID uint32,
 	clientID uint32,
 	offsetAmount float64,
+	allocationMessage string,
 ) error {
 	totalPaid := 0.0
 
@@ -132,6 +133,7 @@ func processLoanPayment(
 				LoanID:        &loan.ID,
 				InstallmentID: &i.ID,
 				Amount:        remainingAmount,
+				Description:   fmt.Sprintf("%s: installment paid fully", allocationMessage),
 			})
 		} else {
 			if loan.PaidAmount == 0 {
@@ -163,6 +165,7 @@ func processLoanPayment(
 				LoanID:        &loan.ID,
 				InstallmentID: &i.ID,
 				Amount:        partialPayment,
+				Description:   fmt.Sprintf("%s: installment paid partially", allocationMessage),
 			})
 
 			break
@@ -175,32 +178,35 @@ func processLoanPayment(
 		}
 	}
 
-	params := generated.UpdateLoanParams{
-		ID:         loan.ID,
-		PaidAmount: totalPaid,
-	}
-
-	if offsetAmount > 0 {
-		params.PaidAmount = totalPaid - offsetAmount
-	}
-
-	if loan.UpdatedBy != nil {
-		params.UpdatedBy = sql.NullInt32{
-			Valid: true,
-			Int32: int32(*loan.UpdatedBy),
+	if len(installments) > 0 {
+		params := generated.UpdateLoanParams{
+			ID:         loan.ID,
+			PaidAmount: totalPaid,
 		}
-	}
 
-	_, err = q.UpdateLoan(ctx, params)
-	if err != nil {
-		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan: %s", err.Error())
+		if offsetAmount > 0 {
+			params.PaidAmount = totalPaid - offsetAmount
+		}
+
+		if loan.UpdatedBy != nil {
+			params.UpdatedBy = sql.NullInt32{
+				Valid: true,
+				Int32: int32(*loan.UpdatedBy),
+			}
+		}
+
+		_, err = q.UpdateLoan(ctx, params)
+		if err != nil {
+			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update loan: %s", err.Error())
+		}
 	}
 
 	if loan.PaidAmount > 0 {
 		if err := updateOverpayment(ctx, q, repository.Overpayment{
-			ClientID:  clientID,
-			Amount:    loan.PaidAmount,
-			PaymentID: &paymentID,
+			ClientID:    clientID,
+			Amount:      loan.PaidAmount,
+			PaymentID:   &paymentID,
+			Description: fmt.Sprintf("%s: loan is paid fully adding to overpayment", allocationMessage),
 		}); err != nil {
 			return err
 		}
@@ -210,6 +216,7 @@ func processLoanPayment(
 			Amount:        loan.PaidAmount,
 			LoanID:        nil,
 			InstallmentID: nil,
+			Description:   fmt.Sprintf("%s: loan is paid fully adding to overpayment", allocationMessage),
 		}); err != nil {
 			return err
 		}
@@ -257,7 +264,8 @@ func updateOverpayment(
 			Valid: true,
 			Int32: int32(*overpaymentParams.PaymentID),
 		},
-		CreatedBy: "SYSTEM",
+		CreatedBy:   "SYSTEM",
+		Description: overpaymentParams.Description,
 	}
 
 	_, err = q.CreateClientOverpaymentTransaction(ctx, params)
@@ -324,6 +332,7 @@ func createAllocation(
 	allocation := generated.CreatePaymentAllocationParams{
 		NonPostedID: allocationParams.NonPostedID,
 		Amount:      allocationParams.Amount,
+		Description: allocationParams.Description,
 	}
 
 	if allocationParams.LoanID != nil {

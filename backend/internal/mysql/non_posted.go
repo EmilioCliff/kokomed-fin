@@ -89,6 +89,13 @@ func (r *NonPostedRepository) UpdateNonPosted(
 		},
 	}
 
+	if nonPosted.DeletedDescription != nil {
+		params.DeletedDescription = sql.NullString{
+			Valid:  true,
+			String: *nonPosted.DeletedDescription,
+		}
+	}
+
 	_, err := r.queries.UpdateNonPosted(ctx, params)
 	if err != nil {
 		return pkg.Errorf(
@@ -302,8 +309,18 @@ func (r *NonPostedRepository) ListNonPostedByTransactionSource(
 	return rslt, nil
 }
 
-func (r *NonPostedRepository) DeleteNonPosted(ctx context.Context, id uint32) error {
-	err := r.queries.SoftDeleteNonPosted(ctx, id)
+func (r *NonPostedRepository) DeleteNonPosted(
+	ctx context.Context,
+	id uint32,
+	description string,
+) error {
+	err := r.queries.SoftDeleteNonPosted(ctx, generated.SoftDeleteNonPostedParams{
+		ID: id,
+		DeletedDescription: sql.NullString{
+			Valid:  true,
+			String: description,
+		},
+	})
 	if err != nil && err == sql.ErrNoRows {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete non posted: %s", err.Error())
 	}

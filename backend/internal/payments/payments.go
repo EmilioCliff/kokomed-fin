@@ -3,6 +3,7 @@ package payments
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/EmilioCliff/kokomed-fin/backend/internal/mysql"
@@ -59,9 +60,10 @@ func (p *PaymentService) ProcessCallback(
 					}
 
 					if err = updateOverpayment(ctx, q, repository.Overpayment{
-						ClientID:  *params.AssignedTo,
-						Amount:    params.Amount,
-						PaymentID: &nonPostedID,
+						ClientID:    *params.AssignedTo,
+						Amount:      params.Amount,
+						PaymentID:   &nonPostedID,
+						Description: "SYSTEM LOAN PAYMENT: no active loan adding to overpayment",
 					}); err != nil {
 						return err
 					}
@@ -71,6 +73,7 @@ func (p *PaymentService) ProcessCallback(
 						Amount:        params.Amount,
 						LoanID:        nil,
 						InstallmentID: nil,
+						Description:   "SYSTEM LOAN PAYMENT: no active loan adding to overpayment",
 					}); err != nil {
 						return err
 					}
@@ -94,7 +97,7 @@ func (p *PaymentService) ProcessCallback(
 				return err
 			}
 
-			return processLoanPayment(ctx, q, loan, nonPostedID, *params.AssignedTo, 0)
+			return processLoanPayment(ctx, q, loan, nonPostedID, *params.AssignedTo, 0, "SYSTEM LOAN PAYMENT: ")
 		}); err != nil {
 			return 0, err
 		}
@@ -151,9 +154,10 @@ func (p *PaymentService) TriggerManualPayment(
 		if err != nil {
 			if err == sql.ErrNoRows {
 				if err := updateOverpayment(ctx, q, repository.Overpayment{
-					ClientID:  paymentData.ClientID,
-					Amount:    nonPosted.Amount,
-					PaymentID: &paymentData.NonPostedID,
+					ClientID:    paymentData.ClientID,
+					Amount:      nonPosted.Amount,
+					PaymentID:   &paymentData.NonPostedID,
+					Description: "MANUAL LOAN PAYMENT: no active loan adding to overpayment",
 				}); err != nil {
 					return err
 				}
@@ -163,6 +167,7 @@ func (p *PaymentService) TriggerManualPayment(
 					Amount:        nonPosted.Amount,
 					LoanID:        nil,
 					InstallmentID: nil,
+					Description:   "MANUAL LOAN PAYMENT: no active loan adding to overpayment",
 				}); err != nil {
 					return err
 				}
@@ -177,7 +182,7 @@ func (p *PaymentService) TriggerManualPayment(
 			ID:         loanID,
 			PaidAmount: nonPosted.Amount,
 			UpdatedBy:  &paymentData.AdminUserID,
-		}, paymentData.NonPostedID, paymentData.ClientID, 0); err != nil {
+		}, paymentData.NonPostedID, paymentData.ClientID, 0, "MANUAL LOAN PAYMENT: "); err != nil {
 			return err
 		}
 
@@ -191,22 +196,24 @@ func (p *PaymentService) UpdatePayment(
 	ctx context.Context,
 	paymentID uint32,
 	userID uint32,
+	description string,
 	paymentData *services.MpesaCallbackData,
 ) error {
+	descriptionUpdate := fmt.Sprintf("UPDATE LOAN PAYMENT: %s", description)
+	nonPostedParams := &repository.NonPosted{
+		ID:                 paymentID,
+		TransactionSource:  paymentData.TransactionSource,
+		TransactionNumber:  paymentData.TransactionID,
+		AccountNumber:      paymentData.AccountNumber,
+		PhoneNumber:        paymentData.PhoneNumber,
+		PayingName:         paymentData.PayingName,
+		Amount:             paymentData.Amount,
+		AssignedBy:         paymentData.AssignedBy,
+		PaidDate:           time.Now(),
+		DeletedDescription: &descriptionUpdate,
+	}
 	if paymentData.AssignedTo == nil {
-		nonPostedParams := &repository.NonPosted{
-			ID:                paymentID,
-			TransactionSource: paymentData.TransactionSource,
-			TransactionNumber: paymentData.TransactionID,
-			AccountNumber:     paymentData.AccountNumber,
-			PhoneNumber:       paymentData.PhoneNumber,
-			PayingName:        paymentData.PayingName,
-			Amount:            paymentData.Amount,
-			AssignedBy:        paymentData.AssignedBy,
-			PaidDate:          time.Now(),
-			AssignedTo:        nil,
-		}
-
+		nonPostedParams.AssignedTo = nil
 		if err := p.mySQL.NonPosted.UpdateNonPosted(ctx, nonPostedParams); err != nil {
 			return err
 		}
@@ -230,13 +237,34 @@ func (p *PaymentService) UpdatePayment(
 					return err
 				}
 			} else {
-				if err := deductOverpayment(ctx, q, allocation.ID, paymentData.AssignedBy, allocation.Amount); err != nil {
+				if err := deductOverpayment(ctx, q, repository.Overpayment{
+					ClientID:  *paymentData.AssignedTo,
+					Amount:    allocation.Amount,
+					PaymentID: &paymentID,
+					CreatedBy: paymentData.AssignedBy,
+					Description: fmt.Sprintf(
+						"UPDATE LOAN PAYMENT: REDUCING OVERPAYMENT: %s",
+						description,
+					),
+				}); err != nil {
 					return err
 				}
 			}
 		}
 
-		_, err = q.DeletePaymentAllocationsByNonPostedId(ctx, paymentID)
+		_, err = q.DeletePaymentAllocationsByNonPostedId(
+			ctx,
+			generated.DeletePaymentAllocationsByNonPostedIdParams{
+				NonPostedID: paymentID,
+				DeletedDescription: sql.NullString{
+					Valid: true,
+					String: fmt.Sprintf(
+						"UPDATE LOAN PAYMENT: DELETING ALLOCATIONS: %s",
+						description,
+					),
+				},
+			},
+		)
 		if err != nil {
 			return pkg.Errorf(
 				pkg.INTERNAL_ERROR,
@@ -282,25 +310,46 @@ func (p *PaymentService) UpdatePayment(
 			}
 		}
 
+		nonPostedParams.AssignedTo = paymentData.AssignedTo
+		if err := p.mySQL.NonPosted.UpdateNonPosted(ctx, nonPostedParams); err != nil {
+			return err
+		}
+
 		loan := &repository.UpdateLoan{
 			ID:         loanID,
 			PaidAmount: paymentData.Amount,
 		}
 
-		return processLoanPayment(ctx, q, loan, paymentID, *paymentData.AssignedTo, revertedAmount)
+		return processLoanPayment(
+			ctx,
+			q,
+			loan,
+			paymentID,
+			*paymentData.AssignedTo,
+			revertedAmount,
+			fmt.Sprintf("UPDATE LOAN PAYMENT: %s", description),
+		)
 	})
 
 	return err
 }
 
-func (p *PaymentService) DeletePayment(ctx context.Context, paymentID uint32, userID uint32) error {
+func (p *PaymentService) DeletePayment(
+	ctx context.Context,
+	paymentID uint32,
+	userID uint32,
+	description string,
+) error {
 	paymentData, err := p.mySQL.NonPosted.GetNonPosted(ctx, paymentID)
 	if err != nil {
 		return err
 	}
 
 	if paymentData.AssignedTo == nil {
-		if err = p.mySQL.NonPosted.DeleteNonPosted(ctx, paymentID); err != nil {
+		if err = p.mySQL.NonPosted.DeleteNonPosted(ctx, paymentID, fmt.Sprintf(
+			"DELETE PAYMENT: DELETING PAYMENT: %s",
+			description,
+		)); err != nil {
 			return err
 		}
 
@@ -323,19 +372,54 @@ func (p *PaymentService) DeletePayment(ctx context.Context, paymentID uint32, us
 					return err
 				}
 			} else {
-				if err := deductOverpayment(ctx, q, allocation.ID, paymentData.AssignedBy, allocation.Amount); err != nil {
+				if err := deductOverpayment(ctx, q, repository.Overpayment{
+					ClientID:  *paymentData.AssignedTo,
+					Amount:    allocation.Amount,
+					PaymentID: &paymentID,
+					CreatedBy: paymentData.AssignedBy,
+					Description: fmt.Sprintf(
+						"DELETE PAYMENT: REDUCING OVERPAYMENT: %s",
+						description,
+					),
+				}); err != nil {
 					return err
 				}
 			}
 		}
 
-		_, err = q.DeletePaymentAllocationsByNonPostedId(ctx, paymentID)
+		_, err = q.DeletePaymentAllocationsByNonPostedId(
+			ctx,
+			generated.DeletePaymentAllocationsByNonPostedIdParams{
+				NonPostedID: paymentID,
+				DeletedDescription: sql.NullString{
+					Valid: true,
+					String: fmt.Sprintf(
+						"DELETE PAYMENT: DELETING ALLOCATIONS: %s",
+						description,
+					),
+				},
+			},
+		)
 		if err != nil {
 			return pkg.Errorf(
 				pkg.INTERNAL_ERROR,
 				"failed to delete payment allocations: %s",
 				err.Error(),
 			)
+		}
+
+		err = q.SoftDeleteNonPosted(ctx, generated.SoftDeleteNonPostedParams{
+			ID: paymentID,
+			DeletedDescription: sql.NullString{
+				Valid: true,
+				String: fmt.Sprintf(
+					"DELETE PAYMENT: DELETING PAYMENT: %s",
+					description,
+				),
+			},
+		})
+		if err != nil {
+			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete non posted: %s", err.Error())
 		}
 
 		if revertedAmount > 0 {
@@ -357,7 +441,7 @@ func (p *PaymentService) DeletePayment(ctx context.Context, paymentID uint32, us
 				if hasActiveLoan {
 					return pkg.Errorf(
 						pkg.INVALID_ERROR,
-						"loan is status will change to active and client has another active loan",
+						"loan status will change to active and client has another active loan",
 					)
 				}
 

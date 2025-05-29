@@ -124,7 +124,7 @@ func (s *Server) setUpRoutes() {
 	v1.POST("/payment/validation", s.validationCallback)
 	authRoute.PATCH("/payment/:id/assign", s.paymentByAdmin)
 	authRoute.POST("/payment/:id", s.updateLoan)
-	authRoute.DELETE("/payment/:id", s.deleteLoan)
+	authRoute.POST("/payment/:id/delete", s.deleteLoan)
 
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)

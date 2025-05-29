@@ -22,7 +22,8 @@ UPDATE non_posted
     amount = sqlc.arg("amount"),
     paid_date = sqlc.arg("paid_date"),
     assign_to = COALESCE(sqlc.narg("assign_to"), assign_to),
-    assigned_by = sqlc.arg("assigned_by")
+    assigned_by = sqlc.arg("assigned_by"),
+    deleted_description = sqlc.arg("deleted_description")
 WHERE id = sqlc.arg("id");
 
 -- name: ListAllNonPosted :many
@@ -52,7 +53,8 @@ DELETE FROM non_posted WHERE id = ?;
 
 -- name: SoftDeleteNonPosted :exec
 UPDATE non_posted
-SET deleted_at = CURRENT_TIMESTAMP
+SET deleted_at = CURRENT_TIMESTAMP,
+    deleted_description = sqlc.arg("deleted_description")
 WHERE id = sqlc.arg("id");
 
 -- name: GetClientsNonPosted :many

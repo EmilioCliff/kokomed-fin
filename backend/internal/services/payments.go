@@ -30,7 +30,8 @@ type PaymentService interface {
 		ctx context.Context,
 		paymentID uint32,
 		userID uint32,
+		description string,
 		paymentData *MpesaCallbackData,
 	) error
-	DeletePayment(ctx context.Context, paymentID uint32, clientID uint32) error
+	DeletePayment(ctx context.Context, paymentID uint32, clientID uint32, description string) error
 }

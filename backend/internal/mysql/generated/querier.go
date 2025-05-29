@@ -40,7 +40,7 @@ type Querier interface {
 	DeleteLoan(ctx context.Context, id uint32) error
 	DeleteNonPosted(ctx context.Context, id uint32) error
 	DeletePaymentAllocation(ctx context.Context, id uint32) (sql.Result, error)
-	DeletePaymentAllocationsByNonPostedId(ctx context.Context, nonPostedID uint32) (sql.Result, error)
+	DeletePaymentAllocationsByNonPostedId(ctx context.Context, arg DeletePaymentAllocationsByNonPostedIdParams) (sql.Result, error)
 	DeleteProduct(ctx context.Context, id uint32) error
 	DisburseLoan(ctx context.Context, arg DisburseLoanParams) (sql.Result, error)
 	GetActiveLoanDetails(ctx context.Context, clientID uint32) (GetActiveLoanDetailsRow, error)
@@ -117,7 +117,7 @@ type Querier interface {
 	PayInstallment(ctx context.Context, arg PayInstallmentParams) (sql.Result, error)
 	ReduceLoan(ctx context.Context, arg ReduceLoanParams) (sql.Result, error)
 	RevertInstallment(ctx context.Context, arg RevertInstallmentParams) (sql.Result, error)
-	SoftDeleteNonPosted(ctx context.Context, id uint32) error
+	SoftDeleteNonPosted(ctx context.Context, arg SoftDeleteNonPostedParams) error
 	TransferLoan(ctx context.Context, arg TransferLoanParams) (sql.Result, error)
 	UpdateBranch(ctx context.Context, arg UpdateBranchParams) (sql.Result, error)
 	UpdateClient(ctx context.Context, arg UpdateClientParams) (sql.Result, error)

@@ -204,12 +204,13 @@ type Client struct {
 }
 
 type ClientOverpaymentTransaction struct {
-	ID        uint32        `json:"id"`
-	ClientID  uint32        `json:"client_id"`
-	PaymentID sql.NullInt32 `json:"payment_id"`
-	Amount    float64       `json:"amount"`
-	CreatedBy string        `json:"created_by"`
-	CreatedAt time.Time     `json:"created_at"`
+	ID          uint32        `json:"id"`
+	ClientID    uint32        `json:"client_id"`
+	PaymentID   sql.NullInt32 `json:"payment_id"`
+	Amount      float64       `json:"amount"`
+	Description string        `json:"description"`
+	CreatedBy   string        `json:"created_by"`
+	CreatedAt   time.Time     `json:"created_at"`
 }
 
 type Installment struct {
@@ -245,27 +246,30 @@ type Loan struct {
 }
 
 type NonPosted struct {
-	ID                uint32                     `json:"id"`
-	TransactionNumber string                     `json:"transaction_number"`
-	AccountNumber     string                     `json:"account_number"`
-	PhoneNumber       string                     `json:"phone_number"`
-	PayingName        string                     `json:"paying_name"`
-	Amount            float64                    `json:"amount"`
-	AssignTo          sql.NullInt32              `json:"assign_to"`
-	PaidDate          time.Time                  `json:"paid_date"`
-	TransactionSource NonPostedTransactionSource `json:"transaction_source"`
-	AssignedBy        string                     `json:"assigned_by"`
-	DeletedAt         sql.NullTime               `json:"deleted_at"`
+	ID                 uint32                     `json:"id"`
+	TransactionNumber  string                     `json:"transaction_number"`
+	AccountNumber      string                     `json:"account_number"`
+	PhoneNumber        string                     `json:"phone_number"`
+	PayingName         string                     `json:"paying_name"`
+	Amount             float64                    `json:"amount"`
+	AssignTo           sql.NullInt32              `json:"assign_to"`
+	PaidDate           time.Time                  `json:"paid_date"`
+	TransactionSource  NonPostedTransactionSource `json:"transaction_source"`
+	AssignedBy         string                     `json:"assigned_by"`
+	DeletedAt          sql.NullTime               `json:"deleted_at"`
+	DeletedDescription sql.NullString             `json:"deleted_description"`
 }
 
 type PaymentAllocation struct {
-	ID            uint32        `json:"id"`
-	NonPostedID   uint32        `json:"non_posted_id"`
-	LoanID        sql.NullInt32 `json:"loan_id"`
-	InstallmentID sql.NullInt32 `json:"installment_id"`
-	Amount        float64       `json:"amount"`
-	DeletedAt     sql.NullTime  `json:"deleted_at"`
-	CreatedAt     time.Time     `json:"created_at"`
+	ID                 uint32         `json:"id"`
+	NonPostedID        uint32         `json:"non_posted_id"`
+	LoanID             sql.NullInt32  `json:"loan_id"`
+	InstallmentID      sql.NullInt32  `json:"installment_id"`
+	Amount             float64        `json:"amount"`
+	Description        string         `json:"description"`
+	DeletedAt          sql.NullTime   `json:"deleted_at"`
+	DeletedDescription sql.NullString `json:"deleted_description"`
+	CreatedAt          time.Time      `json:"created_at"`
 }
 
 type Product struct {

@@ -111,13 +111,6 @@ func (s *Server) createClient(ctx *gin.Context) {
 		return
 	}
 
-	// v, err := s.structureClient(&client, ctx)
-	// if err != nil {
-	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-	// 	return
-	// }
-
 	s.cache.DelAll(ctx, "client:limit=*")
 
 	ctx.JSON(http.StatusOK, client)

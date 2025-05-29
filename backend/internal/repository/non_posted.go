@@ -9,17 +9,19 @@ import (
 )
 
 type NonPosted struct {
-	ID                uint32      `json:"id"`
-	TransactionSource string      `json:"transactionSource"`
-	TransactionNumber string      `json:"transactionNumber"`
-	AccountNumber     string      `json:"accountNumber"`
-	PhoneNumber       string      `json:"phoneNumber"`
-	PayingName        string      `json:"payingName"`
-	Amount            float64     `json:"amount"`
-	PaidDate          time.Time   `json:"paidDate"`
-	AssignedTo        *uint32     `json:"assignedTo,omitempty"`
-	AssignedBy        string      `json:"assignedBy"`
-	AssignedClient    ClientShort `json:"assignedTo,omitempty"`
+	ID                 uint32      `json:"id"`
+	TransactionSource  string      `json:"transactionSource"`
+	TransactionNumber  string      `json:"transactionNumber"`
+	AccountNumber      string      `json:"accountNumber"`
+	PhoneNumber        string      `json:"phoneNumber"`
+	PayingName         string      `json:"payingName"`
+	Amount             float64     `json:"amount"`
+	PaidDate           time.Time   `json:"paidDate"`
+	AssignedTo         *uint32     `json:"assignedTo,omitempty"`
+	AssignedBy         string      `json:"assignedBy"`
+	DeletedAt          *time.Time  `json:"deletedAt,omitempty"`
+	DeletedDescription *string     `json:"deletedDescription,omitempty"`
+	AssignedClient     ClientShort `json:"assignedTo,omitempty"`
 }
 
 type NonPostedCategory struct {
@@ -52,7 +54,7 @@ type NonPostedRepository interface {
 		ctx context.Context,
 		pgData *pkg.PaginationMetadata,
 	) ([]NonPosted, error)
-	DeleteNonPosted(ctx context.Context, id uint32) error
+	DeleteNonPosted(ctx context.Context, id uint32, description string) error
 	GetClientNonPosted(
 		ctx context.Context,
 		id uint32,

@@ -11,15 +11,16 @@ import (
 )
 
 const createClientOverpaymentTransaction = `-- name: CreateClientOverpaymentTransaction :execresult
-INSERT INTO client_overpayment_transactions (client_id, payment_id, amount, created_by)
-VALUES (?, ?, ?, ?)
+INSERT INTO client_overpayment_transactions (client_id, payment_id, amount, description, created_by)
+VALUES (?, ?, ?, ?, ?)
 `
 
 type CreateClientOverpaymentTransactionParams struct {
-	ClientID  uint32        `json:"client_id"`
-	PaymentID sql.NullInt32 `json:"payment_id"`
-	Amount    float64       `json:"amount"`
-	CreatedBy string        `json:"created_by"`
+	ClientID    uint32        `json:"client_id"`
+	PaymentID   sql.NullInt32 `json:"payment_id"`
+	Amount      float64       `json:"amount"`
+	Description string        `json:"description"`
+	CreatedBy   string        `json:"created_by"`
 }
 
 func (q *Queries) CreateClientOverpaymentTransaction(ctx context.Context, arg CreateClientOverpaymentTransactionParams) (sql.Result, error) {
@@ -27,12 +28,13 @@ func (q *Queries) CreateClientOverpaymentTransaction(ctx context.Context, arg Cr
 		arg.ClientID,
 		arg.PaymentID,
 		arg.Amount,
+		arg.Description,
 		arg.CreatedBy,
 	)
 }
 
 const getClientOverpaymentTransaction = `-- name: GetClientOverpaymentTransaction :one
-SELECT id, client_id, payment_id, amount, created_by, created_at FROM client_overpayment_transactions WHERE id = ?
+SELECT id, client_id, payment_id, amount, description, created_by, created_at FROM client_overpayment_transactions WHERE id = ?
 `
 
 func (q *Queries) GetClientOverpaymentTransaction(ctx context.Context, id uint32) (ClientOverpaymentTransaction, error) {
@@ -43,6 +45,7 @@ func (q *Queries) GetClientOverpaymentTransaction(ctx context.Context, id uint32
 		&i.ClientID,
 		&i.PaymentID,
 		&i.Amount,
+		&i.Description,
 		&i.CreatedBy,
 		&i.CreatedAt,
 	)
@@ -50,7 +53,7 @@ func (q *Queries) GetClientOverpaymentTransaction(ctx context.Context, id uint32
 }
 
 const getClientOverpaymentTransactionByPaymentId = `-- name: GetClientOverpaymentTransactionByPaymentId :one
-SELECT id, client_id, payment_id, amount, created_by, created_at FROM client_overpayment_transactions WHERE payment_id = ?
+SELECT id, client_id, payment_id, amount, description, created_by, created_at FROM client_overpayment_transactions WHERE payment_id = ?
 `
 
 func (q *Queries) GetClientOverpaymentTransactionByPaymentId(ctx context.Context, paymentID sql.NullInt32) (ClientOverpaymentTransaction, error) {
@@ -61,6 +64,7 @@ func (q *Queries) GetClientOverpaymentTransactionByPaymentId(ctx context.Context
 		&i.ClientID,
 		&i.PaymentID,
 		&i.Amount,
+		&i.Description,
 		&i.CreatedBy,
 		&i.CreatedAt,
 	)
@@ -68,7 +72,7 @@ func (q *Queries) GetClientOverpaymentTransactionByPaymentId(ctx context.Context
 }
 
 const getClientOverpaymentTransactions = `-- name: GetClientOverpaymentTransactions :many
-SELECT id, client_id, payment_id, amount, created_by, created_at FROM client_overpayment_transactions WHERE client_id = ?
+SELECT id, client_id, payment_id, amount, description, created_by, created_at FROM client_overpayment_transactions WHERE client_id = ?
 `
 
 func (q *Queries) GetClientOverpaymentTransactions(ctx context.Context, clientID uint32) ([]ClientOverpaymentTransaction, error) {
@@ -85,6 +89,7 @@ func (q *Queries) GetClientOverpaymentTransactions(ctx context.Context, clientID
 			&i.ClientID,
 			&i.PaymentID,
 			&i.Amount,
+			&i.Description,
 			&i.CreatedBy,
 			&i.CreatedAt,
 		); err != nil {
