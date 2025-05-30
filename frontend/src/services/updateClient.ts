@@ -1,10 +1,11 @@
 import api from '@/API/api';
-import { updateClientType } from '@/lib/types';
+import { EditClientFormType } from '@/components/PAGES/payments/schema';
+import { commonresponse } from '@/lib/types';
 
-const updateClient = async (data: updateClientType) => {
+const updateClient = async (data: EditClientFormType) => {
 	try {
 		const response = await api
-			.patch<updateClientType>(`/client/${data.id}`, data)
+			.patch<commonresponse>(`/client/${data.id}`, data)
 			.then((resp) => resp.data);
 
 		if (response.message) {

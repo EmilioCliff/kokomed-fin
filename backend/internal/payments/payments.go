@@ -97,7 +97,7 @@ func (p *PaymentService) ProcessCallback(
 				return err
 			}
 
-			return processLoanPayment(ctx, q, loan, nonPostedID, *params.AssignedTo, 0, "SYSTEM LOAN PAYMENT: ")
+			return processLoanPayment(ctx, q, loan, nonPostedID, *params.AssignedTo, 0, "SYSTEM LOAN PAYMENT")
 		}); err != nil {
 			return 0, err
 		}
@@ -114,23 +114,24 @@ func (p *PaymentService) ProcessCallback(
 func (p *PaymentService) TriggerManualPayment(
 	ctx context.Context,
 	paymentData services.ManualPaymentData,
+	assignedBy string,
 ) (uint32, error) {
 	loanID := uint32(0)
-	adminFullname, err := p.mySQL.Helpers.GetUserFullname(ctx, paymentData.AdminUserID)
-	if err != nil {
-		return 0, err
-	}
-	err = p.db.ExecTx(ctx, func(q generated.Querier) error {
+	// adminFullname, err := p.mySQL.Helpers.GetUserFullname(ctx, paymentData.AdminUserID)
+	// if err != nil {
+	// 	return 0, err
+	// }
+	err := p.db.ExecTx(ctx, func(q generated.Querier) error {
 		_, err := q.AssignNonPosted(ctx, generated.AssignNonPostedParams{
 			ID: paymentData.NonPostedID,
 			AssignTo: sql.NullInt32{
 				Valid: true,
 				Int32: int32(paymentData.ClientID),
 			},
-			TransactionSource: generated.NonPostedTransactionSourceMPESA, // to MPESA since attaching mpesa payment to client
+			TransactionSource: generated.NonPostedTransactionSourceINTERNAL,
 			AssignedBy: sql.NullString{
 				Valid:  true,
-				String: adminFullname,
+				String: assignedBy,
 			},
 		})
 		if err != nil {
@@ -182,7 +183,7 @@ func (p *PaymentService) TriggerManualPayment(
 			ID:         loanID,
 			PaidAmount: nonPosted.Amount,
 			UpdatedBy:  &paymentData.AdminUserID,
-		}, paymentData.NonPostedID, paymentData.ClientID, 0, "MANUAL LOAN PAYMENT: "); err != nil {
+		}, paymentData.NonPostedID, paymentData.ClientID, 0, "MANUAL LOAN PAYMENT"); err != nil {
 			return err
 		}
 
@@ -199,6 +200,18 @@ func (p *PaymentService) UpdatePayment(
 	description string,
 	paymentData *services.MpesaCallbackData,
 ) error {
+	nonPosted, err := p.mySQL.NonPosted.GetNonPosted(ctx, paymentID)
+	if err != nil {
+		return err
+	}
+
+	if nonPosted.TransactionSource != "INTERNAL" {
+		return pkg.Errorf(
+			pkg.INVALID_ERROR,
+			"transaction source is not internal. only internal transactions can be updated",
+		)
+	}
+
 	descriptionUpdate := fmt.Sprintf("UPDATE LOAN PAYMENT: %s", description)
 	nonPostedParams := &repository.NonPosted{
 		ID:                 paymentID,
@@ -221,7 +234,7 @@ func (p *PaymentService) UpdatePayment(
 		return nil
 	}
 
-	err := p.db.ExecTx(ctx, func(q generated.Querier) error {
+	err = p.db.ExecTx(ctx, func(q generated.Querier) error {
 		allocations, err := q.ListPaymentAllocationsByNonPostedId(ctx, paymentID)
 		if err != nil {
 			return err
@@ -259,7 +272,7 @@ func (p *PaymentService) UpdatePayment(
 				DeletedDescription: sql.NullString{
 					Valid: true,
 					String: fmt.Sprintf(
-						"UPDATE LOAN PAYMENT: DELETING ALLOCATIONS: %s",
+						"UPDATE LOAN PAYMENT: DELETING ALLOCATION: %s",
 						description,
 					),
 				},
@@ -343,6 +356,13 @@ func (p *PaymentService) DeletePayment(
 	paymentData, err := p.mySQL.NonPosted.GetNonPosted(ctx, paymentID)
 	if err != nil {
 		return err
+	}
+
+	if paymentData.TransactionSource != "INTERNAL" {
+		return pkg.Errorf(
+			pkg.INVALID_ERROR,
+			"transaction source is not internal. only internal transactions can be updated",
+		)
 	}
 
 	if paymentData.AssignedTo == nil {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,15 @@ export default function VirtualizeddSelect({
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedOption, setSelectedOption] = useState('');
 	const [open, setOpen] = useState(false);
+
+	useEffect(() => {
+		if (value !== null && value !== 0) {
+			const found = options.find((opt) => opt.id === value);
+			if (found) {
+				setSelectedOption(found.name);
+			}
+		}
+	}, [value, options]);
 
 	const filteredOptions = useMemo(() => {
 		return options.filter((option) =>

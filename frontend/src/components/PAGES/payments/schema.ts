@@ -35,3 +35,20 @@ export const paymentFormSchema = z.object({
 });
 
 export type PaymentFormType = z.infer<typeof paymentFormSchema>;
+
+export const editClientFormSchema = z.object({
+	id: z.number().gt(0, { message: 'Select valid client' }),
+	fullName: z.string().min(3),
+	phoneNumber: z
+		.string()
+		.length(10, 'Phone number must be exactly 10 digits')
+		.regex(/^\d+$/, 'Phone number must contain only digits'),
+	idNumber: z.string().optional(),
+	dob: z.string().optional(),
+	gender: z.enum(['MALE', 'FEMALE']),
+	active: z.enum(['true', 'false']),
+	branchId: z.number().gt(0, { message: 'Select valid branch' }),
+	assignedStaffId: z.number().gt(0, { message: 'Select valid staff' }),
+});
+
+export type EditClientFormType = z.infer<typeof editClientFormSchema>;

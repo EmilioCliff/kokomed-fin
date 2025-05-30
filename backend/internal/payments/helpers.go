@@ -11,78 +11,6 @@ import (
 	"github.com/EmilioCliff/kokomed-fin/backend/pkg"
 )
 
-func revertInstallment(
-	ctx context.Context,
-	q generated.Querier,
-	installmentID uint32,
-	paidAmount float64,
-) error {
-	_, err := q.RevertInstallment(ctx, generated.RevertInstallmentParams{
-		ID:              installmentID,
-		RemainingAmount: paidAmount,
-	})
-	if err != nil {
-		return pkg.Errorf(
-			pkg.INTERNAL_ERROR,
-			"failed to update installment: %s",
-			err.Error(),
-		)
-	}
-
-	return nil
-}
-
-func deductOverpayment(
-	ctx context.Context,
-	q generated.Querier,
-	data repository.Overpayment,
-) error {
-	overpayment, err := q.GetClientOverpayment(ctx, data.ClientID)
-	if err != nil {
-		return pkg.Errorf(
-			pkg.INTERNAL_ERROR,
-			"failed to get client overpayment: %s",
-			err.Error(),
-		)
-	}
-
-	if overpayment < data.Amount {
-		return pkg.Errorf(
-			pkg.INVALID_ERROR,
-			"client overpayment is less than the amount")
-	}
-
-	_, err = q.DeductClientOverpayment(ctx, generated.DeductClientOverpaymentParams{
-		ID:          data.ClientID,
-		Overpayment: data.Amount,
-	})
-	if err != nil {
-		return pkg.Errorf(
-			pkg.INTERNAL_ERROR,
-			"failed to update client overpayment: %s",
-			err.Error(),
-		)
-	}
-
-	params := generated.CreateClientOverpaymentTransactionParams{
-		ClientID:    data.ClientID,
-		Amount:      data.Amount,
-		CreatedBy:   data.CreatedBy,
-		Description: data.Description,
-	}
-
-	_, err = q.CreateClientOverpaymentTransaction(ctx, params)
-	if err != nil {
-		return pkg.Errorf(
-			pkg.INTERNAL_ERROR,
-			"failed to create client overpayment transaction: %s",
-			err.Error(),
-		)
-	}
-
-	return nil
-}
-
 func processLoanPayment(
 	ctx context.Context,
 	q generated.Querier,
@@ -235,6 +163,78 @@ func processLoanPayment(
 		if err != nil {
 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to change loans status: %s", err.Error())
 		}
+	}
+
+	return nil
+}
+
+func revertInstallment(
+	ctx context.Context,
+	q generated.Querier,
+	installmentID uint32,
+	paidAmount float64,
+) error {
+	_, err := q.RevertInstallment(ctx, generated.RevertInstallmentParams{
+		ID:              installmentID,
+		RemainingAmount: paidAmount,
+	})
+	if err != nil {
+		return pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to update installment: %s",
+			err.Error(),
+		)
+	}
+
+	return nil
+}
+
+func deductOverpayment(
+	ctx context.Context,
+	q generated.Querier,
+	data repository.Overpayment,
+) error {
+	overpayment, err := q.GetClientOverpayment(ctx, data.ClientID)
+	if err != nil {
+		return pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get client overpayment: %s",
+			err.Error(),
+		)
+	}
+
+	if overpayment < data.Amount {
+		return pkg.Errorf(
+			pkg.INVALID_ERROR,
+			"client overpayment is less than the amount")
+	}
+
+	_, err = q.DeductClientOverpayment(ctx, generated.DeductClientOverpaymentParams{
+		ID:          data.ClientID,
+		Overpayment: data.Amount,
+	})
+	if err != nil {
+		return pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to update client overpayment: %s",
+			err.Error(),
+		)
+	}
+
+	params := generated.CreateClientOverpaymentTransactionParams{
+		ClientID:    data.ClientID,
+		Amount:      data.Amount,
+		CreatedBy:   data.CreatedBy,
+		Description: data.Description,
+	}
+
+	_, err = q.CreateClientOverpaymentTransaction(ctx, params)
+	if err != nil {
+		return pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to create client overpayment transaction: %s",
+			err.Error(),
+		)
 	}
 
 	return nil

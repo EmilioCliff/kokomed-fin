@@ -116,6 +116,7 @@ func (s *Server) setUpRoutes() {
 	authRoute.PATCH("/loan/:id/disburse", s.disburseLoan)
 	authRoute.GET("/loan/:id/installments", s.getLoanInstallments)
 	cachedRoutes.GET("/loan", s.listLoansByCategory)
+	cachedRoutes.GET("/loan/client/:id", s.listClientLoans)
 	cachedRoutes.GET("/loan/expected-payments", s.listExpectedPayments)
 	cachedRoutes.GET("/loan/unpaid-installments", s.listUnpaidInstallmentsData)
 

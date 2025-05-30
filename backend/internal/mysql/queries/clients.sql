@@ -22,10 +22,14 @@ SELECT * FROM clients WHERE id = ? LIMIT 1;
 
 -- name: UpdateClient :execresult
 UPDATE clients 
-    SET id_number = coalesce(sqlc.narg("id_number"), id_number),
+    SET full_name = sqlc.arg("full_name"),
+    phone_number = sqlc.arg("phone_number"),
+    gender = sqlc.arg("gender"),
+    assigned_staff = sqlc.arg("assigned_staff"),
+    branch_id = sqlc.arg("branch_id"),
+    active = sqlc.arg("active"),
+    id_number = coalesce(sqlc.narg("id_number"), id_number),
     dob = coalesce(sqlc.narg("dob"), dob),
-    active = coalesce(sqlc.narg("active"), active),
-    branch_id = coalesce(sqlc.narg("branch_id"), branch_id),
     updated_at = CURRENT_TIMESTAMP,
     updated_by = sqlc.arg("updated_by")
 WHERE id = sqlc.arg("id");

@@ -159,6 +159,68 @@ func (r *LoanRepository) ListLoans(
 	), nil
 }
 
+func (r *LoanRepository) GetClientLoans(
+	ctx context.Context,
+	clientID uint32,
+	category *repository.Category,
+	pgData *pkg.PaginationMetadata,
+) ([]repository.LoanFullData, pkg.PaginationMetadata, error) {
+	params := generated.GetClientLoansParams{
+		ClientID:  clientID,
+		Column1:   "",
+		FINDINSET: "",
+		Limit:     int32(pgData.PageSize),
+		Offset:    int32(pkg.CalculateOffset(pgData.CurrentPage, pgData.PageSize)),
+	}
+
+	params2 := generated.CountClientLoansParams{
+		ClientID:  clientID,
+		Column1:   "",
+		FINDINSET: "",
+	}
+
+	if category.Statuses != nil {
+		params.Column1 = "has_status"
+		params2.Column1 = "has_status"
+		params.FINDINSET = *category.Statuses
+		params2.FINDINSET = *category.Statuses
+	}
+
+	loans, err := r.queries.GetClientLoans(ctx, params)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, pkg.PaginationMetadata{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no loans found")
+		}
+
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get loans: %s",
+			err.Error(),
+		)
+	}
+
+	totalLoans, err := r.queries.CountClientLoans(ctx, params2)
+	if err != nil {
+		return nil, pkg.PaginationMetadata{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get total loans: %s",
+			err.Error(),
+		)
+	}
+
+	result := make([]repository.LoanFullData, len(loans))
+
+	for i, loan := range loans {
+		result[i] = convertClientLoanRowToRepo(&loan)
+	}
+
+	return result, pkg.CreatePaginationMetadata(
+		uint32(totalLoans),
+		pgData.PageSize,
+		pgData.CurrentPage,
+	), nil
+}
+
 func (r *LoanRepository) GetExpectedPayments(
 	ctx context.Context,
 	category *repository.Category,
@@ -603,6 +665,87 @@ func (r *LoanRepository) ListUnpaidInstallmentsData(
 }
 
 func convertListLoanRowToRepo(loan *generated.ListLoansRow) repository.LoanFullData {
+	rsp := repository.LoanFullData{
+		ID: loan.ID,
+		Product: repository.ProductShort{
+			ID:             loan.ProductID,
+			BranchName:     loan.ProductBranchName, // You might need to join the product's branch name if required
+			LoanAmount:     loan.LoanAmount,
+			RepayAmount:    loan.RepayAmount,
+			InterestAmount: loan.InterestAmount,
+		},
+		Client: repository.ClientShort{
+			ID:          loan.ClientID,
+			FullName:    loan.ClientName,
+			PhoneNumber: loan.ClientPhone,
+			Active:      loan.ClientActive,
+			BranchName:  loan.ClientBranchName,
+		},
+		LoanOfficer: repository.UserShortResponse{
+			ID:          loan.LoanOfficer,
+			FullName:    loan.LoanOfficerName,
+			Email:       loan.LoanOfficerEmail,
+			PhoneNumber: loan.LoanOfficerPhone,
+		},
+		LoanPurpose: pkg.StringPtr(""),
+		DueDate:     &time.Time{},
+		ApprovedBy: repository.UserShortResponse{
+			ID:          loan.ApprovedBy,
+			FullName:    loan.ApprovedByName,
+			Email:       loan.ApprovedByEmail,
+			PhoneNumber: loan.ApprovedByPhone,
+		},
+		DisbursedOn:        &time.Time{},
+		TotalInstallments:  loan.TotalInstallments,
+		InstallmentsPeriod: loan.InstallmentsPeriod,
+		Status:             string(loan.Status),
+		ProcessingFee:      loan.ProcessingFee,
+		FeePaid:            loan.FeePaid,
+		PaidAmount:         loan.PaidAmount,
+		RemainingAmount:    loan.RepayAmount - loan.PaidAmount,
+		CreatedBy: repository.UserShortResponse{
+			ID:          loan.CreatedBy,
+			FullName:    loan.CreatedByName.String,
+			Email:       loan.CreatedByEmail.String,
+			PhoneNumber: loan.CreatedByPhone.String,
+		},
+		CreatedAt: loan.CreatedAt,
+	}
+
+	if loan.DueDate.Valid {
+		rsp.DueDate = &loan.DueDate.Time
+	}
+
+	if loan.DisbursedOn.Valid {
+		rsp.DisbursedOn = &loan.DisbursedOn.Time
+	}
+
+	if loan.LoanPurpose.Valid {
+		rsp.LoanPurpose = &loan.LoanPurpose.String
+	}
+
+	if loan.UpdatedBy.Valid {
+		rsp.UpdatedBy = repository.UserShortResponse{
+			ID:          uint32(loan.UpdatedBy.Int32),
+			FullName:    loan.UpdatedByName.String,
+			Email:       loan.UpdatedByEmail.String,
+			PhoneNumber: loan.UpdatedByPhone.String,
+		}
+	}
+
+	if loan.DisbursedBy.Valid {
+		rsp.DisbursedBy = repository.UserShortResponse{
+			ID:          uint32(loan.DisbursedBy.Int32),
+			FullName:    loan.DisbursedByName.String,
+			Email:       loan.DisbursedByEmail.String,
+			PhoneNumber: loan.DisbursedByPhone.String,
+		}
+	}
+
+	return rsp
+}
+
+func convertClientLoanRowToRepo(loan *generated.GetClientLoansRow) repository.LoanFullData {
 	rsp := repository.LoanFullData{
 		ID: loan.ID,
 		Product: repository.ProductShort{

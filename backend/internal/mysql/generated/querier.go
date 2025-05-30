@@ -14,6 +14,7 @@ type Querier interface {
 	CheckActiveLoanForClient(ctx context.Context, clientID uint32) (bool, error)
 	CheckUserExistance(ctx context.Context, email string) (int64, error)
 	CountBranchesByCategory(ctx context.Context, arg CountBranchesByCategoryParams) (int64, error)
+	CountClientLoans(ctx context.Context, arg CountClientLoansParams) (int64, error)
 	CountClientsByCategory(ctx context.Context, arg CountClientsByCategoryParams) (int64, error)
 	CountClientsNonPosted(ctx context.Context, arg CountClientsNonPostedParams) (int64, error)
 	CountExpectedPayments(ctx context.Context, arg CountExpectedPaymentsParams) (int64, error)
@@ -54,6 +55,8 @@ type Querier interface {
 	// JOIN users updated ON c.updated_by = updated.id
 	GetClientFullData(ctx context.Context, id uint32) (GetClientFullDataRow, error)
 	GetClientIDByPhoneNumber(ctx context.Context, phoneNumber string) (uint32, error)
+	// Left joins for optional fields (disbursed_by, updated_by, created_by)
+	GetClientLoans(ctx context.Context, arg GetClientLoansParams) ([]GetClientLoansRow, error)
 	GetClientOverpayment(ctx context.Context, id uint32) (float64, error)
 	GetClientOverpaymentTransaction(ctx context.Context, id uint32) (ClientOverpaymentTransaction, error)
 	GetClientOverpaymentTransactionByPaymentId(ctx context.Context, paymentID sql.NullInt32) (ClientOverpaymentTransaction, error)

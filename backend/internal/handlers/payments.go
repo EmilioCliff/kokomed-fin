@@ -143,7 +143,7 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 		NonPostedID: id,
 		ClientID:    req.ClientID,
 		AdminUserID: payloadData.UserID,
-	})
+	}, payloadData.Email)
 	if err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -170,7 +170,7 @@ type updateLoanRequest struct {
 	PayingName        string  `json:"paying_name"        binding:"required"`
 	Amount            float64 `json:"amount"             binding:"required"`
 	AssignedBy        string  `json:"assigned_by"        binding:"required"`
-	AssignedTo        uint32  `json:"assigned_to"        binding:"required"`
+	AssignedTo        string  `json:"assigned_to"        binding:"required"`
 	Description       string  `json:"description"        binding:"required"`
 	PaidDate          string  `json:"paid_date"          binding:"required"`
 }
@@ -204,6 +204,12 @@ func (s *Server) updateLoan(ctx *gin.Context) {
 		return
 	}
 
+	if strings.ToLower(payloadData.Role) != "admin" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "not authorized"})
+
+		return
+	}
+
 	params := services.MpesaCallbackData{
 		TransactionSource: req.TransactionSource,
 		TransactionID:     req.TransactionID,
@@ -212,11 +218,20 @@ func (s *Server) updateLoan(ctx *gin.Context) {
 		PayingName:        req.PayingName,
 		Amount:            req.Amount,
 		AssignedBy:        req.AssignedBy,
-		AssignedTo:        pkg.Uint32Ptr(req.AssignedTo),
+		// AssignedTo:        pkg.Uint32Ptr(req.AssignedTo),
 	}
 
-	if req.AssignedTo == 0 {
+	assignedTo, err := pkg.StringToUint32(req.AssignedTo)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if assignedTo == 0 {
 		params.AssignedTo = nil
+	} else {
+		params.AssignedTo = pkg.Uint32Ptr(assignedTo)
 	}
 
 	if req.PaidDate != "" {

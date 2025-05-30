@@ -25,7 +25,11 @@ type ManualPaymentData struct {
 
 type PaymentService interface {
 	ProcessCallback(ctx context.Context, callbackData *MpesaCallbackData) (uint32, error)
-	TriggerManualPayment(ctx context.Context, paymentData ManualPaymentData) (uint32, error)
+	TriggerManualPayment(
+		ctx context.Context,
+		paymentData ManualPaymentData,
+		assignedBy string,
+	) (uint32, error)
 	UpdatePayment(
 		ctx context.Context,
 		paymentID uint32,

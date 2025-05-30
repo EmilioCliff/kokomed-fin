@@ -21,6 +21,7 @@ import { ToastContainer } from 'react-toastify';
 import PaymentClient from './components/PAGES/payments/PaymentClient';
 // import GetDataTest from './pages/GetDataTest';
 import LoanUnpaidInstallments from './components/PAGES/loans/LoanUnpaidInstallments';
+import PaymentLoanBreakdown from './components/PAGES/payments/PaymentLoanBreakdown';
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,10 @@ function App() {
 								<Route
 									path="payments/client"
 									element={<PaymentClient />}
+								/>
+								<Route
+									path="payments/client/loan/:id"
+									element={<PaymentLoanBreakdown />}
 								/>
 								<Route
 									path="products/overview"

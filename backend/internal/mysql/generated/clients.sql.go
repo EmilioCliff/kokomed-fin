@@ -622,30 +622,42 @@ func (q *Queries) NullifyClientOverpayment(ctx context.Context, id uint32) (sql.
 
 const updateClient = `-- name: UpdateClient :execresult
 UPDATE clients 
-    SET id_number = coalesce(?, id_number),
+    SET full_name = ?,
+    phone_number = ?,
+    gender = ?,
+    assigned_staff = ?,
+    branch_id = ?,
+    active = ?,
+    id_number = coalesce(?, id_number),
     dob = coalesce(?, dob),
-    active = coalesce(?, active),
-    branch_id = coalesce(?, branch_id),
     updated_at = CURRENT_TIMESTAMP,
     updated_by = ?
 WHERE id = ?
 `
 
 type UpdateClientParams struct {
-	IDNumber  sql.NullString `json:"id_number"`
-	Dob       sql.NullTime   `json:"dob"`
-	Active    sql.NullBool   `json:"active"`
-	BranchID  sql.NullInt32  `json:"branch_id"`
-	UpdatedBy uint32         `json:"updated_by"`
-	ID        uint32         `json:"id"`
+	FullName      string         `json:"full_name"`
+	PhoneNumber   string         `json:"phone_number"`
+	Gender        ClientsGender  `json:"gender"`
+	AssignedStaff uint32         `json:"assigned_staff"`
+	BranchID      uint32         `json:"branch_id"`
+	Active        bool           `json:"active"`
+	IDNumber      sql.NullString `json:"id_number"`
+	Dob           sql.NullTime   `json:"dob"`
+	UpdatedBy     uint32         `json:"updated_by"`
+	ID            uint32         `json:"id"`
 }
 
 func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, updateClient,
+		arg.FullName,
+		arg.PhoneNumber,
+		arg.Gender,
+		arg.AssignedStaff,
+		arg.BranchID,
+		arg.Active,
 		arg.IDNumber,
 		arg.Dob,
-		arg.Active,
-		arg.BranchID,
 		arg.UpdatedBy,
 		arg.ID,
 	)

@@ -544,6 +544,14 @@ func (r *NonPostedRepository) GetClientNonPosted(
 		rslt.ClientDetails.PhoneNumber = client.PhoneNumber
 		rslt.ClientDetails.Overpayment = client.Overpayment
 		rslt.ClientDetails.BranchName = branch.Name
+		rslt.ClientDetails.BranchID = client.BranchID
+		rslt.ClientDetails.Dob = client.Dob.Time.Format("2006-01-02")
+		rslt.ClientDetails.Gender = string(client.Gender)
+		rslt.ClientDetails.IdNumber = client.IDNumber.String
+		rslt.ClientDetails.Active = client.Active
+		rslt.ClientDetails.AssignedStaff = repository.UserShortResponse{
+			ID: client.AssignedStaff,
+		}
 	}
 
 	if clientHasActiveLoan {

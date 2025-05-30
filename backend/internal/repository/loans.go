@@ -142,6 +142,12 @@ type LoansRepository interface {
 	TransferLoan(ctx context.Context, officerId uint32, loanId uint32, adminId uint32) error
 	GetLoanByID(ctx context.Context, id uint32) (Loan, error)
 	GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error)
+	GetClientLoans(
+		ctx context.Context,
+		clientID uint32,
+		category *Category,
+		pgData *pkg.PaginationMetadata,
+	) ([]LoanFullData, pkg.PaginationMetadata, error)
 	ListLoans(
 		ctx context.Context,
 		category *Category,
