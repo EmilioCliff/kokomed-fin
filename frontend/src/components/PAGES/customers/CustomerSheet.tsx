@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { updateClientType } from '@/lib/types';
-import updateClient from '@/services/updateClient';
+import { updateClientShort } from '@/services/updateClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import getFormData from '@/services/getFormData';
 import { useTable } from '@/hooks/useTable';
@@ -53,7 +53,7 @@ function CustomerSheet() {
 	const queryClient = useQueryClient();
 
 	const mutation = useMutation({
-		mutationFn: updateClient,
+		mutationFn: updateClientShort,
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: ['clients'] });
 			toast.success('User Updated');
