@@ -383,3 +383,19 @@ WHERE
     l.client_id = ?
     AND l.status = 'ACTIVE'
 LIMIT 1;
+
+-- name: GetLoanDetails :one
+SELECT 
+    l.id,
+    l.client_id,
+    p.loan_amount,
+    p.repay_amount,
+    l.disbursed_on,
+    l.due_date,
+    l.paid_amount,
+    l.status
+FROM loans l
+JOIN products p ON l.product_id = p.id
+WHERE 
+    l.id = ?
+LIMIT 1;

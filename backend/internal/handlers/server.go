@@ -104,6 +104,7 @@ func (s *Server) setUpRoutes() {
 	// non-posted routes
 	cachedRoutes.GET("/non-posted/all", s.listAllNonPostedPayments)
 	authRoute.POST("/non-posted/clients", s.listClientsNonPosted)
+	cachedRoutes.GET("/non-posted/:id", s.getNonPosted)
 
 	// branches routes
 	cachedRoutes.GET("/branch", s.listBranches)
@@ -116,6 +117,7 @@ func (s *Server) setUpRoutes() {
 	authRoute.PATCH("/loan/:id/disburse", s.disburseLoan)
 	authRoute.GET("/loan/:id/installments", s.getLoanInstallments)
 	cachedRoutes.GET("/loan", s.listLoansByCategory)
+	cachedRoutes.GET("/loan/:id", s.getLoan)
 	cachedRoutes.GET("/loan/client/:id", s.listClientLoans)
 	cachedRoutes.GET("/loan/expected-payments", s.listExpectedPayments)
 	cachedRoutes.GET("/loan/unpaid-installments", s.listUnpaidInstallmentsData)
@@ -124,8 +126,10 @@ func (s *Server) setUpRoutes() {
 	v1.POST("/payment/callback", s.paymentCallback)
 	v1.POST("/payment/validation", s.validationCallback)
 	authRoute.PATCH("/payment/:id/assign", s.paymentByAdmin)
-	authRoute.POST("/payment/:id", s.updateLoan)
+	authRoute.POST("/payment/:id/update", s.updatePayment)
+	authRoute.POST("/payment/:id/simulate-update", s.simulateUpdatePayment)
 	authRoute.POST("/payment/:id/delete", s.deleteLoan)
+	authRoute.GET("/payment/:id/simulate-delete", s.simulateDeletePayment)
 
 	// helper routes
 	authRoute.GET("/helper/dashboard", s.getDashboardData)

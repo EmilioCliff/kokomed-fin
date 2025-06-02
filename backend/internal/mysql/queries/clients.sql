@@ -20,6 +20,12 @@ SELECT * FROM clients LIMIT ? OFFSET ?;
 -- name: GetClient :one
 SELECT * FROM clients WHERE id = ? LIMIT 1;
 
+-- name: GetClientWithBranchName :one
+SELECT c.*, b.name AS branch_name 
+FROM clients c 
+JOIN branches b ON c.branch_id = b.id 
+WHERE c.id = ? LIMIT 1;
+
 -- name: UpdateClient :execresult
 UPDATE clients 
     SET full_name = sqlc.arg("full_name"),

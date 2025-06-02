@@ -48,8 +48,6 @@ const EditClientForm = ({ onFormOpen, clientData }: editCustomerFormProps) => {
 		staleTime: 5 * 1000,
 	});
 
-	console.log(clientData);
-
 	const form = useForm<EditClientFormType>({
 		resolver: zodResolver(editClientFormSchema),
 		defaultValues: {

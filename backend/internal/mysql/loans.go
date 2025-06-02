@@ -66,7 +66,6 @@ func (r *LoanRepository) GetLoanByID(ctx context.Context, id uint32) (repository
 	return convertGeneratedLoan(loan), nil
 }
 
-// used in transactions to get client active loan
 func (t *LoanRepository) GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error) {
 	loanID, err := t.queries.GetClientActiveLoan(ctx, generated.GetClientActiveLoanParams{
 		ClientID: clientID,
@@ -74,10 +73,14 @@ func (t *LoanRepository) GetClientActiceLoan(ctx context.Context, clientID uint3
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return 0, pkg.Errorf(pkg.NOT_FOUND_ERROR, "loan not found")
+			return 0, nil
 		}
 
-		return 0, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan: %s", err.Error())
+		return 0, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get client active loan: %s",
+			err.Error(),
+		)
 	}
 
 	return loanID, nil
@@ -157,6 +160,182 @@ func (r *LoanRepository) ListLoans(
 		pgData.PageSize,
 		pgData.CurrentPage,
 	), nil
+}
+
+func (r *LoanRepository) GetLoan(ctx context.Context, id uint32) (repository.LoanShort, error) {
+	loan, err := r.queries.GetLoanDetails(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return repository.LoanShort{}, pkg.Errorf(pkg.NOT_FOUND_ERROR, "loan not found")
+		}
+
+		return repository.LoanShort{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get loan: %s",
+			err.Error(),
+		)
+	}
+
+	rslt := repository.LoanShort{
+		ID:          loan.ID,
+		LoanAmount:  loan.LoanAmount,
+		Status:      string(loan.Status),
+		RepayAmount: loan.RepayAmount,
+		DisbursedOn: loan.DisbursedOn.Time.Format("2006-01-02"),
+		DueDate:     loan.DueDate.Time.Format("2006-01-02"),
+		PaidAmount:  loan.PaidAmount,
+	}
+
+	client, err := r.queries.GetClientWithBranchName(ctx, loan.ClientID)
+	if err != nil && err != sql.ErrNoRows {
+		return repository.LoanShort{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get client: %s",
+			err.Error(),
+		)
+	}
+
+	rslt.ClientDetails = repository.ClientShort{
+		ID:          client.ID,
+		FullName:    client.FullName,
+		PhoneNumber: client.PhoneNumber,
+		BranchName:  client.BranchName,
+		Overpayment: client.Overpayment,
+		Active:      client.Active,
+	}
+
+	if client.IDNumber.Valid {
+		rslt.ClientDetails.IdNumber = client.IDNumber.String
+	}
+
+	installments, err := r.queries.ListInstallmentsByLoan(ctx, loan.ID)
+	if err != nil && err != sql.ErrNoRows {
+		return repository.LoanShort{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get loan installments: %s",
+			err.Error(),
+		)
+	}
+
+	if len(installments) > 0 {
+		rslt.Installments = convertGeneratedInstallmentList(installments)
+	} else {
+		rslt.Installments = []repository.Installment{}
+	}
+
+	allocations, err := r.queries.ListPaymentAllocationsByLoanId(ctx, sql.NullInt32{
+		Valid: true,
+		Int32: int32(loan.ID),
+	})
+	if err != nil && err != sql.ErrNoRows {
+		return repository.LoanShort{}, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to get loan allocations: %s",
+			err.Error(),
+		)
+	}
+
+	nonPostedIDs := make(map[int]struct{})
+	for _, alloc := range allocations {
+		nonPostedIDs[int(alloc.NonPostedID)] = struct{}{}
+	}
+
+	if len(nonPostedIDs) > 0 {
+		for id := range nonPostedIDs {
+			overpaymentAllocation, err := r.queries.ListPaymentAllocationsByNonPostedID(
+				ctx,
+				uint32(id),
+			)
+			if err != nil && err != sql.ErrNoRows {
+				return repository.LoanShort{}, pkg.Errorf(
+					pkg.INTERNAL_ERROR,
+					"failed to get overpayment allocations: %s",
+					err.Error(),
+				)
+			}
+
+			if len(overpaymentAllocation) == 0 {
+				continue
+			}
+
+			allocations = append(allocations, generated.ListPaymentAllocationsByLoanIdRow{
+				ID:                overpaymentAllocation[0].ID,
+				NonPostedID:       overpaymentAllocation[0].NonPostedID,
+				LoanID:            overpaymentAllocation[0].LoanID,
+				InstallmentID:     overpaymentAllocation[0].InstallmentID,
+				Amount:            overpaymentAllocation[0].Amount,
+				Description:       overpaymentAllocation[0].Description,
+				CreatedAt:         overpaymentAllocation[0].CreatedAt,
+				TransactionSource: overpaymentAllocation[0].TransactionSource,
+				TransactionNumber: overpaymentAllocation[0].TransactionNumber,
+				AccountNumber:     overpaymentAllocation[0].AccountNumber,
+				PayingName:        overpaymentAllocation[0].PayingName,
+				Amount_2:          overpaymentAllocation[0].Amount_2,
+				PaidDate:          overpaymentAllocation[0].PaidDate,
+			})
+		}
+	}
+
+	if len(allocations) > 0 {
+		nonPostedLs := make([]repository.NonPostedShort, 0, len(allocations))
+		for _, allocation := range allocations {
+			p := repository.PaymentAllocation{
+				ID:            allocation.ID,
+				NonPostedID:   allocation.NonPostedID,
+				LoanID:        nil,
+				InstallmentID: nil,
+				Amount:        allocation.Amount,
+				Description:   allocation.Description,
+				CreatedAt:     allocation.CreatedAt,
+			}
+
+			if allocation.LoanID.Valid {
+				value := uint32(allocation.LoanID.Int32)
+				p.LoanID = &value
+			}
+
+			if allocation.InstallmentID.Valid {
+				value := uint32(allocation.InstallmentID.Int32)
+				p.InstallmentID = &value
+			}
+
+			if allocation.DeletedAt.Valid {
+				p.DeletedAt = &allocation.DeletedAt.Time
+			}
+			if allocation.DeletedDescription.Valid {
+				p.DeletedDescription = &allocation.DeletedDescription.String
+			}
+
+			rslt.Payments = append(rslt.Payments, p)
+
+			nonPosted := repository.NonPostedShort{
+				ID:                allocation.NonPostedID,
+				Amount:            allocation.Amount,
+				TransactionSource: string(allocation.TransactionSource),
+				TransactionNumber: allocation.TransactionNumber,
+				AccountNumber:     allocation.AccountNumber,
+				PayingName:        allocation.PayingName,
+				PaidDate:          allocation.PaidDate,
+			}
+
+			nonPostedLs = append(nonPostedLs, nonPosted)
+		}
+
+		rslt.NonPosted = mergeNonPosted(nonPostedLs)
+	} else {
+		rslt.Payments = []repository.PaymentAllocation{}
+		rslt.NonPosted = []repository.NonPostedShort{}
+	}
+
+	return rslt, nil
+}
+
+func (r *LoanRepository) GetLoanStatus(ctx context.Context, id uint32) (string, error) {
+	status, err := r.queries.GetLoanStatus(ctx, id)
+	if err != nil {
+		return "", pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan status: %s", err.Error())
+	}
+	return string(status), nil
 }
 
 func (r *LoanRepository) GetClientLoans(
@@ -743,6 +922,25 @@ func convertListLoanRowToRepo(loan *generated.ListLoansRow) repository.LoanFullD
 	}
 
 	return rsp
+}
+
+func mergeNonPosted(entries []repository.NonPostedShort) []repository.NonPostedShort {
+	mergedMap := make(map[uint32]repository.NonPostedShort)
+
+	for _, entry := range entries {
+		if existing, found := mergedMap[entry.ID]; found {
+			existing.Amount += entry.Amount
+			mergedMap[entry.ID] = existing
+		} else {
+			mergedMap[entry.ID] = entry
+		}
+	}
+
+	result := make([]repository.NonPostedShort, 0, len(mergedMap))
+	for _, v := range mergedMap {
+		result = append(result, v)
+	}
+	return result
 }
 
 func convertClientLoanRowToRepo(loan *generated.GetClientLoansRow) repository.LoanFullData {

@@ -39,7 +39,21 @@ SELECT * FROM non_posted WHERE transaction_source = ? LIMIT ? OFFSET ?;
 SELECT * FROM non_posted WHERE assign_to IS NULL LIMIT ? OFFSET ?;
 
 -- name: GetNonPosted :one
-SELECT * FROM non_posted WHERE id = ? LIMIT 1;
+SELECT 
+    np.*, 
+    -- Client Details (if assigned)
+    c.id AS client_id,
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    c.overpayment AS client_overpayment,
+    b.name AS client_branch_name
+
+FROM non_posted np
+LEFT JOIN clients c ON np.assign_to = c.id
+LEFT JOIN branches b ON c.branch_id = b.id
+WHERE np.id = ? LIMIT 1;
+-- SELECT * FROM non_posted WHERE id = ? LIMIT 1;
+
 
 -- name: AssignNonPosted :execresult
 UPDATE non_posted 

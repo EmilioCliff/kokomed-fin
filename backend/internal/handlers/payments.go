@@ -163,19 +163,19 @@ func (s *Server) paymentByAdmin(ctx *gin.Context) {
 }
 
 type updateLoanRequest struct {
-	TransactionSource string  `json:"transaction_source" binding:"required"`
-	TransactionID     string  `json:"transaction_id"     binding:"required"`
-	AccountNumber     string  `json:"account_number"     binding:"required"`
-	PhoneNumber       string  `json:"phone_number"       binding:"required"`
-	PayingName        string  `json:"paying_name"        binding:"required"`
-	Amount            float64 `json:"amount"             binding:"required"`
-	AssignedBy        string  `json:"assigned_by"        binding:"required"`
-	AssignedTo        string  `json:"assigned_to"        binding:"required"`
-	Description       string  `json:"description"        binding:"required"`
-	PaidDate          string  `json:"paid_date"          binding:"required"`
+	TransactionSource string  `json:"transactionSource" binding:"required"`
+	TransactionID     string  `json:"transactionId"     binding:"required"`
+	AccountNumber     string  `json:"accountNumber"     binding:"required"`
+	PhoneNumber       string  `json:"phoneNumber"       binding:"required"`
+	PayingName        string  `json:"payingName"        binding:"required"`
+	Amount            float64 `json:"amount"            binding:"required"`
+	AssignedBy        string  `json:"assignedBy"        binding:"required"`
+	AssignedTo        uint32  `json:"assignedTo"`
+	Description       string  `json:"description"       binding:"required"`
+	PaidDate          string  `json:"paidDate"          binding:"required"`
 }
 
-func (s *Server) updateLoan(ctx *gin.Context) {
+func (s *Server) updatePayment(ctx *gin.Context) {
 	var req updateLoanRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
@@ -218,20 +218,12 @@ func (s *Server) updateLoan(ctx *gin.Context) {
 		PayingName:        req.PayingName,
 		Amount:            req.Amount,
 		AssignedBy:        req.AssignedBy,
-		// AssignedTo:        pkg.Uint32Ptr(req.AssignedTo),
 	}
 
-	assignedTo, err := pkg.StringToUint32(req.AssignedTo)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	if assignedTo == 0 {
+	if req.AssignedTo == 0 {
 		params.AssignedTo = nil
 	} else {
-		params.AssignedTo = pkg.Uint32Ptr(assignedTo)
+		params.AssignedTo = pkg.Uint32Ptr(req.AssignedTo)
 	}
 
 	if req.PaidDate != "" {
@@ -290,6 +282,12 @@ func (s *Server) deleteLoan(ctx *gin.Context) {
 		return
 	}
 
+	if strings.ToLower(payloadData.Role) != "admin" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "not authorized"})
+
+		return
+	}
+
 	if err := s.payments.DeletePayment(ctx, id, payloadData.UserID, req.Description); err != nil {
 		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
 
@@ -297,6 +295,124 @@ func (s *Server) deleteLoan(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func (s *Server) simulateUpdatePayment(ctx *gin.Context) {
+	var req updateLoanRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	id, err := pkg.StringToUint32(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
+
+	if strings.ToLower(payloadData.Role) != "admin" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "not authorized"})
+
+		return
+	}
+
+	params := services.MpesaCallbackData{
+		TransactionSource: req.TransactionSource,
+		TransactionID:     req.TransactionID,
+		AccountNumber:     req.AccountNumber,
+		PhoneNumber:       req.PhoneNumber,
+		PayingName:        req.PayingName,
+		Amount:            req.Amount,
+		AssignedBy:        req.AssignedBy,
+	}
+
+	if req.AssignedTo == 0 {
+		params.AssignedTo = nil
+	} else {
+		params.AssignedTo = pkg.Uint32Ptr(req.AssignedTo)
+	}
+
+	if req.PaidDate != "" {
+		paidDateT, err := time.Parse("2006-01-02", req.PaidDate)
+		if err != nil {
+			ctx.JSON(
+				http.StatusBadRequest,
+				errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "invalid paid_date format")),
+			)
+
+			return
+		}
+
+		params.PaidDate = pkg.TimePtr(paidDateT)
+	}
+
+	result, err := s.payments.SimulateUpdatePayment(
+		ctx,
+		id,
+		payloadData.UserID,
+		&params,
+	)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"data": result})
+}
+
+func (s *Server) simulateDeletePayment(ctx *gin.Context) {
+	id, err := pkg.StringToUint32(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	payload, ok := ctx.Get(authorizationPayloadKey)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+
+		return
+	}
+
+	payloadData, ok := payload.(*pkg.Payload)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "incorrect token"})
+
+		return
+	}
+
+	if strings.ToLower(payloadData.Role) != "admin" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "not authorized"})
+
+		return
+	}
+
+	result, err := s.payments.SimulateDeletePayment(ctx, id, payloadData.UserID)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"data": result})
 }
 
 func (s *Server) getMPESAAccesToken(ctx *gin.Context) {

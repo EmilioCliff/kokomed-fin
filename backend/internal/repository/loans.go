@@ -113,15 +113,18 @@ type ExpectedPayment struct {
 }
 
 type LoanShort struct {
-	ID           uint32        `json:"id"`
-	LoanAmount   float64       `json:"loanAmount"`
-	RepayAmount  float64       `json:"repayAmount"`
-	DisbursedOn  string        `json:"disbursedOn"`
-	DueDate      string        `json:"dueDate"`
-	PaidAmount   float64       `json:"paidAmount"`
-	Installments []Installment `json:"installments"`
+	ID            uint32              `json:"id"`
+	Status        string              `json:"status"`
+	LoanAmount    float64             `json:"loanAmount"`
+	RepayAmount   float64             `json:"repayAmount"`
+	DisbursedOn   string              `json:"disbursedOn"`
+	DueDate       string              `json:"dueDate"`
+	PaidAmount    float64             `json:"paidAmount"`
+	ClientDetails ClientShort         `json:"clientDetails"`
+	Installments  []Installment       `json:"installments"`
+	Payments      []PaymentAllocation `json:"paymentAllocations"`
+	NonPosted     []NonPostedShort    `json:"nonPosted"`
 }
-
 type UnpaidInstallmentData struct {
 	InstallmentNumber uint32  `json:"installmentNumber"`
 	RemainingAmount   float64 `json:"remainingAmount"`
@@ -139,9 +142,11 @@ type UnpaidInstallmentData struct {
 type LoansRepository interface {
 	CreateLoan(ctx context.Context, loan *Loan) (LoanFullData, error)
 	DisburseLoan(ctx context.Context, disburseLoan *DisburseLoan) (uint32, error)
+	GetLoan(ctx context.Context, id uint32) (LoanShort, error)
 	TransferLoan(ctx context.Context, officerId uint32, loanId uint32, adminId uint32) error
 	GetLoanByID(ctx context.Context, id uint32) (Loan, error)
 	GetClientActiceLoan(ctx context.Context, clientID uint32) (uint32, error)
+	GetLoanStatus(ctx context.Context, id uint32) (string, error)
 	GetClientLoans(
 		ctx context.Context,
 		clientID uint32,

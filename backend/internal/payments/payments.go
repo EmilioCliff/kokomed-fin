@@ -208,7 +208,7 @@ func (p *PaymentService) UpdatePayment(
 	if nonPosted.TransactionSource != "INTERNAL" {
 		return pkg.Errorf(
 			pkg.INVALID_ERROR,
-			"transaction source is not internal. only internal transactions can be updated",
+			"transaction source is not 'INTERNAL'. only 'INTERNAL' transactions can be updated",
 		)
 	}
 
@@ -238,6 +238,13 @@ func (p *PaymentService) UpdatePayment(
 		allocations, err := q.ListPaymentAllocationsByNonPostedId(ctx, paymentID)
 		if err != nil {
 			return err
+		}
+
+		if len(allocations) == 0 {
+			return pkg.Errorf(
+				pkg.INVALID_ERROR,
+				"action cannot be performed. payment lacks enough data to reverse payments",
+			)
 		}
 
 		revertedAmount := 0.0
@@ -361,7 +368,7 @@ func (p *PaymentService) DeletePayment(
 	if paymentData.TransactionSource != "INTERNAL" {
 		return pkg.Errorf(
 			pkg.INVALID_ERROR,
-			"transaction source is not internal. only internal transactions can be updated",
+			"transaction source is not 'INTERNAL'. only 'INTERNAL' transactions can be deleted",
 		)
 	}
 
@@ -380,6 +387,13 @@ func (p *PaymentService) DeletePayment(
 		allocations, err := q.ListPaymentAllocationsByNonPostedId(ctx, paymentID)
 		if err != nil {
 			return err
+		}
+
+		if len(allocations) == 0 {
+			return pkg.Errorf(
+				pkg.INVALID_ERROR,
+				"action cannot be performed. payment lacks enough data to reverse payments",
+			)
 		}
 
 		revertedAmount := 0.0

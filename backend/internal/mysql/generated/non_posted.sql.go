@@ -12,6 +12,8 @@ import (
 )
 
 const assignNonPosted = `-- name: AssignNonPosted :execresult
+
+
 UPDATE non_posted 
     SET assign_to = ?,
     transaction_source = ?,
@@ -26,6 +28,7 @@ type AssignNonPostedParams struct {
 	ID                uint32                     `json:"id"`
 }
 
+// SELECT * FROM non_posted WHERE id = ? LIMIT 1;
 func (q *Queries) AssignNonPosted(ctx context.Context, arg AssignNonPostedParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, assignNonPosted,
 		arg.AssignTo,
@@ -231,12 +234,44 @@ func (q *Queries) GetClientsNonPosted(ctx context.Context, arg GetClientsNonPost
 }
 
 const getNonPosted = `-- name: GetNonPosted :one
-SELECT id, transaction_number, account_number, phone_number, paying_name, amount, assign_to, paid_date, transaction_source, assigned_by, deleted_at, deleted_description FROM non_posted WHERE id = ? LIMIT 1
+SELECT 
+    np.id, np.transaction_number, np.account_number, np.phone_number, np.paying_name, np.amount, np.assign_to, np.paid_date, np.transaction_source, np.assigned_by, np.deleted_at, np.deleted_description, 
+    -- Client Details (if assigned)
+    c.id AS client_id,
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    c.overpayment AS client_overpayment,
+    b.name AS client_branch_name
+
+FROM non_posted np
+LEFT JOIN clients c ON np.assign_to = c.id
+LEFT JOIN branches b ON c.branch_id = b.id
+WHERE np.id = ? LIMIT 1
 `
 
-func (q *Queries) GetNonPosted(ctx context.Context, id uint32) (NonPosted, error) {
+type GetNonPostedRow struct {
+	ID                 uint32                     `json:"id"`
+	TransactionNumber  string                     `json:"transaction_number"`
+	AccountNumber      string                     `json:"account_number"`
+	PhoneNumber        string                     `json:"phone_number"`
+	PayingName         string                     `json:"paying_name"`
+	Amount             float64                    `json:"amount"`
+	AssignTo           sql.NullInt32              `json:"assign_to"`
+	PaidDate           time.Time                  `json:"paid_date"`
+	TransactionSource  NonPostedTransactionSource `json:"transaction_source"`
+	AssignedBy         string                     `json:"assigned_by"`
+	DeletedAt          sql.NullTime               `json:"deleted_at"`
+	DeletedDescription sql.NullString             `json:"deleted_description"`
+	ClientID           sql.NullInt32              `json:"client_id"`
+	ClientName         sql.NullString             `json:"client_name"`
+	ClientPhone        sql.NullString             `json:"client_phone"`
+	ClientOverpayment  sql.NullString             `json:"client_overpayment"`
+	ClientBranchName   sql.NullString             `json:"client_branch_name"`
+}
+
+func (q *Queries) GetNonPosted(ctx context.Context, id uint32) (GetNonPostedRow, error) {
 	row := q.db.QueryRowContext(ctx, getNonPosted, id)
-	var i NonPosted
+	var i GetNonPostedRow
 	err := row.Scan(
 		&i.ID,
 		&i.TransactionNumber,
@@ -250,6 +285,11 @@ func (q *Queries) GetNonPosted(ctx context.Context, id uint32) (NonPosted, error
 		&i.AssignedBy,
 		&i.DeletedAt,
 		&i.DeletedDescription,
+		&i.ClientID,
+		&i.ClientName,
+		&i.ClientPhone,
+		&i.ClientOverpayment,
+		&i.ClientBranchName,
 	)
 	return i, err
 }

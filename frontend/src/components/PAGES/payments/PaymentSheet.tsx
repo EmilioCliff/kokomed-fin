@@ -19,11 +19,13 @@ import {
 import { Button } from '@/components/ui/button';
 import VirtualizeddSelect from '../../UI/VisualizedSelect';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router';
 
 function PaymentSheet() {
 	const [clientId, setClientId] = useState(0);
 	const { selectedRow, setSelectedRow } = useTable();
 	const { decoded } = useAuth();
+	const navigation = useNavigate();
 
 	const { data } = useQuery({
 		queryKey: ['payments/form'],
@@ -162,9 +164,26 @@ function PaymentSheet() {
 								</div>
 							);
 						})}
-						<Button size="lg" onClick={onSave} className="mt-8">
-							Save
-						</Button>
+						<div className="flex justify-between">
+							{selectedRow.transactionSource === 'INTERNAL' &&
+								decoded?.role === role.ADMIN && (
+									<Button
+										variant={'outline'}
+										size="lg"
+										onClick={() =>
+											navigation(
+												`/payments/overview/${selectedRow.id}`,
+											)
+										}
+										className="mt-8"
+									>
+										Edit
+									</Button>
+								)}
+							<Button size="lg" onClick={onSave} className="mt-8">
+								Save
+							</Button>
+						</div>
 					</div>
 				)}
 			</SheetContent>

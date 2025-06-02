@@ -533,6 +533,50 @@ func (q *Queries) GetLoanData(ctx context.Context) ([]uint32, error) {
 	return items, nil
 }
 
+const getLoanDetails = `-- name: GetLoanDetails :one
+SELECT 
+    l.id,
+    l.client_id,
+    p.loan_amount,
+    p.repay_amount,
+    l.disbursed_on,
+    l.due_date,
+    l.paid_amount,
+    l.status
+FROM loans l
+JOIN products p ON l.product_id = p.id
+WHERE 
+    l.id = ?
+LIMIT 1
+`
+
+type GetLoanDetailsRow struct {
+	ID          uint32       `json:"id"`
+	ClientID    uint32       `json:"client_id"`
+	LoanAmount  float64      `json:"loan_amount"`
+	RepayAmount float64      `json:"repay_amount"`
+	DisbursedOn sql.NullTime `json:"disbursed_on"`
+	DueDate     sql.NullTime `json:"due_date"`
+	PaidAmount  float64      `json:"paid_amount"`
+	Status      LoansStatus  `json:"status"`
+}
+
+func (q *Queries) GetLoanDetails(ctx context.Context, id uint32) (GetLoanDetailsRow, error) {
+	row := q.db.QueryRowContext(ctx, getLoanDetails, id)
+	var i GetLoanDetailsRow
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.LoanAmount,
+		&i.RepayAmount,
+		&i.DisbursedOn,
+		&i.DueDate,
+		&i.PaidAmount,
+		&i.Status,
+	)
+	return i, err
+}
+
 const getLoanEvents = `-- name: GetLoanEvents :many
 SELECT 
     l.id AS loan_id,

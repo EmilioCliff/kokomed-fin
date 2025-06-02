@@ -4,6 +4,17 @@ import { format } from 'date-fns';
 import DataTableColumnHeader from '@/components/table/data-table-column-header';
 import { Badge } from '@/components/ui/badge';
 import { Loan } from '../loans/schema';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Eye, MoreHorizontal } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
 
 export const paymentColumns: ColumnDef<Payment>[] = [
 	{
@@ -256,6 +267,21 @@ export const clientLoanColumns: ColumnDef<Loan>[] = [
 		),
 		enableSorting: true,
 	},
+	{
+		accessorKey: 'view',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="View" />
+		),
+		cell: ({ row }) => (
+			<Link to={`/loans/overview/${row.original.id}`} className="w-full">
+				<Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+					<Eye className="h-4 w-4" />
+					<span className="sr-only">View Loan</span>
+				</Button>
+			</Link>
+		),
+		enableSorting: false,
+	},
 ];
 
 export const clientPaymentColumns: ColumnDef<Payment>[] = [
@@ -379,6 +405,43 @@ export const clientPaymentColumns: ColumnDef<Payment>[] = [
 					? 'System'
 					: row.original.assignedBy}
 			</div>
+		),
+		enableSorting: false,
+	},
+	{
+		accessorKey: 'actions',
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Actions" />
+		),
+		cell: ({ row }) => (
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button variant="ghost" className="h-8 w-8 p-0">
+						<span className="sr-only">Open menu</span>
+						<MoreHorizontal className="h-4 w-4" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					<DropdownMenuLabel>Actions</DropdownMenuLabel>
+					<DropdownMenuItem>
+						<Link
+							to={`/payments/overview/${row.original.id}`}
+							className="w-full"
+						>
+							Edit Payment
+						</Link>
+					</DropdownMenuItem>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem className=" hover:bg-destructive">
+						<Link
+							to={`/sms/new?customer=${row.original.id}`}
+							className="w-full"
+						>
+							Delete
+						</Link>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 		),
 		enableSorting: false,
 	},

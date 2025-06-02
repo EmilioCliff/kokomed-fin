@@ -17,6 +17,18 @@ export const paymentSchema = z.object({
 
 export type Payment = z.infer<typeof paymentSchema>;
 
+export const paymentAllocationSchema = z.object({
+	id: z.number(),
+	nonPostedId: z.number(),
+	loanId: z.number().optional(),
+	installmentId: z.number().optional(),
+	amount: z.number(),
+	description: z.string(),
+	deletedDescription: z.string().optional(),
+	deletedAt: z.string().optional(),
+	createdAt: z.string(),
+});
+
 export const paymentFormSchema = z.object({
 	TransAmount: z.coerce.number().gt(0, { message: 'Select valid amount' }),
 	TransID: z
@@ -52,3 +64,27 @@ export const editClientFormSchema = z.object({
 });
 
 export type EditClientFormType = z.infer<typeof editClientFormSchema>;
+
+export const editPaymentFormSchema = z.object({
+	id: z.number(),
+	transactionSource: z.enum(['MPESA', 'INTERNAL']),
+	transactionId: z
+		.string()
+		.min(3, { message: 'Must be 3 or more characters long' }),
+	accountNumber: z
+		.string()
+		.min(10, { message: 'Must be 10 characters long' }),
+	phoneNumber: z.string().min(3, { message: 'Must be 3 characters long' }),
+	payingName: z
+		.string()
+		.min(3, { message: 'Must be 3 or more characters long' }),
+	amount: z.coerce.number().gt(0, { message: 'Select valid amount' }),
+	assignedBy: z.string(),
+	assignedTo: z.number(),
+	description: z
+		.string()
+		.min(3, { message: 'Must be 3 or more characters long' }),
+	paidDate: z.string(),
+});
+
+export type EditPaymentFormType = z.infer<typeof editPaymentFormSchema>;

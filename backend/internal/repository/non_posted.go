@@ -17,7 +17,7 @@ type NonPosted struct {
 	PayingName         string      `json:"payingName"`
 	Amount             float64     `json:"amount"`
 	PaidDate           time.Time   `json:"paidDate"`
-	AssignedTo         *uint32     `json:"assignedTo,omitempty"`
+	AssignedTo         *uint32     `json:"assignedClient,omitempty"`
 	AssignedBy         string      `json:"assignedBy"`
 	DeletedAt          *time.Time  `json:"deletedAt,omitempty"`
 	DeletedDescription *string     `json:"deletedDescription,omitempty"`
@@ -45,6 +45,7 @@ type NonPostedRepository interface {
 		category *NonPostedCategory,
 		pgData *pkg.PaginationMetadata,
 	) ([]NonPosted, pkg.PaginationMetadata, error)
+	ListPaymentAllocationsByNonPostedId(ctx context.Context, id uint32) ([]PaymentAllocation, error)
 	ListNonPostedByTransactionSource(
 		ctx context.Context,
 		transactionSource string,

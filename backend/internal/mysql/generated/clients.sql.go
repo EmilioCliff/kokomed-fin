@@ -274,6 +274,54 @@ func (q *Queries) GetClientOverpayment(ctx context.Context, id uint32) (float64,
 	return overpayment, err
 }
 
+const getClientWithBranchName = `-- name: GetClientWithBranchName :one
+SELECT c.id, c.full_name, c.phone_number, c.id_number, c.dob, c.gender, c.active, c.branch_id, c.assigned_staff, c.overpayment, c.updated_by, c.updated_at, c.created_by, c.created_at, b.name AS branch_name 
+FROM clients c 
+JOIN branches b ON c.branch_id = b.id 
+WHERE c.id = ? LIMIT 1
+`
+
+type GetClientWithBranchNameRow struct {
+	ID            uint32         `json:"id"`
+	FullName      string         `json:"full_name"`
+	PhoneNumber   string         `json:"phone_number"`
+	IDNumber      sql.NullString `json:"id_number"`
+	Dob           sql.NullTime   `json:"dob"`
+	Gender        ClientsGender  `json:"gender"`
+	Active        bool           `json:"active"`
+	BranchID      uint32         `json:"branch_id"`
+	AssignedStaff uint32         `json:"assigned_staff"`
+	Overpayment   float64        `json:"overpayment"`
+	UpdatedBy     uint32         `json:"updated_by"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	CreatedBy     uint32         `json:"created_by"`
+	CreatedAt     time.Time      `json:"created_at"`
+	BranchName    string         `json:"branch_name"`
+}
+
+func (q *Queries) GetClientWithBranchName(ctx context.Context, id uint32) (GetClientWithBranchNameRow, error) {
+	row := q.db.QueryRowContext(ctx, getClientWithBranchName, id)
+	var i GetClientWithBranchNameRow
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.PhoneNumber,
+		&i.IDNumber,
+		&i.Dob,
+		&i.Gender,
+		&i.Active,
+		&i.BranchID,
+		&i.AssignedStaff,
+		&i.Overpayment,
+		&i.UpdatedBy,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.BranchName,
+	)
+	return i, err
+}
+
 const helperClient = `-- name: HelperClient :many
 SELECT id, full_name, phone_number FROM clients
 `

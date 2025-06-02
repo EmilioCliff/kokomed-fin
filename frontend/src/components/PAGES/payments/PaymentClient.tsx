@@ -36,9 +36,6 @@ import {
 } from '@/components/ui/dialog';
 import { Edit } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { DataTable } from '@/components/table/data-table';
-import { clientPaymentColumns } from './payment';
-import { paymentSources } from '@/data/loan';
 import { useTable } from '@/hooks/useTable';
 import { useDebounce } from '@/hooks/useDebounce';
 import EditClientForm from './EditClientForm';
@@ -466,9 +463,10 @@ function PaymentClient() {
 							resetTableState();
 							setCurrentTab(value);
 						}}
+						className="w-full"
 						defaultValue="loans"
 					>
-						<TabsList>
+						<TabsList className="grid w-full grid-cols-2">
 							<TabsTrigger value="loans">Loans</TabsTrigger>
 							<TabsTrigger value="payments">Payments</TabsTrigger>
 						</TabsList>

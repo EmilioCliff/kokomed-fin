@@ -15,6 +15,7 @@ interface VirtualizeddSelectProps {
 	placeholder: string;
 	value: number | null;
 	onChange: (id: number) => void;
+	disabled?: boolean;
 }
 
 export default function VirtualizeddSelect({
@@ -22,6 +23,7 @@ export default function VirtualizeddSelect({
 	placeholder,
 	value,
 	onChange,
+	disabled,
 }: VirtualizeddSelectProps) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedOption, setSelectedOption] = useState('');
@@ -43,7 +45,7 @@ export default function VirtualizeddSelect({
 	}, [searchQuery, options]);
 
 	return (
-		<Select open={open} onOpenChange={setOpen}>
+		<Select disabled={disabled} open={open} onOpenChange={setOpen}>
 			<SelectTrigger>
 				<SelectValue
 					placeholder={

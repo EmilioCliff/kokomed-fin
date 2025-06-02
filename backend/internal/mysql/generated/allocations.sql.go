@@ -8,6 +8,7 @@ package generated
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const createPaymentAllocation = `-- name: CreatePaymentAllocation :execresult
@@ -55,18 +56,47 @@ func (q *Queries) DeletePaymentAllocationsByNonPostedId(ctx context.Context, arg
 }
 
 const listPaymentAllocationsByLoanId = `-- name: ListPaymentAllocationsByLoanId :many
-SELECT id, non_posted_id, loan_id, installment_id, amount, description, deleted_at, deleted_description, created_at FROM payment_allocations WHERE loan_id = ? AND deleted_at IS NULL
+SELECT 
+  pa.id, pa.non_posted_id, pa.loan_id, pa.installment_id, pa.amount, pa.description, pa.deleted_at, pa.deleted_description, pa.created_at,
+  np.transaction_source,
+  np.transaction_number,
+  np.account_number,
+  np.paying_name,
+  np.amount,
+  np.paid_date
+FROM payment_allocations pa
+JOIN non_posted np ON pa.non_posted_id = np.id
+WHERE pa.loan_id = ?
+AND pa.deleted_at IS NULL
 `
 
-func (q *Queries) ListPaymentAllocationsByLoanId(ctx context.Context, loanID sql.NullInt32) ([]PaymentAllocation, error) {
+type ListPaymentAllocationsByLoanIdRow struct {
+	ID                 uint32                     `json:"id"`
+	NonPostedID        uint32                     `json:"non_posted_id"`
+	LoanID             sql.NullInt32              `json:"loan_id"`
+	InstallmentID      sql.NullInt32              `json:"installment_id"`
+	Amount             float64                    `json:"amount"`
+	Description        string                     `json:"description"`
+	DeletedAt          sql.NullTime               `json:"deleted_at"`
+	DeletedDescription sql.NullString             `json:"deleted_description"`
+	CreatedAt          time.Time                  `json:"created_at"`
+	TransactionSource  NonPostedTransactionSource `json:"transaction_source"`
+	TransactionNumber  string                     `json:"transaction_number"`
+	AccountNumber      string                     `json:"account_number"`
+	PayingName         string                     `json:"paying_name"`
+	Amount_2           float64                    `json:"amount_2"`
+	PaidDate           time.Time                  `json:"paid_date"`
+}
+
+func (q *Queries) ListPaymentAllocationsByLoanId(ctx context.Context, loanID sql.NullInt32) ([]ListPaymentAllocationsByLoanIdRow, error) {
 	rows, err := q.db.QueryContext(ctx, listPaymentAllocationsByLoanId, loanID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []PaymentAllocation{}
+	items := []ListPaymentAllocationsByLoanIdRow{}
 	for rows.Next() {
-		var i PaymentAllocation
+		var i ListPaymentAllocationsByLoanIdRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.NonPostedID,
@@ -77,6 +107,84 @@ func (q *Queries) ListPaymentAllocationsByLoanId(ctx context.Context, loanID sql
 			&i.DeletedAt,
 			&i.DeletedDescription,
 			&i.CreatedAt,
+			&i.TransactionSource,
+			&i.TransactionNumber,
+			&i.AccountNumber,
+			&i.PayingName,
+			&i.Amount_2,
+			&i.PaidDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPaymentAllocationsByNonPostedID = `-- name: ListPaymentAllocationsByNonPostedID :many
+SELECT 
+  pa.id, pa.non_posted_id, pa.loan_id, pa.installment_id, pa.amount, pa.description, pa.deleted_at, pa.deleted_description, pa.created_at,
+  np.transaction_source,
+  np.transaction_number,
+  np.account_number,
+  np.paying_name,
+  np.amount,
+  np.paid_date
+FROM payment_allocations pa
+JOIN non_posted np ON pa.non_posted_id = np.id
+WHERE loan_id IS NULL
+  AND non_posted_id = ? AND pa.deleted_at IS NULL
+`
+
+type ListPaymentAllocationsByNonPostedIDRow struct {
+	ID                 uint32                     `json:"id"`
+	NonPostedID        uint32                     `json:"non_posted_id"`
+	LoanID             sql.NullInt32              `json:"loan_id"`
+	InstallmentID      sql.NullInt32              `json:"installment_id"`
+	Amount             float64                    `json:"amount"`
+	Description        string                     `json:"description"`
+	DeletedAt          sql.NullTime               `json:"deleted_at"`
+	DeletedDescription sql.NullString             `json:"deleted_description"`
+	CreatedAt          time.Time                  `json:"created_at"`
+	TransactionSource  NonPostedTransactionSource `json:"transaction_source"`
+	TransactionNumber  string                     `json:"transaction_number"`
+	AccountNumber      string                     `json:"account_number"`
+	PayingName         string                     `json:"paying_name"`
+	Amount_2           float64                    `json:"amount_2"`
+	PaidDate           time.Time                  `json:"paid_date"`
+}
+
+func (q *Queries) ListPaymentAllocationsByNonPostedID(ctx context.Context, nonPostedID uint32) ([]ListPaymentAllocationsByNonPostedIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPaymentAllocationsByNonPostedID, nonPostedID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListPaymentAllocationsByNonPostedIDRow{}
+	for rows.Next() {
+		var i ListPaymentAllocationsByNonPostedIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.NonPostedID,
+			&i.LoanID,
+			&i.InstallmentID,
+			&i.Amount,
+			&i.Description,
+			&i.DeletedAt,
+			&i.DeletedDescription,
+			&i.CreatedAt,
+			&i.TransactionSource,
+			&i.TransactionNumber,
+			&i.AccountNumber,
+			&i.PayingName,
+			&i.Amount_2,
+			&i.PaidDate,
 		); err != nil {
 			return nil, err
 		}

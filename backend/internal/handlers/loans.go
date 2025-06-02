@@ -331,6 +331,42 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+func (s *Server) getLoan(ctx *gin.Context) {
+	id, err := pkg.StringToUint32(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	loan, err := s.repo.Loans.GetLoan(ctx, id)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	response := gin.H{
+		"data": loan,
+	}
+
+	err = s.cache.Set(
+		ctx,
+		constructCacheKey(fmt.Sprintf("loan/:%d", id), map[string][]string{}),
+		response,
+		1*time.Minute,
+	)
+	if err != nil {
+		ctx.JSON(
+			http.StatusInternalServerError,
+			pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err),
+		)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
 func (s *Server) listClientLoans(ctx *gin.Context) {
 	id, err := pkg.StringToUint32(ctx.Param("id"))
 	if err != nil {
