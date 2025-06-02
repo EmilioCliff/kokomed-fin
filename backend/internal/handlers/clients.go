@@ -111,23 +111,20 @@ func (s *Server) createClient(ctx *gin.Context) {
 		return
 	}
 
-	// v, err := s.structureClient(&client, ctx)
-	// if err != nil {
-	// 	ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
-
-	// 	return
-	// }
-
 	s.cache.DelAll(ctx, "client:limit=*")
 
 	ctx.JSON(http.StatusOK, client)
 }
 
 type updateClient struct {
-	IdNumber string `json:"idNumber"`
-	Dob      string `json:"dob"`
-	Active   string `json:"active"`
-	BranchID uint32 `json:"branchId"`
+	FullName      string `json:"fullName"        binding:"required"`
+	PhoneNumber   string `json:"phoneNumber"     binding:"required"`
+	IdNumber      string `json:"idNumber"`
+	Dob           string `json:"dob"`
+	Gender        string `json:"gender"          binding:"required,oneof=MALE FEMALE"`
+	Active        string `json:"active"          binding:"required,oneof=true false"`
+	BranchID      uint32 `json:"branchId"        binding:"required"`
+	AssignedStaff uint32 `json:"assignedStaffId" binding:"required"`
 }
 
 func (s *Server) updateClient(ctx *gin.Context) {
@@ -160,8 +157,14 @@ func (s *Server) updateClient(ctx *gin.Context) {
 	}
 
 	params := &repository.UpdateClient{
-		ID:        id,
-		UpdatedBy: payloadData.UserID,
+		ID:            id,
+		UpdatedBy:     payloadData.UserID,
+		FullName:      req.FullName,
+		PhoneNumber:   req.PhoneNumber,
+		Gender:        req.Gender,
+		AssignedStaff: req.AssignedStaff,
+		BranchID:      req.BranchID,
+		Active:        req.Active == "true",
 	}
 
 	if req.Dob != "" {
@@ -180,18 +183,6 @@ func (s *Server) updateClient(ctx *gin.Context) {
 
 	if req.IdNumber != "" {
 		params.IdNumber = pkg.StringPtr(req.IdNumber)
-	}
-
-	if req.Active != "" {
-		if req.Active == "true" {
-			params.Active = pkg.BoolPtr(true)
-		} else {
-			params.Active = pkg.BoolPtr(false)
-		}
-	}
-
-	if req.BranchID != 0 {
-		params.BranchID = pkg.Uint32Ptr(req.BranchID)
 	}
 
 	err = s.repo.Clients.UpdateClient(ctx, params)

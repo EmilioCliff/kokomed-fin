@@ -9,17 +9,19 @@ import (
 )
 
 type NonPosted struct {
-	ID                uint32      `json:"id"`
-	TransactionSource string      `json:"transactionSource"`
-	TransactionNumber string      `json:"transactionNumber"`
-	AccountNumber     string      `json:"accountNumber"`
-	PhoneNumber       string      `json:"phoneNumber"`
-	PayingName        string      `json:"payingName"`
-	Amount            float64     `json:"amount"`
-	PaidDate          time.Time   `json:"paidDate"`
-	AssignedTo        *uint32     `json:"assignedTo,omitempty"`
-	AssignedBy        string      `json:"assignedBy"`
-	AssignedClient    ClientShort `json:"assignedTo,omitempty"`
+	ID                 uint32      `json:"id"`
+	TransactionSource  string      `json:"transactionSource"`
+	TransactionNumber  string      `json:"transactionNumber"`
+	AccountNumber      string      `json:"accountNumber"`
+	PhoneNumber        string      `json:"phoneNumber"`
+	PayingName         string      `json:"payingName"`
+	Amount             float64     `json:"amount"`
+	PaidDate           time.Time   `json:"paidDate"`
+	AssignedTo         *uint32     `json:"assignedClient,omitempty"`
+	AssignedBy         string      `json:"assignedBy"`
+	DeletedAt          *time.Time  `json:"deletedAt,omitempty"`
+	DeletedDescription *string     `json:"deletedDescription,omitempty"`
+	AssignedClient     ClientShort `json:"assignedTo,omitempty"`
 }
 
 type NonPostedCategory struct {
@@ -37,11 +39,13 @@ type ClientNonPosted struct {
 type NonPostedRepository interface {
 	CreateNonPosted(ctx context.Context, nonPosted *NonPosted) (NonPosted, error)
 	GetNonPosted(ctx context.Context, id uint32) (NonPosted, error)
+	UpdateNonPosted(ctx context.Context, nonPosted *NonPosted) error
 	ListNonPosted(
 		ctx context.Context,
 		category *NonPostedCategory,
 		pgData *pkg.PaginationMetadata,
 	) ([]NonPosted, pkg.PaginationMetadata, error)
+	ListPaymentAllocationsByNonPostedId(ctx context.Context, id uint32) ([]PaymentAllocation, error)
 	ListNonPostedByTransactionSource(
 		ctx context.Context,
 		transactionSource string,
@@ -51,7 +55,7 @@ type NonPostedRepository interface {
 		ctx context.Context,
 		pgData *pkg.PaginationMetadata,
 	) ([]NonPosted, error)
-	DeleteNonPosted(ctx context.Context, id uint32) error
+	DeleteNonPosted(ctx context.Context, id uint32, description string) error
 	GetClientNonPosted(
 		ctx context.Context,
 		id uint32,

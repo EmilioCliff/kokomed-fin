@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -183,6 +184,43 @@ func (s *Server) listClientsNonPosted(ctx *gin.Context) {
 	})
 }
 
+func (s *Server) getNonPosted(ctx *gin.Context) {
+	id, err := pkg.StringToUint32(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	nonPosted, err := s.repo.NonPosted.GetNonPosted(ctx, id)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	response := gin.H{
+		"data": nonPosted,
+	}
+
+	err = s.cache.Set(
+		ctx,
+		constructCacheKey(fmt.Sprintf("non-posted/%d", id), map[string][]string{}),
+		response,
+		1*time.Minute,
+	)
+	if err != nil {
+		ctx.JSON(
+			http.StatusInternalServerError,
+			pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err),
+		)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
+
 func structureNonPosted(p *repository.NonPosted) nonPostedResponse {
 	rsp := nonPostedResponse{
 		ID:                p.ID,
@@ -209,56 +247,3 @@ func structureNonPosted(p *repository.NonPosted) nonPostedResponse {
 
 	return rsp
 }
-
-// func (s *Server) structureNonPosted(p *repository.NonPosted, ctx *gin.Context)
-// (nonPostedResponse, error) {
-// 	cacheKey := fmt.Sprintf("non-posted:%v", p.ID)
-// 	var dataCached nonPostedResponse
-
-// 	exists, _ := s.cache.Get(ctx, cacheKey, &dataCached)
-// 	if exists {
-// 		return dataCached, nil
-// 	}
-
-// 	v := nonPostedResponse{
-// 		ID:                p.ID,
-// 		TransactionSource: string(p.TransactionSource),
-// 		TransactionNumber: p.TransactionNumber,
-// 		AccountNumber:     p.AccountNumber,
-// 		PhoneNumber:       p.PhoneNumber,
-// 		PayingName:        p.PayingName,
-// 		Amount:            p.Amount,
-// 		PaidDate:          p.PaidDate,
-// 		AssignedBy: 	   p.AssignedBy,
-// 	}
-
-// 	if p.AssignedTo != nil {
-// 		v.Assigned = true
-
-// 		client, err := s.repo.Clients.GetClient(ctx, *p.AssignedTo)
-// 		if err != nil {
-// 			log.Println(*p.AssignedTo)
-// 			return nonPostedResponse{}, err
-// 		}
-
-// 		branch, err := s.repo.Branches.GetBranchByID(ctx, client.BranchID)
-// 		if err != nil {
-// 			return nonPostedResponse{}, err
-// 		}
-
-// 		v.AssignedTo = clientShortResponse{
-// 			ID:          client.ID,
-// 			FullName: client.FullName,
-// 			PhoneNumber: client.PhoneNumber,
-// 			Overpayment: client.Overpayment,
-// 			DueAmount: client.DueAmount,
-// 			BranchName: branch.Name,
-// 		}
-// 	}
-
-// 	if err := s.cache.Set(ctx, cacheKey, v, 3*time.Minute); err != nil {
-// 		return nonPostedResponse{}, err
-// 	}
-
-// 	return v, nil
-// }

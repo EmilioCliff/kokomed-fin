@@ -148,7 +148,7 @@ function UserSheet() {
 				}
 			}}
 		>
-			<SheetContent className="overflow-auto custom-sheet-class">
+			<SheetContent className="overflow-auto no-scrollbar custom-sheet-class">
 				<SheetHeader>
 					<SheetTitle>User Details</SheetTitle>
 					<SheetDescription>Description goes here</SheetDescription>

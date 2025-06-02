@@ -10,6 +10,7 @@ export const clientSchema = z.object({
 	gender: z.enum(['MALE', 'FEMALE']),
 	active: z.boolean(),
 	branchName: z.string(),
+	branchId: z.number().optional(),
 	overpayment: z.number(),
 	assignedStaff: userSchema,
 	dueAmount: z.number().optional(),

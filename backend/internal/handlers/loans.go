@@ -331,6 +331,137 @@ func (s *Server) listLoansByCategory(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+func (s *Server) getLoan(ctx *gin.Context) {
+	id, err := pkg.StringToUint32(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	loan, err := s.repo.Loans.GetLoan(ctx, id)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	response := gin.H{
+		"data": loan,
+	}
+
+	err = s.cache.Set(
+		ctx,
+		constructCacheKey(fmt.Sprintf("loan/:%d", id), map[string][]string{}),
+		response,
+		1*time.Minute,
+	)
+	if err != nil {
+		ctx.JSON(
+			http.StatusInternalServerError,
+			pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err),
+		)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
+func (s *Server) listClientLoans(ctx *gin.Context) {
+	id, err := pkg.StringToUint32(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+	pageNoStr := ctx.DefaultQuery("page", "1")
+	pageNo, err := pkg.StringToUint32(pageNoStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	pageSizeStr := ctx.DefaultQuery("limit", "10")
+	pageSize, err := pkg.StringToUint32(pageSizeStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())))
+
+		return
+	}
+
+	params := repository.Category{}
+	cacheParams := map[string][]string{
+		"page":  {pageNoStr},
+		"limit": {pageSizeStr},
+	}
+
+	b := ctx.Query("branch")
+	if b != "" {
+		branchID, err := pkg.StringToUint32(b)
+		if err != nil {
+			ctx.JSON(
+				http.StatusBadRequest,
+				errorResponse(pkg.Errorf(pkg.INVALID_ERROR, err.Error())),
+			)
+
+			return
+		}
+
+		params.BranchID = pkg.Uint32Ptr(branchID)
+		cacheParams["branch"] = []string{b}
+	}
+
+	search := ctx.Query("search")
+	if search != "" {
+		params.Search = pkg.StringPtr(strings.ToLower(search))
+		cacheParams["search"] = []string{search}
+	}
+
+	status := ctx.Query("status")
+	if status != "" {
+		statuses := strings.Split(status, ",")
+
+		for i := range statuses {
+			statuses[i] = strings.TrimSpace(statuses[i])
+		}
+
+		params.Statuses = pkg.StringPtr(strings.Join(statuses, ","))
+		cacheParams["status"] = []string{strings.Join(statuses, ",")}
+	}
+
+	loans, pgData, err := s.repo.Loans.GetClientLoans(
+		ctx,
+		id,
+		&params,
+		&pkg.PaginationMetadata{CurrentPage: pageNo, PageSize: pageSize},
+	)
+	if err != nil {
+		ctx.JSON(pkg.ErrorToStatusCode(err), errorResponse(err))
+
+		return
+	}
+
+	response := gin.H{
+		"metadata": pgData,
+		"data":     loans,
+	}
+
+	cacheKey := constructCacheKey(fmt.Sprintf("loan/client:%d", id), cacheParams)
+
+	err = s.cache.Set(ctx, cacheKey, response, 1*time.Minute)
+	if err != nil {
+		ctx.JSON(
+			http.StatusInternalServerError,
+			pkg.Errorf(pkg.INTERNAL_ERROR, "failed caching: %s", err),
+		)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
+
 func (s *Server) listUnpaidInstallmentsData(ctx *gin.Context) {
 	pageNoStr := ctx.DefaultQuery("page", "1")
 	pageNo, err := pkg.StringToUint32(pageNoStr)

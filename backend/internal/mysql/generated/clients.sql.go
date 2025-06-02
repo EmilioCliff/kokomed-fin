@@ -89,6 +89,21 @@ func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (sql
 	)
 }
 
+const deductClientOverpayment = `-- name: DeductClientOverpayment :execresult
+UPDATE clients
+SET overpayment = overpayment - ?
+WHERE id = ?
+`
+
+type DeductClientOverpaymentParams struct {
+	Overpayment float64 `json:"overpayment"`
+	ID          uint32  `json:"id"`
+}
+
+func (q *Queries) DeductClientOverpayment(ctx context.Context, arg DeductClientOverpaymentParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, deductClientOverpayment, arg.Overpayment, arg.ID)
+}
+
 const deleteClient = `-- name: DeleteClient :execresult
 DELETE FROM clients WHERE id = ?
 `
@@ -257,6 +272,54 @@ func (q *Queries) GetClientOverpayment(ctx context.Context, id uint32) (float64,
 	var overpayment float64
 	err := row.Scan(&overpayment)
 	return overpayment, err
+}
+
+const getClientWithBranchName = `-- name: GetClientWithBranchName :one
+SELECT c.id, c.full_name, c.phone_number, c.id_number, c.dob, c.gender, c.active, c.branch_id, c.assigned_staff, c.overpayment, c.updated_by, c.updated_at, c.created_by, c.created_at, b.name AS branch_name 
+FROM clients c 
+JOIN branches b ON c.branch_id = b.id 
+WHERE c.id = ? LIMIT 1
+`
+
+type GetClientWithBranchNameRow struct {
+	ID            uint32         `json:"id"`
+	FullName      string         `json:"full_name"`
+	PhoneNumber   string         `json:"phone_number"`
+	IDNumber      sql.NullString `json:"id_number"`
+	Dob           sql.NullTime   `json:"dob"`
+	Gender        ClientsGender  `json:"gender"`
+	Active        bool           `json:"active"`
+	BranchID      uint32         `json:"branch_id"`
+	AssignedStaff uint32         `json:"assigned_staff"`
+	Overpayment   float64        `json:"overpayment"`
+	UpdatedBy     uint32         `json:"updated_by"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	CreatedBy     uint32         `json:"created_by"`
+	CreatedAt     time.Time      `json:"created_at"`
+	BranchName    string         `json:"branch_name"`
+}
+
+func (q *Queries) GetClientWithBranchName(ctx context.Context, id uint32) (GetClientWithBranchNameRow, error) {
+	row := q.db.QueryRowContext(ctx, getClientWithBranchName, id)
+	var i GetClientWithBranchNameRow
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.PhoneNumber,
+		&i.IDNumber,
+		&i.Dob,
+		&i.Gender,
+		&i.Active,
+		&i.BranchID,
+		&i.AssignedStaff,
+		&i.Overpayment,
+		&i.UpdatedBy,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.BranchName,
+	)
+	return i, err
 }
 
 const helperClient = `-- name: HelperClient :many
@@ -607,30 +670,42 @@ func (q *Queries) NullifyClientOverpayment(ctx context.Context, id uint32) (sql.
 
 const updateClient = `-- name: UpdateClient :execresult
 UPDATE clients 
-    SET id_number = coalesce(?, id_number),
+    SET full_name = ?,
+    phone_number = ?,
+    gender = ?,
+    assigned_staff = ?,
+    branch_id = ?,
+    active = ?,
+    id_number = coalesce(?, id_number),
     dob = coalesce(?, dob),
-    active = coalesce(?, active),
-    branch_id = coalesce(?, branch_id),
     updated_at = CURRENT_TIMESTAMP,
     updated_by = ?
 WHERE id = ?
 `
 
 type UpdateClientParams struct {
-	IDNumber  sql.NullString `json:"id_number"`
-	Dob       sql.NullTime   `json:"dob"`
-	Active    sql.NullBool   `json:"active"`
-	BranchID  sql.NullInt32  `json:"branch_id"`
-	UpdatedBy uint32         `json:"updated_by"`
-	ID        uint32         `json:"id"`
+	FullName      string         `json:"full_name"`
+	PhoneNumber   string         `json:"phone_number"`
+	Gender        ClientsGender  `json:"gender"`
+	AssignedStaff uint32         `json:"assigned_staff"`
+	BranchID      uint32         `json:"branch_id"`
+	Active        bool           `json:"active"`
+	IDNumber      sql.NullString `json:"id_number"`
+	Dob           sql.NullTime   `json:"dob"`
+	UpdatedBy     uint32         `json:"updated_by"`
+	ID            uint32         `json:"id"`
 }
 
 func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, updateClient,
+		arg.FullName,
+		arg.PhoneNumber,
+		arg.Gender,
+		arg.AssignedStaff,
+		arg.BranchID,
+		arg.Active,
 		arg.IDNumber,
 		arg.Dob,
-		arg.Active,
-		arg.BranchID,
 		arg.UpdatedBy,
 		arg.ID,
 	)

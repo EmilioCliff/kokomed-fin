@@ -38,7 +38,7 @@ function LoanExpectedPaymentSheet() {
 				}
 			}}
 		>
-			<SheetContent className="overflow-auto">
+			<SheetContent className="overflow-auto no-scrollbar">
 				<SheetHeader>
 					<SheetTitle>Loan Details</SheetTitle>
 					<SheetDescription>Loan Installments</SheetDescription>

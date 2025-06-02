@@ -60,7 +60,7 @@ export default function LoanPage() {
 							Add New Loan
 						</Button>
 					</DialogTrigger>
-					<DialogContent className="max-w-screen-lg max-h-screen overflow-y-auto">
+					<DialogContent className="max-w-screen-lg max-h-screen overflow-y-auto no-scrollbar">
 						<DialogHeader>
 							<DialogTitle>Add New Loan</DialogTitle>
 							<DialogDescription>

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { clientSchema } from '../customers/schema';
 import { userSchema } from '../users/schema';
 import { productSchema } from '../products/schema';
+import { paymentAllocationSchema, paymentSchema } from '../payments/schema';
 
 export const loanSchema = z.object({
 	id: z.number(),
@@ -75,11 +76,15 @@ export type Installment = z.infer<typeof installmentSchema>;
 export const loanShortSchema = z.object({
 	id: z.number(),
 	loanAmount: z.number(),
+	status: z.string(),
 	repayAmount: z.number(),
 	disbursedOn: z.string(),
 	dueDate: z.string(),
 	paidAmount: z.number(),
+	clientDetails: clientSchema,
 	installments: z.array(installmentSchema),
+	paymentAllocations: z.array(paymentAllocationSchema),
+	nonPosted: z.array(paymentSchema),
 });
 
 export type LoanShort = z.infer<typeof loanShortSchema>;

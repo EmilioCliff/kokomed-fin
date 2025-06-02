@@ -124,6 +124,7 @@ func CORSmiddleware() gin.HandlerFunc {
 	allowedOrigins := []string{
 		"https://kokomed-fin.vercel.app",
 		"https://frontend-production-ca6a.up.railway.app",
+		"https://frontend-development-fdd2.up.railway.app",
 		"http://frontend:3000",
 		"http://localhost:3000",
 		"http://localhost:5173",

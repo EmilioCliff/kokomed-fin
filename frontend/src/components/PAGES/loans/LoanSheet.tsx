@@ -37,6 +37,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@/hooks/useAuth';
 import { useTable } from '@/hooks/useTable';
 import { role } from '@/lib/types';
+import { useNavigate } from 'react-router';
 
 function LoanSheet() {
 	const [status, setStatus] = useState<loanStatus | null>(null);
@@ -44,6 +45,7 @@ function LoanSheet() {
 	const [feePaid, setFeePaid] = useState<boolean | null>(null);
 	const { selectedRow, setSelectedRow } = useTable();
 	const { decoded } = useAuth();
+	const navigation = useNavigate();
 
 	const queryClient = useQueryClient();
 
@@ -259,7 +261,7 @@ function LoanSheet() {
 				}
 			}}
 		>
-			<SheetContent className="overflow-auto custom-sheet-class">
+			<SheetContent className="overflow-auto no-scrollbar custom-sheet-class">
 				<SheetHeader>
 					<SheetTitle>Loan Details</SheetTitle>
 					<SheetDescription>Description goes here</SheetDescription>
@@ -306,9 +308,23 @@ function LoanSheet() {
 								</div>
 							);
 						})}
-						<Button size="lg" onClick={onSave} className="mt-8">
-							Save
-						</Button>
+						<div className="flex justify-between">
+							<Button
+								variant={'outline'}
+								size="lg"
+								onClick={() =>
+									navigation(
+										`/loans/overview/${selectedRow.id}`,
+									)
+								}
+								className="mt-8"
+							>
+								View
+							</Button>
+							<Button size="lg" onClick={onSave} className="mt-8">
+								Save
+							</Button>
+						</div>
 					</div>
 				)}
 			</SheetContent>

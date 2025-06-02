@@ -78,9 +78,13 @@ function AppSidebar() {
 														(link, index) => {
 															const location =
 																useLocation();
+															// const isActive =
+															// 	location.pathname ===
+															// 	link.url;
 															const isActive =
-																location.pathname ===
-																link.url;
+																location.pathname.startsWith(
+																	link.url,
+																);
 
 															return (
 																<SidebarMenuSubItem

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ interface VirtualizeddSelectProps {
 	placeholder: string;
 	value: number | null;
 	onChange: (id: number) => void;
+	disabled?: boolean;
 }
 
 export default function VirtualizeddSelect({
@@ -22,10 +23,20 @@ export default function VirtualizeddSelect({
 	placeholder,
 	value,
 	onChange,
+	disabled,
 }: VirtualizeddSelectProps) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedOption, setSelectedOption] = useState('');
 	const [open, setOpen] = useState(false);
+
+	useEffect(() => {
+		if (value !== null && value !== 0) {
+			const found = options.find((opt) => opt.id === value);
+			if (found) {
+				setSelectedOption(found.name);
+			}
+		}
+	}, [value, options]);
 
 	const filteredOptions = useMemo(() => {
 		return options.filter((option) =>
@@ -34,7 +45,7 @@ export default function VirtualizeddSelect({
 	}, [searchQuery, options]);
 
 	return (
-		<Select open={open} onOpenChange={setOpen}>
+		<Select disabled={disabled} open={open} onOpenChange={setOpen}>
 			<SelectTrigger>
 				<SelectValue
 					placeholder={

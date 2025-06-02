@@ -25,6 +25,26 @@ export enum loanStatus {
 	DEFAULTED = 'DEFAULTED',
 }
 
+export enum transactionSource {
+	INTERNAL = 'INTERNAL',
+	EXTERNAL = 'EXTERNAL',
+}
+
+export interface simulatedAction {
+	actionType: string;
+	description: string;
+	amount: number;
+	loanId?: number;
+	installmentId?: number;
+	severity: string;
+}
+
+export interface simulationResult {
+	paymentId: number;
+	userId: number;
+	actions: simulatedAction[];
+}
+
 export interface tableFilterType {
 	options: {
 		label: string;
@@ -125,6 +145,10 @@ export interface getClientsType extends Omit<commonresponse, 'data'> {
 	data: Client[];
 }
 
+export interface getSimulatedPaymentType extends Omit<commonresponse, 'data'> {
+	data: simulationResult;
+}
+
 export interface getLoansType extends Omit<commonresponse, 'data'> {
 	data: Loan[];
 }
@@ -161,6 +185,14 @@ export interface getBranchesType extends Omit<commonresponse, 'data'> {
 
 export interface getPaymentsType extends Omit<commonresponse, 'data'> {
 	data: Payment[];
+}
+
+export interface getPaymentType extends Omit<commonresponse, 'data'> {
+	data: Payment;
+}
+
+export interface getLoanType extends Omit<commonresponse, 'data'> {
+	data: LoanShort;
 }
 
 export interface getLoanEventsType extends Omit<commonresponse, 'data'> {

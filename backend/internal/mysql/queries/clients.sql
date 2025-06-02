@@ -20,12 +20,22 @@ SELECT * FROM clients LIMIT ? OFFSET ?;
 -- name: GetClient :one
 SELECT * FROM clients WHERE id = ? LIMIT 1;
 
+-- name: GetClientWithBranchName :one
+SELECT c.*, b.name AS branch_name 
+FROM clients c 
+JOIN branches b ON c.branch_id = b.id 
+WHERE c.id = ? LIMIT 1;
+
 -- name: UpdateClient :execresult
 UPDATE clients 
-    SET id_number = coalesce(sqlc.narg("id_number"), id_number),
+    SET full_name = sqlc.arg("full_name"),
+    phone_number = sqlc.arg("phone_number"),
+    gender = sqlc.arg("gender"),
+    assigned_staff = sqlc.arg("assigned_staff"),
+    branch_id = sqlc.arg("branch_id"),
+    active = sqlc.arg("active"),
+    id_number = coalesce(sqlc.narg("id_number"), id_number),
     dob = coalesce(sqlc.narg("dob"), dob),
-    active = coalesce(sqlc.narg("active"), active),
-    branch_id = coalesce(sqlc.narg("branch_id"), branch_id),
     updated_at = CURRENT_TIMESTAMP,
     updated_by = sqlc.arg("updated_by")
 WHERE id = sqlc.arg("id");
@@ -37,6 +47,11 @@ WHERE
     (phone_number = sqlc.arg("phone_number") AND sqlc.arg("phone_number") IS NOT NULL)
     OR 
     (id = sqlc.arg("client_id") AND sqlc.arg("client_id") IS NOT NULL);
+
+-- name: DeductClientOverpayment :execresult
+UPDATE clients
+SET overpayment = overpayment - sqlc.arg("overpayment")
+WHERE id = sqlc.arg("id");
 
 -- name: NullifyClientOverpayment :execresult
 UPDATE clients

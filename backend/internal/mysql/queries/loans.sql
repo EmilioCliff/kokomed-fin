@@ -32,6 +32,13 @@ UPDATE loans
     updated_by = coalesce(sqlc.arg("updated_by"), updated_by)
 WHERE id = sqlc.arg("id");
 
+-- name: ReduceLoan :execresult
+UPDATE loans 
+    SET paid_amount = paid_amount - sqlc.arg("paid_amount"),
+    status = 'ACTIVE',
+    updated_by = sqlc.arg("updated_by")
+WHERE id = sqlc.arg("id");
+
 -- name: TransferLoan :execresult
 UPDATE loans SET loan_officer = ?, updated_by = ? WHERE id = ?;
 
@@ -101,6 +108,9 @@ SELECT id FROM loans WHERE client_id = ? AND status = ? LIMIT 1;
 
 -- name: GetLoanData :many
 SELECT id FROM loans;
+
+-- name: GetLoanStatus :one
+SELECT status FROM loans WHERE id = ? LIMIT 1;
 
 -- name: ListLoans :many
 SELECT 
@@ -188,6 +198,82 @@ WHERE
         OR FIND_IN_SET(l.status, ?) > 0
     );
 
+-- name: GetClientLoans :many
+SELECT 
+    l.*, 
+
+    -- Product Details
+    p.branch_id AS product_branch_id,
+    pb.name AS product_branch_name,  -- Fetch the product branch name
+    p.loan_amount, 
+    p.repay_amount, 
+    p.interest_amount,
+
+    -- Client Details
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    c.active AS client_active,
+    c.branch_id AS client_branch_id,
+    cb.name AS client_branch_name,
+
+    -- Loan Officer Details
+    u.full_name AS loan_officer_name,
+    u.email AS loan_officer_email,
+    u.phone_number AS loan_officer_phone,
+
+    -- Approved By Details
+    a.full_name AS approved_by_name,
+    a.email AS approved_by_email,
+    a.phone_number AS approved_by_phone,
+
+    -- Disbursed By Details (Nullable)
+    d.full_name AS disbursed_by_name,
+    d.email AS disbursed_by_email,
+    d.phone_number AS disbursed_by_phone,
+
+    -- Updated By Details (Nullable)
+    up.full_name AS updated_by_name,
+    up.email AS updated_by_email,
+    up.phone_number AS updated_by_phone,
+
+    -- Created By Details
+    cr.full_name AS created_by_name,
+    cr.email AS created_by_email,
+    cr.phone_number AS created_by_phone
+
+FROM loans l
+JOIN products p ON l.product_id = p.id
+JOIN branches pb ON p.branch_id = pb.id  -- Fetching product branch name
+JOIN clients c ON l.client_id = c.id
+JOIN branches cb ON c.branch_id = cb.id
+JOIN users u ON l.loan_officer = u.id
+JOIN users a ON l.approved_by = a.id
+
+-- Left joins for optional fields (disbursed_by, updated_by, created_by)
+LEFT JOIN users d ON l.disbursed_by = d.id
+LEFT JOIN users up ON l.updated_by = up.id
+LEFT JOIN users cr ON l.created_by = cr.id
+
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(l.status, ?) > 0
+    ) AND l.client_id = ?
+ORDER BY l.created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: CountClientLoans :one
+SELECT COUNT(*) AS total_loans 
+FROM loans l
+JOIN products p ON l.product_id = p.id
+JOIN clients c ON l.client_id = c.id
+JOIN users u ON l.loan_officer = u.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(l.status, ?) > 0
+    ) AND l.client_id = ?;
+
 -- name: ListExpectedPayments :many
 SELECT 
 	b.name AS branch_name,
@@ -254,19 +340,11 @@ SELECT EXISTS (
     WHERE client_id = ? AND status = 'ACTIVE'
 ) AS has_active_loan LIMIT 1;
 
--- name: GetLoanPaymentData :one
+-- name: GetLoanClientID :one
 SELECT 
-    l.id AS loan_id,
-    l.client_id,
-    l.processing_fee,
-    l.fee_paid,
-    l.paid_amount,
-    c.phone_number,
-    p.repay_amount
-FROM loans l
-JOIN products p ON l.product_id = p.id
-JOIN clients c ON l.client_id = c.id
-WHERE l.id = ?
+    client_id
+FROM loans 
+WHERE id = ?
 LIMIT 1;
 
 -- name: GetLoanEvents :many
@@ -304,4 +382,20 @@ JOIN products p ON l.product_id = p.id
 WHERE 
     l.client_id = ?
     AND l.status = 'ACTIVE'
+LIMIT 1;
+
+-- name: GetLoanDetails :one
+SELECT 
+    l.id,
+    l.client_id,
+    p.loan_amount,
+    p.repay_amount,
+    l.disbursed_on,
+    l.due_date,
+    l.paid_amount,
+    l.status
+FROM loans l
+JOIN products p ON l.product_id = p.id
+WHERE 
+    l.id = ?
 LIMIT 1;

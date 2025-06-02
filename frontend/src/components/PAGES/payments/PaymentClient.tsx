@@ -26,39 +26,75 @@ import {
 	getClientNonPosted,
 	getClientPayment,
 } from '@/services/getClientNonPosted';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
+import { Edit } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { DataTable } from '@/components/table/data-table';
-import { clientPaymentColumns } from './payment';
-import { paymentSources } from '@/data/loan';
 import { useTable } from '@/hooks/useTable';
 import { useDebounce } from '@/hooks/useDebounce';
+import EditClientForm from './EditClientForm';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import PaymentsTab from './PaymentsTab';
+import { getClientLoans } from '@/services/getClientLoans';
+import LoansTab from './LoansTab';
+import { useAuth } from '@/hooks/useAuth';
+import { role } from '@/lib/types';
 
 function PaymentClient() {
 	const [searchType, setSearchType] = useState('id');
 	const [clientId, setClientId] = useState(0);
 	const [phoneNumber, setPhoneNumber] = useState('');
-	const { pageIndex, pageSize, updateTableContext, resetTableState } =
+	const { pageIndex, pageSize, filter, updateTableContext, resetTableState } =
 		useTable();
 	const [searched, setSearched] = useState(false);
+	const [editForm, setEditForm] = useState(false);
+	const [currentTab, setCurrentTab] = useState('loans');
+	const { decoded } = useAuth();
 
 	const debouced = useDebounce({ value: phoneNumber, delay: 2000 });
 
 	const paymentsQuery = useQuery({
-		queryKey: ['payments', pageIndex, pageSize],
+		queryKey: ['payments/client', pageIndex, pageSize, clientId],
 		queryFn: () =>
 			getClientPayment(clientId, debouced, pageIndex, pageSize),
 		staleTime: 5 * 1000,
 		placeholderData: keepPreviousData,
-		enabled: searched && (!!phoneNumber || !!clientId),
+		enabled:
+			searched &&
+			(!!phoneNumber || !!clientId) &&
+			currentTab === 'payments',
+	});
+
+	const loansQuery = useQuery({
+		queryKey: ['loans/client', pageIndex, pageSize, clientId, filter],
+		queryFn: () => getClientLoans(clientId, pageIndex, pageSize, filter),
+		staleTime: 5 * 1000,
+		placeholderData: keepPreviousData,
+		enabled:
+			searched && (!!phoneNumber || !!clientId) && currentTab === 'loans',
 	});
 
 	useEffect(() => {
-		if (paymentsQuery.data) {
-			if (paymentsQuery.data.metadata) {
-				updateTableContext(paymentsQuery.data.metadata);
+		if (currentTab === 'payments') {
+			if (paymentsQuery.data) {
+				if (paymentsQuery.data.metadata) {
+					updateTableContext(paymentsQuery.data.metadata);
+				}
+			}
+		} else {
+			if (loansQuery.data) {
+				if (loansQuery.data.metadata) {
+					updateTableContext(loansQuery.data.metadata);
+				}
 			}
 		}
-	}, [paymentsQuery.data?.data]);
+	}, [paymentsQuery.data?.data, loansQuery.data?.data, currentTab]);
 
 	const { data } = useQuery({
 		queryKey: ['payments/form'],
@@ -165,9 +201,52 @@ function PaymentClient() {
 							</div>
 						) : (
 							<>
-								<h2 className="text-xl font-semibold mb-4">
-									Client Details
-								</h2>
+								<div className="flex justify-between">
+									<h2 className="text-xl font-semibold mb-4">
+										Client Details
+									</h2>
+									{decoded?.email === role.ADMIN && (
+										<Dialog
+											open={editForm}
+											onOpenChange={setEditForm}
+										>
+											<DialogTrigger asChild>
+												<Button
+													variant="outline"
+													size="sm"
+												>
+													<Edit className="mr-2 h-4 w-4" />
+													Edit
+												</Button>
+											</DialogTrigger>
+											<DialogContent>
+												<DialogHeader>
+													<DialogTitle>
+														Edit Customer
+													</DialogTitle>
+													<DialogDescription>
+														Update the customer's
+														details below.
+													</DialogDescription>
+												</DialogHeader>
+
+												{mutation.data?.data ? (
+													<EditClientForm
+														onFormOpen={setEditForm}
+														clientData={
+															mutation.data.data
+																.clientDetails
+														}
+													/>
+												) : (
+													<p className="text-sm text-muted-foreground">
+														Loading client data...
+													</p>
+												)}
+											</DialogContent>
+										</Dialog>
+									)}
+								</div>
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 									<div>
 										<p className="text-sm text-muted-foreground">
@@ -314,7 +393,7 @@ function PaymentClient() {
 								<h3 className="text-lg font-medium mb-3">
 									Installments
 								</h3>
-								<div className="overflow-x-auto">
+								<div className="overflow-x-auto no-scrollbar">
 									<Table>
 										<TableHeader>
 											<TableRow>
@@ -387,55 +466,32 @@ function PaymentClient() {
 							</>
 						)}
 					</Card>
-					<Card className="p-4 mb-6">
-						{mutation.data.data.paymentDetails.length === 0 ? (
-							<div className="text-center py-6">
-								<p className="text-gray-500">
-									No payments found for this{' '}
-									{searchType === 'id'
-										? 'client.'
-										: 'number.'}
-								</p>
-							</div>
-						) : (
-							<div>
-								<div className="flex justify-between items-center mb-4">
-									<h2 className="text-xl font-semibold">
-										Payment History
-									</h2>
-									<span className="text-lg font-semibold text-blue-600">
-										Total: KES{' '}
-										{`${mutation.data.data.totalPaid.toLocaleString()}`}
-									</span>
-								</div>
-								<DataTable
-									data={paymentsQuery.data?.data || []}
-									columns={clientPaymentColumns}
-									searchableColumns={[
-										{
-											id: 'payingName',
-											title: 'Paying Name',
-										},
-										{
-											id: 'accountNumber',
-											title: 'Account Number',
-										},
-										{
-											id: 'transactionNumber',
-											title: 'Transaction Number',
-										},
-									]}
-									facetedFilterColumns={[
-										{
-											id: 'transactionSource',
-											title: 'Transaction Source',
-											options: paymentSources,
-										},
-									]}
-								/>
-							</div>
-						)}
-					</Card>
+					<Tabs
+						onValueChange={(value: string) => {
+							resetTableState();
+							setCurrentTab(value);
+						}}
+						className="w-full"
+						defaultValue="loans"
+					>
+						<TabsList className="grid w-full grid-cols-2">
+							<TabsTrigger value="loans">Loans</TabsTrigger>
+							<TabsTrigger value="payments">Payments</TabsTrigger>
+						</TabsList>
+						<TabsContent value="loans">
+							<LoansTab
+								loans={loansQuery.data?.data || []}
+								searchType={searchType}
+							/>
+						</TabsContent>
+						<TabsContent value="payments">
+							<PaymentsTab
+								payments={paymentsQuery.data?.data || []}
+								total={mutation.data.data.totalPaid}
+								searchType={searchType}
+							/>
+						</TabsContent>
+					</Tabs>
 				</>
 			)}
 			{searched === false && (

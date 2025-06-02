@@ -57,7 +57,7 @@ function CustomersPage() {
 							Add New Customer
 						</Button>
 					</DialogTrigger>
-					<DialogContent className="max-w-screen-lg max-h-screen overflow-y-auto">
+					<DialogContent className="max-w-screen-lg max-h-screen overflow-y-auto no-scrollbar">
 						<DialogHeader>
 							<DialogTitle>Add New Customer</DialogTitle>
 							<DialogDescription>

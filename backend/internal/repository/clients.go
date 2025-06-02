@@ -28,12 +28,17 @@ type Client struct {
 }
 
 type UpdateClient struct {
-	ID        uint32     `json:"id"`
-	UpdatedBy uint32     `json:"updated_by"`
-	IdNumber  *string    `json:"id_number"`
-	Dob       *time.Time `json:"dob"`
-	Active    *bool      `json:"active"`
-	BranchID  *uint32    `json:"branch_id"`
+	ID            uint32     `json:"id"`
+	UpdatedBy     uint32     `json:"updated_by"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+	FullName      string     `json:"full_name"`
+	PhoneNumber   string     `json:"phone_number"`
+	Gender        string     `json:"gender"`
+	AssignedStaff uint32     `json:"assigned_staff"`
+	IdNumber      *string    `json:"id_number"`
+	Dob           *time.Time `json:"dob"`
+	Active        bool       `json:"active"`
+	BranchID      uint32     `json:"branch_id"`
 }
 
 type ClientCategorySearch struct {
@@ -42,13 +47,18 @@ type ClientCategorySearch struct {
 }
 
 type ClientShort struct {
-	ID          uint32  `json:"id"`
-	FullName    string  `json:"fullName"`
-	PhoneNumber string  `json:"phoneNumber"`
-	Active      bool    `json:"active"`
-	Overpayment float64 `json:"overpayment"`
-	BranchName  string  `json:"branchName"`
-	DueAmount   float64 `json:"dueAmount"`
+	ID            uint32            `json:"id"`
+	FullName      string            `json:"fullName"`
+	PhoneNumber   string            `json:"phoneNumber"`
+	Active        bool              `json:"active"`
+	Dob           string            `json:"dob"`
+	Gender        string            `json:"gender"`
+	IdNumber      string            `json:"idNumber"`
+	AssignedStaff UserShortResponse `json:"assignedStaff"`
+	Overpayment   float64           `json:"overpayment"`
+	BranchName    string            `json:"branchName"`
+	BranchID      uint32            `json:"branchId"`
+	DueAmount     float64           `json:"dueAmount"`
 }
 
 type ClientFullData struct {

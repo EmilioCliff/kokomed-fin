@@ -1,4 +1,3 @@
-import './App.css';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -12,15 +11,15 @@ import PaymentsPage from './components/PAGES/payments/PaymentsPage';
 import UsersPage from './components/PAGES/users/UsersPage';
 import BranchesPage from './components/PAGES/branches/BranchesPage';
 import ProductsPage from './components/PAGES/products/ProductsPage';
-// import LoanExpectedPayments from './components/PAGES/loans/LoanExpectedPayments';
 import { AuthContextWrapper } from './context/AuthContext';
 import { TableContextWrapper } from './context/TableContext';
 import { ReportsPage } from './components/PAGES/reports/ReportsPage';
 import LoanTimeline from './components/PAGES/loans/LoanTimeline';
 import { ToastContainer } from 'react-toastify';
 import PaymentClient from './components/PAGES/payments/PaymentClient';
-// import GetDataTest from './pages/GetDataTest';
 import LoanUnpaidInstallments from './components/PAGES/loans/LoanUnpaidInstallments';
+import EditPaymentForm from './components/PAGES/payments/EditPaymentForm';
+import LoanDetailsPage from './components/PAGES/loans/LoanPage';
 
 const queryClient = new QueryClient();
 
@@ -41,6 +40,10 @@ function App() {
 								<Route
 									path="loans/overview"
 									element={<LoansPage />}
+								/>
+								<Route
+									path="loans/overview/:id"
+									element={<LoanDetailsPage />}
 								/>
 								<Route
 									path="loans/unpaid-installments"
@@ -73,6 +76,10 @@ function App() {
 								<Route
 									path="payments/client"
 									element={<PaymentClient />}
+								/>
+								<Route
+									path="payments/overview/:id"
+									element={<EditPaymentForm />}
 								/>
 								<Route
 									path="products/overview"

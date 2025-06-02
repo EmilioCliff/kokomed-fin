@@ -26,6 +26,32 @@ func (q *Queries) CheckActiveLoanForClient(ctx context.Context, clientID uint32)
 	return has_active_loan, err
 }
 
+const countClientLoans = `-- name: CountClientLoans :one
+SELECT COUNT(*) AS total_loans 
+FROM loans l
+JOIN products p ON l.product_id = p.id
+JOIN clients c ON l.client_id = c.id
+JOIN users u ON l.loan_officer = u.id
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(l.status, ?) > 0
+    ) AND l.client_id = ?
+`
+
+type CountClientLoansParams struct {
+	Column1   interface{} `json:"column_1"`
+	FINDINSET string      `json:"FIND_IN_SET"`
+	ClientID  uint32      `json:"client_id"`
+}
+
+func (q *Queries) CountClientLoans(ctx context.Context, arg CountClientLoansParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countClientLoans, arg.Column1, arg.FINDINSET, arg.ClientID)
+	var total_loans int64
+	err := row.Scan(&total_loans)
+	return total_loans, err
+}
+
 const countExpectedPayments = `-- name: CountExpectedPayments :one
 SELECT COUNT(*) AS total_unexpected
 FROM clients c
@@ -243,6 +269,198 @@ func (q *Queries) GetClientActiveLoan(ctx context.Context, arg GetClientActiveLo
 	return id, err
 }
 
+const getClientLoans = `-- name: GetClientLoans :many
+SELECT 
+    l.id, l.product_id, l.client_id, l.loan_officer, l.loan_purpose, l.due_date, l.approved_by, l.disbursed_on, l.disbursed_by, l.total_installments, l.installments_period, l.status, l.processing_fee, l.paid_amount, l.updated_by, l.created_by, l.created_at, l.fee_paid, 
+
+    -- Product Details
+    p.branch_id AS product_branch_id,
+    pb.name AS product_branch_name,  -- Fetch the product branch name
+    p.loan_amount, 
+    p.repay_amount, 
+    p.interest_amount,
+
+    -- Client Details
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    c.active AS client_active,
+    c.branch_id AS client_branch_id,
+    cb.name AS client_branch_name,
+
+    -- Loan Officer Details
+    u.full_name AS loan_officer_name,
+    u.email AS loan_officer_email,
+    u.phone_number AS loan_officer_phone,
+
+    -- Approved By Details
+    a.full_name AS approved_by_name,
+    a.email AS approved_by_email,
+    a.phone_number AS approved_by_phone,
+
+    -- Disbursed By Details (Nullable)
+    d.full_name AS disbursed_by_name,
+    d.email AS disbursed_by_email,
+    d.phone_number AS disbursed_by_phone,
+
+    -- Updated By Details (Nullable)
+    up.full_name AS updated_by_name,
+    up.email AS updated_by_email,
+    up.phone_number AS updated_by_phone,
+
+    -- Created By Details
+    cr.full_name AS created_by_name,
+    cr.email AS created_by_email,
+    cr.phone_number AS created_by_phone
+
+FROM loans l
+JOIN products p ON l.product_id = p.id
+JOIN branches pb ON p.branch_id = pb.id  -- Fetching product branch name
+JOIN clients c ON l.client_id = c.id
+JOIN branches cb ON c.branch_id = cb.id
+JOIN users u ON l.loan_officer = u.id
+JOIN users a ON l.approved_by = a.id
+
+LEFT JOIN users d ON l.disbursed_by = d.id
+LEFT JOIN users up ON l.updated_by = up.id
+LEFT JOIN users cr ON l.created_by = cr.id
+
+WHERE 
+    (
+        COALESCE(?, '') = '' 
+        OR FIND_IN_SET(l.status, ?) > 0
+    ) AND l.client_id = ?
+ORDER BY l.created_at DESC
+LIMIT ? OFFSET ?
+`
+
+type GetClientLoansParams struct {
+	Column1   interface{} `json:"column_1"`
+	FINDINSET string      `json:"FIND_IN_SET"`
+	ClientID  uint32      `json:"client_id"`
+	Limit     int32       `json:"limit"`
+	Offset    int32       `json:"offset"`
+}
+
+type GetClientLoansRow struct {
+	ID                 uint32         `json:"id"`
+	ProductID          uint32         `json:"product_id"`
+	ClientID           uint32         `json:"client_id"`
+	LoanOfficer        uint32         `json:"loan_officer"`
+	LoanPurpose        sql.NullString `json:"loan_purpose"`
+	DueDate            sql.NullTime   `json:"due_date"`
+	ApprovedBy         uint32         `json:"approved_by"`
+	DisbursedOn        sql.NullTime   `json:"disbursed_on"`
+	DisbursedBy        sql.NullInt32  `json:"disbursed_by"`
+	TotalInstallments  uint32         `json:"total_installments"`
+	InstallmentsPeriod uint32         `json:"installments_period"`
+	Status             LoansStatus    `json:"status"`
+	ProcessingFee      float64        `json:"processing_fee"`
+	PaidAmount         float64        `json:"paid_amount"`
+	UpdatedBy          sql.NullInt32  `json:"updated_by"`
+	CreatedBy          uint32         `json:"created_by"`
+	CreatedAt          time.Time      `json:"created_at"`
+	FeePaid            bool           `json:"fee_paid"`
+	ProductBranchID    uint32         `json:"product_branch_id"`
+	ProductBranchName  string         `json:"product_branch_name"`
+	LoanAmount         float64        `json:"loan_amount"`
+	RepayAmount        float64        `json:"repay_amount"`
+	InterestAmount     float64        `json:"interest_amount"`
+	ClientName         string         `json:"client_name"`
+	ClientPhone        string         `json:"client_phone"`
+	ClientActive       bool           `json:"client_active"`
+	ClientBranchID     uint32         `json:"client_branch_id"`
+	ClientBranchName   string         `json:"client_branch_name"`
+	LoanOfficerName    string         `json:"loan_officer_name"`
+	LoanOfficerEmail   string         `json:"loan_officer_email"`
+	LoanOfficerPhone   string         `json:"loan_officer_phone"`
+	ApprovedByName     string         `json:"approved_by_name"`
+	ApprovedByEmail    string         `json:"approved_by_email"`
+	ApprovedByPhone    string         `json:"approved_by_phone"`
+	DisbursedByName    sql.NullString `json:"disbursed_by_name"`
+	DisbursedByEmail   sql.NullString `json:"disbursed_by_email"`
+	DisbursedByPhone   sql.NullString `json:"disbursed_by_phone"`
+	UpdatedByName      sql.NullString `json:"updated_by_name"`
+	UpdatedByEmail     sql.NullString `json:"updated_by_email"`
+	UpdatedByPhone     sql.NullString `json:"updated_by_phone"`
+	CreatedByName      sql.NullString `json:"created_by_name"`
+	CreatedByEmail     sql.NullString `json:"created_by_email"`
+	CreatedByPhone     sql.NullString `json:"created_by_phone"`
+}
+
+// Left joins for optional fields (disbursed_by, updated_by, created_by)
+func (q *Queries) GetClientLoans(ctx context.Context, arg GetClientLoansParams) ([]GetClientLoansRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClientLoans,
+		arg.Column1,
+		arg.FINDINSET,
+		arg.ClientID,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetClientLoansRow{}
+	for rows.Next() {
+		var i GetClientLoansRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.ClientID,
+			&i.LoanOfficer,
+			&i.LoanPurpose,
+			&i.DueDate,
+			&i.ApprovedBy,
+			&i.DisbursedOn,
+			&i.DisbursedBy,
+			&i.TotalInstallments,
+			&i.InstallmentsPeriod,
+			&i.Status,
+			&i.ProcessingFee,
+			&i.PaidAmount,
+			&i.UpdatedBy,
+			&i.CreatedBy,
+			&i.CreatedAt,
+			&i.FeePaid,
+			&i.ProductBranchID,
+			&i.ProductBranchName,
+			&i.LoanAmount,
+			&i.RepayAmount,
+			&i.InterestAmount,
+			&i.ClientName,
+			&i.ClientPhone,
+			&i.ClientActive,
+			&i.ClientBranchID,
+			&i.ClientBranchName,
+			&i.LoanOfficerName,
+			&i.LoanOfficerEmail,
+			&i.LoanOfficerPhone,
+			&i.ApprovedByName,
+			&i.ApprovedByEmail,
+			&i.ApprovedByPhone,
+			&i.DisbursedByName,
+			&i.DisbursedByEmail,
+			&i.DisbursedByPhone,
+			&i.UpdatedByName,
+			&i.UpdatedByEmail,
+			&i.UpdatedByPhone,
+			&i.CreatedByName,
+			&i.CreatedByEmail,
+			&i.CreatedByPhone,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getLoan = `-- name: GetLoan :one
 SELECT id, product_id, client_id, loan_officer, loan_purpose, due_date, approved_by, disbursed_on, disbursed_by, total_installments, installments_period, status, processing_fee, paid_amount, updated_by, created_by, created_at, fee_paid FROM loans WHERE id = ? LIMIT 1
 `
@@ -273,6 +491,21 @@ func (q *Queries) GetLoan(ctx context.Context, id uint32) (Loan, error) {
 	return i, err
 }
 
+const getLoanClientID = `-- name: GetLoanClientID :one
+SELECT 
+    client_id
+FROM loans 
+WHERE id = ?
+LIMIT 1
+`
+
+func (q *Queries) GetLoanClientID(ctx context.Context, id uint32) (uint32, error) {
+	row := q.db.QueryRowContext(ctx, getLoanClientID, id)
+	var client_id uint32
+	err := row.Scan(&client_id)
+	return client_id, err
+}
+
 const getLoanData = `-- name: GetLoanData :many
 SELECT id FROM loans
 `
@@ -298,6 +531,50 @@ func (q *Queries) GetLoanData(ctx context.Context) ([]uint32, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getLoanDetails = `-- name: GetLoanDetails :one
+SELECT 
+    l.id,
+    l.client_id,
+    p.loan_amount,
+    p.repay_amount,
+    l.disbursed_on,
+    l.due_date,
+    l.paid_amount,
+    l.status
+FROM loans l
+JOIN products p ON l.product_id = p.id
+WHERE 
+    l.id = ?
+LIMIT 1
+`
+
+type GetLoanDetailsRow struct {
+	ID          uint32       `json:"id"`
+	ClientID    uint32       `json:"client_id"`
+	LoanAmount  float64      `json:"loan_amount"`
+	RepayAmount float64      `json:"repay_amount"`
+	DisbursedOn sql.NullTime `json:"disbursed_on"`
+	DueDate     sql.NullTime `json:"due_date"`
+	PaidAmount  float64      `json:"paid_amount"`
+	Status      LoansStatus  `json:"status"`
+}
+
+func (q *Queries) GetLoanDetails(ctx context.Context, id uint32) (GetLoanDetailsRow, error) {
+	row := q.db.QueryRowContext(ctx, getLoanDetails, id)
+	var i GetLoanDetailsRow
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.LoanAmount,
+		&i.RepayAmount,
+		&i.DisbursedOn,
+		&i.DueDate,
+		&i.PaidAmount,
+		&i.Status,
+	)
+	return i, err
 }
 
 const getLoanEvents = `-- name: GetLoanEvents :many
@@ -516,45 +793,15 @@ func (q *Queries) GetLoanFullData(ctx context.Context, id uint32) (GetLoanFullDa
 	return i, err
 }
 
-const getLoanPaymentData = `-- name: GetLoanPaymentData :one
-SELECT 
-    l.id AS loan_id,
-    l.client_id,
-    l.processing_fee,
-    l.fee_paid,
-    l.paid_amount,
-    c.phone_number,
-    p.repay_amount
-FROM loans l
-JOIN products p ON l.product_id = p.id
-JOIN clients c ON l.client_id = c.id
-WHERE l.id = ?
-LIMIT 1
+const getLoanStatus = `-- name: GetLoanStatus :one
+SELECT status FROM loans WHERE id = ? LIMIT 1
 `
 
-type GetLoanPaymentDataRow struct {
-	LoanID        uint32  `json:"loan_id"`
-	ClientID      uint32  `json:"client_id"`
-	ProcessingFee float64 `json:"processing_fee"`
-	FeePaid       bool    `json:"fee_paid"`
-	PaidAmount    float64 `json:"paid_amount"`
-	PhoneNumber   string  `json:"phone_number"`
-	RepayAmount   float64 `json:"repay_amount"`
-}
-
-func (q *Queries) GetLoanPaymentData(ctx context.Context, id uint32) (GetLoanPaymentDataRow, error) {
-	row := q.db.QueryRowContext(ctx, getLoanPaymentData, id)
-	var i GetLoanPaymentDataRow
-	err := row.Scan(
-		&i.LoanID,
-		&i.ClientID,
-		&i.ProcessingFee,
-		&i.FeePaid,
-		&i.PaidAmount,
-		&i.PhoneNumber,
-		&i.RepayAmount,
-	)
-	return i, err
+func (q *Queries) GetLoanStatus(ctx context.Context, id uint32) (LoansStatus, error) {
+	row := q.db.QueryRowContext(ctx, getLoanStatus, id)
+	var status LoansStatus
+	err := row.Scan(&status)
+	return status, err
 }
 
 const listExpectedPayments = `-- name: ListExpectedPayments :many
@@ -1045,6 +1292,24 @@ func (q *Queries) ListNonDisbursedLoans(ctx context.Context, arg ListNonDisburse
 		return nil, err
 	}
 	return items, nil
+}
+
+const reduceLoan = `-- name: ReduceLoan :execresult
+UPDATE loans 
+    SET paid_amount = paid_amount - ?,
+    status = 'ACTIVE',
+    updated_by = ?
+WHERE id = ?
+`
+
+type ReduceLoanParams struct {
+	PaidAmount float64       `json:"paid_amount"`
+	UpdatedBy  sql.NullInt32 `json:"updated_by"`
+	ID         uint32        `json:"id"`
+}
+
+func (q *Queries) ReduceLoan(ctx context.Context, arg ReduceLoanParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, reduceLoan, arg.PaidAmount, arg.UpdatedBy, arg.ID)
 }
 
 const transferLoan = `-- name: TransferLoan :execresult

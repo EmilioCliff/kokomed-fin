@@ -1,3 +1,6 @@
+DATABASE_URL=mysql://kokomed:secret@tcp(172.17.0.2:3306)/kokomed?multiStatements=true&parseTime=true
+MIGRATIONS_PATH=file:///home/emilio-cliff/kokomed-fin/backend/internal/mysql/migrations
+
 test:
 	go test -v ./...
 
@@ -24,11 +27,11 @@ mock:
 createMigrate:
 	migrate create -ext sql -dir ./internal/mysql/migrations/ -seq "${SCHEMA}"
 
-migrateup:
-	migrate -path ./internal/mysql/migrations -database "mysql://kokomed:secret@tcp(localhost:3306)/kokomed-fin" -verbose up
+migrateUp:
+	migrate -source ${MIGRATIONS_PATH} -database "${DATABASE_URL}" -verbose up
 
-migratedown:
-	migrate -path ./internal/mysql/migrations -database "mysql://kokomed:secret@tcp(localhost:3306)/kokomed-fin" -verbose down
+migrateDown:
+	migrate -source ${MIGRATIONS_PATH} -database "${DATABASE_URL}" -verbose down ${VERSION}
 
-.PHONY: test race-test sqlc run coverage createMigrate mock
+.PHONY: test race-test sqlc run coverage createMigrate mock migrateUp migrateDown
 	

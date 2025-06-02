@@ -17,6 +17,18 @@ export const paymentSchema = z.object({
 
 export type Payment = z.infer<typeof paymentSchema>;
 
+export const paymentAllocationSchema = z.object({
+	id: z.number(),
+	nonPostedId: z.number(),
+	loanId: z.number().optional(),
+	installmentId: z.number().optional(),
+	amount: z.number(),
+	description: z.string(),
+	deletedDescription: z.string().optional(),
+	deletedAt: z.string().optional(),
+	createdAt: z.string(),
+});
+
 export const paymentFormSchema = z.object({
 	TransAmount: z.coerce.number().gt(0, { message: 'Select valid amount' }),
 	TransID: z
@@ -35,3 +47,44 @@ export const paymentFormSchema = z.object({
 });
 
 export type PaymentFormType = z.infer<typeof paymentFormSchema>;
+
+export const editClientFormSchema = z.object({
+	id: z.number().gt(0, { message: 'Select valid client' }),
+	fullName: z.string().min(3),
+	phoneNumber: z
+		.string()
+		.length(10, 'Phone number must be exactly 10 digits')
+		.regex(/^\d+$/, 'Phone number must contain only digits'),
+	idNumber: z.string().optional(),
+	dob: z.string().optional(),
+	gender: z.enum(['MALE', 'FEMALE']),
+	active: z.enum(['true', 'false']),
+	branchId: z.number().gt(0, { message: 'Select valid branch' }),
+	assignedStaffId: z.number().gt(0, { message: 'Select valid staff' }),
+});
+
+export type EditClientFormType = z.infer<typeof editClientFormSchema>;
+
+export const editPaymentFormSchema = z.object({
+	id: z.number(),
+	transactionSource: z.enum(['MPESA', 'INTERNAL']),
+	transactionId: z
+		.string()
+		.min(3, { message: 'Must be 3 or more characters long' }),
+	accountNumber: z
+		.string()
+		.min(10, { message: 'Must be 10 characters long' }),
+	phoneNumber: z.string().min(3, { message: 'Must be 3 characters long' }),
+	payingName: z
+		.string()
+		.min(3, { message: 'Must be 3 or more characters long' }),
+	amount: z.coerce.number().gt(0, { message: 'Select valid amount' }),
+	assignedBy: z.string(),
+	assignedTo: z.number(),
+	description: z
+		.string()
+		.min(3, { message: 'Must be 3 or more characters long' }),
+	paidDate: z.string(),
+});
+
+export type EditPaymentFormType = z.infer<typeof editPaymentFormSchema>;

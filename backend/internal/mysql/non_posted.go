@@ -70,6 +70,44 @@ func (r *NonPostedRepository) CreateNonPosted(
 	return *nonPosted, nil
 }
 
+func (r *NonPostedRepository) UpdateNonPosted(
+	ctx context.Context,
+	nonPosted *repository.NonPosted,
+) error {
+	params := generated.UpdateNonPostedParams{
+		ID:                nonPosted.ID,
+		TransactionSource: generated.NonPostedTransactionSource(nonPosted.TransactionSource),
+		TransactionNumber: nonPosted.TransactionNumber,
+		AccountNumber:     nonPosted.AccountNumber,
+		PhoneNumber:       nonPosted.PhoneNumber,
+		PayingName:        nonPosted.PayingName,
+		Amount:            nonPosted.Amount,
+		PaidDate:          nonPosted.PaidDate,
+		AssignedBy:        nonPosted.AssignedBy,
+		AssignTo: sql.NullInt32{
+			Valid: false,
+		},
+	}
+
+	if nonPosted.DeletedDescription != nil {
+		params.DeletedDescription = sql.NullString{
+			Valid:  true,
+			String: *nonPosted.DeletedDescription,
+		}
+	}
+
+	_, err := r.queries.UpdateNonPosted(ctx, params)
+	if err != nil {
+		return pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to create non posted: %s",
+			err.Error(),
+		)
+	}
+
+	return nil
+}
+
 func (r *NonPostedRepository) GetNonPosted(
 	ctx context.Context,
 	id uint32,
@@ -87,7 +125,48 @@ func (r *NonPostedRepository) GetNonPosted(
 		)
 	}
 
-	return convertGenerateNonPosted(nonPosted), nil
+	rslt := repository.NonPosted{
+		ID:                nonPosted.ID,
+		TransactionSource: string(nonPosted.TransactionSource),
+		TransactionNumber: nonPosted.TransactionNumber,
+		AccountNumber:     nonPosted.AccountNumber,
+		PhoneNumber:       nonPosted.PhoneNumber,
+		PayingName:        nonPosted.PayingName,
+		Amount:            nonPosted.Amount,
+		PaidDate:          nonPosted.PaidDate,
+		AssignedBy:        nonPosted.AssignedBy,
+	}
+
+	if nonPosted.DeletedAt.Valid {
+		rslt.DeletedAt = &nonPosted.DeletedAt.Time
+		rslt.DeletedDescription = &nonPosted.DeletedDescription.String
+	}
+
+	if nonPosted.DeletedDescription.Valid {
+		rslt.DeletedDescription = &nonPosted.DeletedDescription.String
+	}
+
+	if nonPosted.AssignTo.Valid {
+		value := uint32(nonPosted.AssignTo.Int32)
+		rslt.AssignedTo = &value
+		overpayment, err := pkg.StringToFloat64(nonPosted.ClientOverpayment.String)
+		if err != nil {
+			return repository.NonPosted{}, pkg.Errorf(
+				pkg.INTERNAL_ERROR,
+				"failed to convert string to float64: %s",
+				err.Error(),
+			)
+		}
+		rslt.AssignedClient = repository.ClientShort{
+			ID:          uint32(nonPosted.ClientID.Int32),
+			FullName:    nonPosted.ClientName.String,
+			PhoneNumber: nonPosted.ClientPhone.String,
+			Overpayment: overpayment,
+			BranchName:  nonPosted.ClientBranchName.String,
+		}
+	}
+
+	return rslt, nil
 }
 
 func (r *NonPostedRepository) ListNonPosted(
@@ -211,6 +290,55 @@ func (r *NonPostedRepository) ListNonPosted(
 	), nil
 }
 
+func (r *NonPostedRepository) ListPaymentAllocationsByNonPostedId(
+	ctx context.Context,
+	id uint32,
+) ([]repository.PaymentAllocation, error) {
+	allocations, err := r.queries.ListPaymentAllocationsByNonPostedId(ctx, id)
+	if err != nil {
+		return nil, pkg.Errorf(
+			pkg.INTERNAL_ERROR,
+			"failed to list payment allocations: %s",
+			err.Error(),
+		)
+	}
+
+	rslt := make([]repository.PaymentAllocation, len(allocations))
+
+	for i, allocation := range allocations {
+		p := repository.PaymentAllocation{
+			ID:            allocation.ID,
+			NonPostedID:   allocation.NonPostedID,
+			LoanID:        nil,
+			InstallmentID: nil,
+			Amount:        allocation.Amount,
+			Description:   allocation.Description,
+			DeletedAt:     nil,
+			CreatedAt:     allocation.CreatedAt,
+		}
+
+		if allocation.LoanID.Valid {
+			p.LoanID = pkg.Uint32Ptr(uint32(allocation.LoanID.Int32))
+		}
+
+		if allocation.InstallmentID.Valid {
+			p.InstallmentID = pkg.Uint32Ptr(uint32(allocation.InstallmentID.Int32))
+		}
+
+		if allocation.DeletedAt.Valid {
+			p.DeletedAt = &allocation.DeletedAt.Time
+		}
+
+		if allocation.DeletedDescription.Valid {
+			p.DeletedDescription = &allocation.DeletedDescription.String
+		}
+
+		rslt[i] = p
+	}
+
+	return rslt, nil
+}
+
 func (r *NonPostedRepository) ListUnassignedNonPosted(
 	ctx context.Context,
 	pgData *pkg.PaginationMetadata,
@@ -271,9 +399,19 @@ func (r *NonPostedRepository) ListNonPostedByTransactionSource(
 	return rslt, nil
 }
 
-func (r *NonPostedRepository) DeleteNonPosted(ctx context.Context, id uint32) error {
-	err := r.queries.DeleteNonPosted(ctx, id)
-	if err != nil {
+func (r *NonPostedRepository) DeleteNonPosted(
+	ctx context.Context,
+	id uint32,
+	description string,
+) error {
+	err := r.queries.SoftDeleteNonPosted(ctx, generated.SoftDeleteNonPostedParams{
+		ID: id,
+		DeletedDescription: sql.NullString{
+			Valid:  true,
+			String: description,
+		},
+	})
+	if err != nil && err == sql.ErrNoRows {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete non posted: %s", err.Error())
 	}
 
@@ -434,6 +572,7 @@ func (r *NonPostedRepository) GetClientNonPosted(
 		}
 	}
 
+	clientHasNonPosted = true
 	nonPosteds, err := r.queries.GetClientsNonPosted(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -442,7 +581,6 @@ func (r *NonPostedRepository) GetClientNonPosted(
 			return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get non-posted: %s", err.Error())
 		}
 	}
-	clientHasNonPosted = true
 
 	totalNonPosted, err := r.queries.CountClientsNonPosted(ctx, params3)
 	if err != nil {
@@ -463,6 +601,7 @@ func (r *NonPostedRepository) GetClientNonPosted(
 	}
 
 	if clientPresent {
+		clientHasActiveLoan = true
 		loan, err = r.queries.GetActiveLoanDetails(ctx, client.ID)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -471,7 +610,6 @@ func (r *NonPostedRepository) GetClientNonPosted(
 				return repository.ClientNonPosted{}, pkg.PaginationMetadata{}, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get loan: %s", err)
 			}
 		}
-		clientHasActiveLoan = true
 	}
 
 	if clientHasActiveLoan {
@@ -496,6 +634,14 @@ func (r *NonPostedRepository) GetClientNonPosted(
 		rslt.ClientDetails.PhoneNumber = client.PhoneNumber
 		rslt.ClientDetails.Overpayment = client.Overpayment
 		rslt.ClientDetails.BranchName = branch.Name
+		rslt.ClientDetails.BranchID = client.BranchID
+		rslt.ClientDetails.Dob = client.Dob.Time.Format("2006-01-02")
+		rslt.ClientDetails.Gender = string(client.Gender)
+		rslt.ClientDetails.IdNumber = client.IDNumber.String
+		rslt.ClientDetails.Active = client.Active
+		rslt.ClientDetails.AssignedStaff = repository.UserShortResponse{
+			ID: client.AssignedStaff,
+		}
 	}
 
 	if clientHasActiveLoan {

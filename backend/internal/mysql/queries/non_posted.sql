@@ -12,6 +12,20 @@ VALUES (
     sqlc.arg("assigned_by")
 );
 
+-- name: UpdateNonPosted :execresult
+UPDATE non_posted 
+    SET transaction_source = sqlc.arg("transaction_source"),
+    transaction_number = sqlc.arg("transaction_number"),
+    account_number = sqlc.arg("account_number"),
+    phone_number = sqlc.arg("phone_number"),
+    paying_name = sqlc.arg("paying_name"),
+    amount = sqlc.arg("amount"),
+    paid_date = sqlc.arg("paid_date"),
+    assign_to = COALESCE(sqlc.narg("assign_to"), assign_to),
+    assigned_by = sqlc.arg("assigned_by"),
+    deleted_description = sqlc.arg("deleted_description")
+WHERE id = sqlc.arg("id");
+
 -- name: ListAllNonPosted :many
 SELECT * FROM non_posted LIMIT ? OFFSET ?;
 
@@ -25,7 +39,21 @@ SELECT * FROM non_posted WHERE transaction_source = ? LIMIT ? OFFSET ?;
 SELECT * FROM non_posted WHERE assign_to IS NULL LIMIT ? OFFSET ?;
 
 -- name: GetNonPosted :one
-SELECT * FROM non_posted WHERE id = ? LIMIT 1;
+SELECT 
+    np.*, 
+    -- Client Details (if assigned)
+    c.id AS client_id,
+    c.full_name AS client_name,
+    c.phone_number AS client_phone,
+    c.overpayment AS client_overpayment,
+    b.name AS client_branch_name
+
+FROM non_posted np
+LEFT JOIN clients c ON np.assign_to = c.id
+LEFT JOIN branches b ON c.branch_id = b.id
+WHERE np.id = ? LIMIT 1;
+-- SELECT * FROM non_posted WHERE id = ? LIMIT 1;
+
 
 -- name: AssignNonPosted :execresult
 UPDATE non_posted 
@@ -36,6 +64,12 @@ WHERE id = sqlc.arg("id");
 
 -- name: DeleteNonPosted :exec
 DELETE FROM non_posted WHERE id = ?;
+
+-- name: SoftDeleteNonPosted :exec
+UPDATE non_posted
+SET deleted_at = CURRENT_TIMESTAMP,
+    deleted_description = sqlc.arg("deleted_description")
+WHERE id = sqlc.arg("id");
 
 -- name: GetClientsNonPosted :many
 SELECT 

@@ -103,8 +103,14 @@ func (r *ClientRepository) UpdateClient(
 	client *repository.UpdateClient,
 ) error {
 	params := generated.UpdateClientParams{
-		ID:        client.ID,
-		UpdatedBy: client.UpdatedBy,
+		ID:            client.ID,
+		UpdatedBy:     client.UpdatedBy,
+		FullName:      client.FullName,
+		PhoneNumber:   client.PhoneNumber,
+		Gender:        generated.ClientsGender(client.Gender),
+		AssignedStaff: client.AssignedStaff,
+		BranchID:      client.BranchID,
+		Active:        client.Active,
 	}
 
 	if client.IdNumber != nil {
@@ -118,20 +124,6 @@ func (r *ClientRepository) UpdateClient(
 		params.Dob = sql.NullTime{
 			Time:  *client.Dob,
 			Valid: true,
-		}
-	}
-
-	if client.Active != nil {
-		params.Active = sql.NullBool{
-			Valid: true,
-			Bool:  *client.Active,
-		}
-	}
-
-	if client.BranchID != nil {
-		params.BranchID = sql.NullInt32{
-			Valid: true,
-			Int32: int32(*client.BranchID),
 		}
 	}
 
