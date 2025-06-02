@@ -74,7 +74,7 @@ function UsersPage() {
 								Add New User
 							</Button>
 						</DialogTrigger>
-						<DialogContent className="max-w-screen-lg max-h-[90vh] overflow-y-auto">
+						<DialogContent className="max-w-screen-lg max-h-[90vh] no-scrollbar overflow-y-auto">
 							<DialogHeader>
 								<DialogTitle>Add New User</DialogTitle>
 								<DialogDescription>

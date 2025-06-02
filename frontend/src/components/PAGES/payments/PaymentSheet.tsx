@@ -120,7 +120,7 @@ function PaymentSheet() {
 				}
 			}}
 		>
-			<SheetContent className="overflow-auto custom-sheet-class">
+			<SheetContent className="overflow-auto no-scrollbar custom-sheet-class">
 				<SheetHeader>
 					<SheetTitle>Payment Details</SheetTitle>
 					<SheetDescription>Description goes here</SheetDescription>

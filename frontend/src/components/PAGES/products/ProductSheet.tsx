@@ -31,7 +31,7 @@ function ProductSheet() {
 				}
 			}}
 		>
-			<SheetContent className="overflow-auto custom-sheet-class">
+			<SheetContent className="overflow-auto no-scrollbar custom-sheet-class">
 				<SheetHeader>
 					<SheetTitle>Product Details</SheetTitle>
 					<SheetDescription>Description goes here</SheetDescription>

@@ -37,7 +37,7 @@ export function LoanDetailsPaymentAllocationModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onClose}>
-			<DialogContent className="max-w-3xl max-h-screen overflow-y-auto">
+			<DialogContent className="max-w-3xl max-h-screen overflow-y-auto no-scrollbar">
 				<DialogHeader>
 					<DialogTitle>Payment Allocation Details</DialogTitle>
 					<DialogDescription>
@@ -125,7 +125,7 @@ export function LoanDetailsPaymentAllocationModal({
 						</div>
 
 						{allocations.length > 0 ? (
-							<div className="border rounded-md overflow-hidden">
+							<div className="border rounded-md overflow-hidden no-scrollbar">
 								<Table>
 									<TableHeader>
 										<TableRow>

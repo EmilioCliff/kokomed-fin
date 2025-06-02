@@ -78,7 +78,7 @@ export default function LoanTimeline() {
 				open={sheetOpen}
 				onOpenChange={() => setSheetOpen(!sheetOpen)}
 			>
-				<SheetContent className="overflow-auto">
+				<SheetContent className="overflow-auto no-scrollbar">
 					<SheetHeader>
 						<SheetTitle>{selectedDate}</SheetTitle>
 						<SheetDescription>

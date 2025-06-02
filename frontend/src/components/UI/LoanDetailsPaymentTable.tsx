@@ -21,7 +21,7 @@ export function LoanDetailsPaymentsTable({
 	onPaymentClick,
 }: PaymentsTableProps) {
 	return (
-		<div className="overflow-x-auto">
+		<div className="overflow-x-auto no-scrollbar">
 			<Table>
 				<TableHeader>
 					<TableRow>

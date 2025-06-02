@@ -261,7 +261,7 @@ function LoanSheet() {
 				}
 			}}
 		>
-			<SheetContent className="overflow-auto custom-sheet-class">
+			<SheetContent className="overflow-auto no-scrollbar custom-sheet-class">
 				<SheetHeader>
 					<SheetTitle>Loan Details</SheetTitle>
 					<SheetDescription>Description goes here</SheetDescription>

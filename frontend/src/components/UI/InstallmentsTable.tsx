@@ -19,7 +19,7 @@ export function LoanDetailsInstallmentsTable({
 	installments,
 }: InstallmentsTableProps) {
 	return (
-		<div className="overflow-x-auto">
+		<div className="overflow-x-auto no-scrollbar">
 			<Table>
 				<TableHeader>
 					<TableRow>

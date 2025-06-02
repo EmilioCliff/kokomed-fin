@@ -56,6 +56,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate, useParams } from 'react-router';
 import { role, simulationResult } from '@/lib/types';
 import getNonPosted from '@/services/getNonPosted';
+import EditPaymentFormSkeleton from '@/components/UI/EditPaymentFormSkeleton';
 
 function EditPaymentForm() {
 	const [step, setStep] = useState<'edit' | 'confirm'>('edit');
@@ -162,7 +163,7 @@ function EditPaymentForm() {
 	}, [nonPostedQuery.data, decoded]);
 
 	if (!originalPayment || !editedPayment) {
-		return null;
+		return <EditPaymentFormSkeleton />;
 	}
 
 	const hasChanges =

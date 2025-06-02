@@ -36,7 +36,7 @@ function LoanDetailsPage() {
 		setIsAllocationModalOpen(true);
 	};
 
-	if (isLoading) return <LoanDetailsSkeleton />;
+	if (isLoading || !data?.data) return <LoanDetailsSkeleton />;
 
 	if (error) {
 		return (
@@ -58,20 +58,20 @@ function LoanDetailsPage() {
 		);
 	}
 
-	if (!data?.data) {
-		return (
-			<div className="container mx-auto p-6">
-				<Card>
-					<CardHeader>
-						<CardTitle>Loan Not Found</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p>The requested loan could not be found.</p>
-					</CardContent>
-				</Card>
-			</div>
-		);
-	}
+	// if (!data?.data) {
+	// 	return (
+	// 		<div className="container mx-auto p-6">
+	// 			<Card>
+	// 				<CardHeader>
+	// 					<CardTitle>Loan Not Found</CardTitle>
+	// 				</CardHeader>
+	// 				<CardContent>
+	// 					<p>The requested loan could not be found.</p>
+	// 				</CardContent>
+	// 			</Card>
+	// 		</div>
+	// 	);
+	// }
 
 	const progress = (data.data.paidAmount / data.data.repayAmount) * 100;
 	const remainingAmount = data.data.repayAmount - data.data.paidAmount;

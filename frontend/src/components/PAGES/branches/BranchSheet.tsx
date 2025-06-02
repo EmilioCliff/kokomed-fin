@@ -29,7 +29,7 @@ function BranchSheet() {
 				}
 			}}
 		>
-			<SheetContent className="overflow-auto custom-sheet-class">
+			<SheetContent className="overflow-auto no-scrollbar custom-sheet-class">
 				<SheetHeader>
 					<SheetTitle>Branch Details</SheetTitle>
 					<SheetDescription>Description goes here</SheetDescription>

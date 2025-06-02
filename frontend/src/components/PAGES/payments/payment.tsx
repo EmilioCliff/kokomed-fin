@@ -423,7 +423,13 @@ export const clientPaymentColumns: ColumnDef<Payment>[] = [
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuLabel>Actions</DropdownMenuLabel>
-					<DropdownMenuItem>
+					<DropdownMenuItem
+						disabled={
+							row.original.transactionSource === 'MPESA'
+								? true
+								: false
+						}
+					>
 						<Link
 							to={`/payments/overview/${row.original.id}`}
 							className="w-full"

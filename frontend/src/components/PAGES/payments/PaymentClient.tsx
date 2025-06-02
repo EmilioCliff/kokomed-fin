@@ -43,6 +43,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import PaymentsTab from './PaymentsTab';
 import { getClientLoans } from '@/services/getClientLoans';
 import LoansTab from './LoansTab';
+import { useAuth } from '@/hooks/useAuth';
+import { role } from '@/lib/types';
 
 function PaymentClient() {
 	const [searchType, setSearchType] = useState('id');
@@ -53,6 +55,7 @@ function PaymentClient() {
 	const [searched, setSearched] = useState(false);
 	const [editForm, setEditForm] = useState(false);
 	const [currentTab, setCurrentTab] = useState('loans');
+	const { decoded } = useAuth();
 
 	const debouced = useDebounce({ value: phoneNumber, delay: 2000 });
 
@@ -202,42 +205,47 @@ function PaymentClient() {
 									<h2 className="text-xl font-semibold mb-4">
 										Client Details
 									</h2>
-									<Dialog
-										open={editForm}
-										onOpenChange={setEditForm}
-									>
-										<DialogTrigger asChild>
-											<Button variant="outline" size="sm">
-												<Edit className="mr-2 h-4 w-4" />
-												Edit
-											</Button>
-										</DialogTrigger>
-										<DialogContent>
-											<DialogHeader>
-												<DialogTitle>
-													Edit Customer
-												</DialogTitle>
-												<DialogDescription>
-													Update the customer's
-													details below.
-												</DialogDescription>
-											</DialogHeader>
+									{decoded?.email === role.ADMIN && (
+										<Dialog
+											open={editForm}
+											onOpenChange={setEditForm}
+										>
+											<DialogTrigger asChild>
+												<Button
+													variant="outline"
+													size="sm"
+												>
+													<Edit className="mr-2 h-4 w-4" />
+													Edit
+												</Button>
+											</DialogTrigger>
+											<DialogContent>
+												<DialogHeader>
+													<DialogTitle>
+														Edit Customer
+													</DialogTitle>
+													<DialogDescription>
+														Update the customer's
+														details below.
+													</DialogDescription>
+												</DialogHeader>
 
-											{mutation.data?.data ? (
-												<EditClientForm
-													onFormOpen={setEditForm}
-													clientData={
-														mutation.data.data
-															.clientDetails
-													}
-												/>
-											) : (
-												<p className="text-sm text-muted-foreground">
-													Loading client data...
-												</p>
-											)}
-										</DialogContent>
-									</Dialog>
+												{mutation.data?.data ? (
+													<EditClientForm
+														onFormOpen={setEditForm}
+														clientData={
+															mutation.data.data
+																.clientDetails
+														}
+													/>
+												) : (
+													<p className="text-sm text-muted-foreground">
+														Loading client data...
+													</p>
+												)}
+											</DialogContent>
+										</Dialog>
+									)}
 								</div>
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 									<div>
@@ -385,7 +393,7 @@ function PaymentClient() {
 								<h3 className="text-lg font-medium mb-3">
 									Installments
 								</h3>
-								<div className="overflow-x-auto">
+								<div className="overflow-x-auto no-scrollbar">
 									<Table>
 										<TableHeader>
 											<TableRow>

@@ -1,4 +1,3 @@
-import './App.css';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
