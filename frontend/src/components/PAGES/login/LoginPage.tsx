@@ -30,7 +30,7 @@ export default function LoginPage() {
 	const navigate = useNavigate();
 
 	function onError(errors: any) {
-		console.log('Errors: ', errors);
+		// console.log('Errors: ', errors);
 	}
 
 	const onSubmit = async (values: LoginForm) => {
