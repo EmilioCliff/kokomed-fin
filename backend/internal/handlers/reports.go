@@ -12,14 +12,13 @@ import (
 )
 
 type downloadReportsRequest struct {
-	StartDate string `json:"startDate"`
-	EndDate   string `json:"endDate"`
+	StartDate  string `json:"startDate"`
+	EndDate    string `json:"endDate"`
 	ReportName string `json:"reportName"`
-	UserId uint32 `json:"userId"`
-	ClientId uint32 `json:"clientId"`
-	LoanId uint32 `json:"loanId"`
+	UserId     uint32 `json:"userId"`
+	ClientId   uint32 `json:"clientId"`
+	LoanId     uint32 `json:"loanId"`
 }
-
 
 func (s *Server) generateReport(ctx *gin.Context) {
 	var req downloadReportsRequest
@@ -44,7 +43,7 @@ func (s *Server) generateReport(ctx *gin.Context) {
 	}
 
 	format := ctx.Query("format")
-	fileExt := "pdf" 
+	fileExt := "pdf"
 
 	baseName := req.ReportName + "_report"
 	if req.UserId != 0 {

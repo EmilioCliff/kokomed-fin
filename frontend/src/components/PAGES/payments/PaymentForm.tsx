@@ -1,4 +1,4 @@
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import Spinner from '@/components/UI/Spinner';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -26,6 +26,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useAuth } from '@/hooks/useAuth';
+import getFormData from '@/services/getFormData';
+import VirtualizeddSelectContact from '@/components/UI/VisualizedSelectContact';
 
 interface LoanFormProps {
 	onFormOpen: (isOpen: boolean) => void;
@@ -33,6 +35,12 @@ interface LoanFormProps {
 
 function PaymentForm({ onFormOpen }: LoanFormProps) {
 	const { decoded } = useAuth();
+
+	const { data } = useQuery({
+		queryKey: ['payments/form'],
+		queryFn: () => getFormData(false, true, false, false, false),
+		staleTime: 5 * 1000,
+	});
 
 	const form = useForm<PaymentFormType>({
 		resolver: zodResolver(paymentFormSchema),
@@ -119,10 +127,16 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 								<FormItem>
 									<FormLabel>Account Number</FormLabel>
 									<FormControl>
-										<Input
-											placeholder="0712345678"
-											{...field}
-										/>
+										{data?.client && (
+											<VirtualizeddSelectContact
+												options={data.client}
+												placeholder="Select Client Phone Number"
+												value={field.value}
+												onChange={(id) =>
+													field.onChange(id)
+												}
+											/>
+										)}
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -135,10 +149,16 @@ function PaymentForm({ onFormOpen }: LoanFormProps) {
 								<FormItem>
 									<FormLabel>Phone Number</FormLabel>
 									<FormControl>
-										<Input
-											placeholder="0712345678"
-											{...field}
-										/>
+										{data?.client && (
+											<VirtualizeddSelectContact
+												options={data.client}
+												placeholder="Select Client Phone Number"
+												value={field.value}
+												onChange={(id) =>
+													field.onChange(id)
+												}
+											/>
+										)}
 									</FormControl>
 									<FormMessage />
 								</FormItem>

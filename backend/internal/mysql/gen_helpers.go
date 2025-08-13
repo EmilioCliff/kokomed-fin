@@ -58,7 +58,7 @@ type GetUserAdminsReportDataParams struct {
 
 type GetUserAdminsReportDataRow struct {
 	Name              string         `json:"name"`
-	Role              string      `json:"role"`
+	Role              string         `json:"role"`
 	BranchName        sql.NullString `json:"branch_name"`
 	ApprovedLoans     int64          `json:"approved_loans"`
 	ActiveLoans       int64          `json:"active_loans"`
@@ -227,7 +227,7 @@ type GetUserUsersReportDataParams struct {
 
 type GetUserUsersReportDataRow struct {
 	Name                   string         `json:"name"`
-	Role                   string      `json:"role"`
+	Role                   string         `json:"role"`
 	Branch                 sql.NullString `json:"branch"`
 	TotalClientsHandled    int64          `json:"total_clients_handled"`
 	LoansApproved          int64          `json:"loans_approved"`
@@ -240,7 +240,7 @@ type GetUserUsersReportDataRow struct {
 }
 
 func (q *UserRepository) GetUserUsersReportData(ctx context.Context, arg GetUserUsersReportDataParams) (GetUserUsersReportDataRow, error) {
-	row  := q.db.db.QueryRowContext(ctx, getUserUsersReportData,
+	row := q.db.db.QueryRowContext(ctx, getUserUsersReportData,
 		arg.StartDate,
 		arg.EndDate,
 		arg.StartDate,
@@ -492,7 +492,6 @@ type GetClientClientsReportDataRow struct {
 	Payments      interface{}    `json:"payments"`
 }
 
-
 func (q *ClientRepository) GetClientClientsReportData(ctx context.Context, arg GetClientClientsReportDataParams) (GetClientClientsReportDataRow, error) {
 	row := q.db.db.QueryRowContext(ctx, getClientClientsReportData,
 		arg.StartDate,
@@ -621,7 +620,7 @@ JOIN users u ON l.loan_officer = u.id
 JOIN products p ON l.product_id = p.id
 LEFT JOIN installments i ON i.loan_id = l.id
 
-WHERE l.created_at BETWEEN ? AND ?
+WHERE l.disbursed_on IS NOT NULL AND l.disbursed_on BETWEEN ? AND ?
 
 GROUP BY l.id, c.full_name, b.name, u.full_name, p.loan_amount, p.repay_amount, l.paid_amount, l.status, l.total_installments
 ORDER BY l.created_at DESC
@@ -633,20 +632,20 @@ type GetLoansReportDataParams struct {
 }
 
 type GetLoansReportDataRow struct {
-	LoanID            uint32      `json:"loan_id"`
-	ClientName        string      `json:"client_name"`
-	BranchName        string      `json:"branch_name"`
-	LoanOfficer       string      `json:"loan_officer"`
-	LoanAmount        float64     `json:"loan_amount"`
-	RepayAmount       float64     `json:"repay_amount"`
-	PaidAmount        float64     `json:"paid_amount"`
-	OutstandingAmount interface{} `json:"outstanding_amount"`
-	Status            string 	  `json:"status"`
-	TotalInstallments uint32      `json:"total_installments"`
-	PaidInstallments  int64       `json:"paid_installments"`
+	LoanID            uint32       `json:"loan_id"`
+	ClientName        string       `json:"client_name"`
+	BranchName        string       `json:"branch_name"`
+	LoanOfficer       string       `json:"loan_officer"`
+	LoanAmount        float64      `json:"loan_amount"`
+	RepayAmount       float64      `json:"repay_amount"`
+	PaidAmount        float64      `json:"paid_amount"`
+	OutstandingAmount interface{}  `json:"outstanding_amount"`
+	Status            string       `json:"status"`
+	TotalInstallments uint32       `json:"total_installments"`
+	PaidInstallments  int64        `json:"paid_installments"`
 	DueDate           sql.NullTime `json:"due_date"`
-	DisbursedDate 	  sql.NullTime `json:"disbursed_date"`
-	DefaultRisk       interface{} `json:"default_risk"`
+	DisbursedDate     sql.NullTime `json:"disbursed_date"`
+	DefaultRisk       interface{}  `json:"default_risk"`
 }
 
 func (q *LoanRepository) GetLoansReportData(ctx context.Context, arg GetLoansReportDataParams) ([]GetLoansReportDataRow, error) {
@@ -730,10 +729,10 @@ type GetLoanReportDataByIdRow struct {
 	LoanAmount            float64     `json:"loan_amount"`
 	RepayAmount           float64     `json:"repay_amount"`
 	PaidAmount            float64     `json:"paid_amount"`
-	Status                string 	  `json:"status"`
-	TotalInstallments     int64      `json:"total_installments"`
+	Status                string      `json:"status"`
+	TotalInstallments     int64       `json:"total_installments"`
 	PaidInstallments      int64       `json:"paid_installments"`
-	RemainingInstallments int64     `json:"remaining_installments"`
+	RemainingInstallments int64       `json:"remaining_installments"`
 	InstallmentDetails    interface{} `json:"installment_details"`
 }
 
@@ -779,12 +778,12 @@ ORDER BY l.disbursed_on DESC
 `
 
 type GetLoanEventsRow struct {
-	LoanID        uint32       `json:"loan_id"`
-	DisbursedDate sql.NullTime `json:"disbursed_date"`
-	DueDate       sql.NullTime       `json:"due_date"`
-	ClientName    string       `json:"client_name"`
-	LoanAmount    float64      `json:"loan_amount"`
-	PaymentDue    sql.NullFloat64       `json:"payment_due"`
+	LoanID        uint32          `json:"loan_id"`
+	DisbursedDate sql.NullTime    `json:"disbursed_date"`
+	DueDate       sql.NullTime    `json:"due_date"`
+	ClientName    string          `json:"client_name"`
+	LoanAmount    float64         `json:"loan_amount"`
+	PaymentDue    sql.NullFloat64 `json:"payment_due"`
 }
 
 func (q *LoanRepository) GetLoanEventsHelper(ctx context.Context) ([]GetLoanEventsRow, error) {
